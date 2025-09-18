@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.controller;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.domain.dto.user.RestListUsersImportDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
@@ -15,6 +16,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -105,5 +108,14 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+    }
+
+    @ApiMessage("Import file list users")
+    @PostMapping("/import")
+    public ResponseEntity<RestListUsersImportDTO> importUsersFromFileRequest(@Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList) {
+        RestListUsersImportDTO restListUsersImportDTO = this.userService.importListUsersFromFileExcel(restUserCreateDTOList);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(restListUsersImportDTO);
     }
 }

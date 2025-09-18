@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.domain.dto.user.RestListUsersImportDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -57,6 +59,10 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("User with email '" + user.getEmail() + "' already exists");
         }
 
+        if (this.checkPhoneExists(user.getPhone())) {
+            throw new IllegalArgumentException("User with phone '" + user.getPhone() + "' already exists");
+        }
+
         this.validateAndSetRole(user, user);
 
         user.setPassword(this.passwordEncoder.encode(user.getPassword()));
@@ -69,7 +75,13 @@ public class UserServiceImpl implements UserService {
         User userGetById = this.getUserById(id);
         this.validateAndSetRole(userUpdated, userGetById);
         userGetById.setFullName(userUpdated.getFullName());
-        userGetById.setPhone(userUpdated.getPhone());
+
+        if (this.checkPhoneExists(userUpdated.getPhone())
+                && !userGetById.getPhone().equals(userUpdated.getPhone())
+        ) {
+            userGetById.setPhone(userUpdated.getPhone());
+        }
+
         return this.userRepository.save(userGetById);
     }
 
@@ -89,7 +101,10 @@ public class UserServiceImpl implements UserService {
             userGetById.setFullName(userUpdated.getFullName());
         }
 
-        if (userUpdated.getPhone() != null && !userUpdated.getPhone().isEmpty()) {
+        if (userUpdated.getPhone() != null
+                && this.checkPhoneExists(userUpdated.getPhone())
+                && !userGetById.getPhone().equals(userUpdated.getPhone())
+        ) {
             userGetById.setPhone(userUpdated.getPhone());
         }
 
@@ -152,6 +167,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean checkPhoneExists(String phone) {
+        return this.userRepository.existsByPhone(phone);
+    }
+
+    @Override
     public boolean checkIdExists(Long id) {
         return this.userRepository.existsById(id);
     }
@@ -210,5 +230,44 @@ public class UserServiceImpl implements UserService {
                 user.getUpdatedBy(),
                 roleUserView
         );
+    }
+
+    @Transactional
+    @Override
+    public RestListUsersImportDTO importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList) {
+        RestListUsersImportDTO restListUsersImportDTO = new RestListUsersImportDTO();
+        List<RestUserCreateDTO> successfulUsers = new ArrayList<>();
+
+        int createdCount = 0;
+        int countError = 0;
+
+        for (RestUserCreateDTO restUserCreateDTO : restUserCreateDTOList) {
+            try {
+                if (this.checkEmailExists(restUserCreateDTO.getEmail())) {
+                    throw new IllegalArgumentException("User with email " + restUserCreateDTO.getEmail() + " already exists!");
+                }
+
+                if (this.checkPhoneExists(restUserCreateDTO.getPhone())) {
+                    throw new IllegalArgumentException("User with phone " + restUserCreateDTO.getPhone() + " already exists!");
+                }
+
+                User user = new User();
+                user.setEmail(restUserCreateDTO.getEmail());
+                user.setFullName(restUserCreateDTO.getFullName());
+                user.setPassword(this.passwordEncoder.encode("123456"));
+                user.setPhone(restUserCreateDTO.getPhone());
+                this.userRepository.save(user);
+                successfulUsers.add(restUserCreateDTO);
+                createdCount++;
+            } catch (Exception e) {
+                countError++;
+            }
+        }
+
+        restListUsersImportDTO.setUsers(successfulUsers);
+        restListUsersImportDTO.setCountSuccess(createdCount);
+        restListUsersImportDTO.setCountError(countError);
+
+        return restListUsersImportDTO;
     }
 }
