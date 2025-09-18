@@ -237,8 +237,8 @@ public class UserServiceImpl implements UserService {
     public RestListUsersImportDTO importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList) {
         RestListUsersImportDTO restListUsersImportDTO = new RestListUsersImportDTO();
         List<RestUserCreateDTO> successfulUsers = new ArrayList<>();
-
-        int createdCount = 0;
+        List<RestUserCreateDTO> errorUsers = new ArrayList<>();
+        int countSuccess = 0;
         int countError = 0;
 
         for (RestUserCreateDTO restUserCreateDTO : restUserCreateDTOList) {
@@ -246,7 +246,6 @@ public class UserServiceImpl implements UserService {
                 if (this.checkEmailExists(restUserCreateDTO.getEmail())) {
                     throw new IllegalArgumentException("User with email " + restUserCreateDTO.getEmail() + " already exists!");
                 }
-
                 if (this.checkPhoneExists(restUserCreateDTO.getPhone())) {
                     throw new IllegalArgumentException("User with phone " + restUserCreateDTO.getPhone() + " already exists!");
                 }
@@ -258,15 +257,31 @@ public class UserServiceImpl implements UserService {
                 user.setPhone(restUserCreateDTO.getPhone());
                 this.userRepository.save(user);
                 successfulUsers.add(restUserCreateDTO);
-                createdCount++;
+                countSuccess++;
             } catch (Exception e) {
+                errorUsers.add(restUserCreateDTO);
                 countError++;
             }
         }
 
-        restListUsersImportDTO.setUsers(successfulUsers);
-        restListUsersImportDTO.setCountSuccess(createdCount);
+        restListUsersImportDTO.setCountSuccess(countSuccess);
         restListUsersImportDTO.setCountError(countError);
+        restListUsersImportDTO.setUsers(successfulUsers);
+
+        if (countError > 0) {
+            List<RestListUsersImportDTO.UserListImportInfo> details = new ArrayList<>();
+            for (RestUserCreateDTO user : errorUsers) {
+                int originalIndex = restUserCreateDTOList.indexOf(user);
+                String errorMsg =
+                        this.checkEmailExists(user.getEmail())
+                        ? "User with email " + user.getEmail() + " already exists!"
+                            : this.checkPhoneExists(user.getPhone())
+                            ? "User with phone " + user.getPhone() + " already exists!"
+                                : "Unknown error";
+                details.add(new RestListUsersImportDTO.UserListImportInfo(originalIndex, errorMsg, user));
+            }
+            restListUsersImportDTO.setDetail(details);
+        }
 
         return restListUsersImportDTO;
     }

@@ -14,5 +14,16 @@ import java.util.List;
 public class RestListUsersImportDTO {
     private int countSuccess;
     private int countError;
+    private List<UserListImportInfo> detail;
     private List<RestUserCreateDTO> users;
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class UserListImportInfo {
+        private int index;
+        private String errorMessage;
+        private RestUserCreateDTO user;
+    }
 }
