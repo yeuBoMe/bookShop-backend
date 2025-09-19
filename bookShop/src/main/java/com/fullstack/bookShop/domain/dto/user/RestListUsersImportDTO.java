@@ -14,7 +14,7 @@ import java.util.List;
 public class RestListUsersImportDTO {
     private int countSuccess;
     private int countError;
-    private List<UserListImportInfo> detail;
+    private Object detail;
     private List<RestUserCreateDTO> users;
 
     @Getter
