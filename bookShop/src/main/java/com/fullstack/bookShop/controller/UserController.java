@@ -114,8 +114,12 @@ public class UserController {
     @PostMapping("/import")
     public ResponseEntity<RestListUsersImportDTO> importUsersFromFileRequest(@Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList) {
         RestListUsersImportDTO restListUsersImportDTO = this.userService.importListUsersFromFileExcel(restUserCreateDTOList);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(restListUsersImportDTO);
+        return restListUsersImportDTO.getCountError() > 0
+                ? ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(restListUsersImportDTO)
+                : ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(restListUsersImportDTO);
     }
 }
