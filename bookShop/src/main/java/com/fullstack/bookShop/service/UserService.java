@@ -32,5 +32,5 @@ public interface UserService {
 
     ResultPaginationDTO fetchAllUsers(Specification<User> spec, Pageable pageable);
 
-    RestListUsersImportDTO importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList);
+    RestListUsersImportDTO<Object> importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList);
 }

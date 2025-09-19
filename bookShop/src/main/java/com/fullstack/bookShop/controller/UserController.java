@@ -112,14 +112,23 @@ public class UserController {
 
     @ApiMessage("Import file list users")
     @PostMapping("/import")
-    public ResponseEntity<RestListUsersImportDTO> importUsersFromFileRequest(@Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList) {
-        RestListUsersImportDTO restListUsersImportDTO = this.userService.importListUsersFromFileExcel(restUserCreateDTOList);
-        return restListUsersImportDTO.getCountError() > 0
-                ? ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(restListUsersImportDTO)
-                : ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(restListUsersImportDTO);
+    public ResponseEntity<RestListUsersImportDTO<Object>> importUsersFromFileRequest(
+            @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
+    ) {
+        RestListUsersImportDTO<Object> restListUsersImportDTO =
+                this.userService.importListUsersFromFileExcel(restUserCreateDTOList);
+
+        HttpStatus httpStatus;
+        if (restListUsersImportDTO.getCountSuccess() == 0) {
+            httpStatus = HttpStatus.BAD_REQUEST;
+        } else if (restListUsersImportDTO.getCountError() > 0) {
+            httpStatus = HttpStatus.MULTI_STATUS;
+        } else {
+            httpStatus = HttpStatus.CREATED;
+        }
+
+        return ResponseEntity
+                .status(httpStatus)
+                .body(restListUsersImportDTO);
     }
 }

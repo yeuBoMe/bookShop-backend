@@ -4,6 +4,7 @@ import com.fullstack.bookShop.domain.response.RestResponse;
 import com.fullstack.bookShop.util.exception.custom.PermissionException;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
 import jakarta.mail.MessagingException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
@@ -86,7 +87,7 @@ public class GlobalException {
                 .body(restResponse);
     }
 
-    // Handle validation errors or request body
+    // Handle validation errors or request body in controller
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RestResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         BindingResult bindingResult = ex.getBindingResult();
@@ -109,6 +110,25 @@ public class GlobalException {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(restResponse);
     }
+
+    // Handle validation errors or request body after go through controller
+/*    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<RestResponse<Object>> handleConstraintViolationException(ConstraintViolationException ex) {
+        List<String> errors = ex.getConstraintViolations()
+                .stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .toList();
+
+        RestResponse<Object> response = new RestResponse<>();
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        response.setError("Validation failed");
+        response.setMessage("Invalid request parameters");
+        response.setData(errors);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }*/
 
     // Handle 404 not found or invalid URLs
     @ExceptionHandler(NoResourceFoundException.class)

@@ -48,16 +48,15 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(status);
 
-        if (status >= 400) {
+        boolean isImportEndpoint = path.contains("/import");
+
+        if (status >= 400 && !isImportEndpoint) {
+            // Chỉ trả về body gốc cho error responses KHÔNG PHẢI là import
             return body;
         } else {
             restResponse.setData(body);
             ApiMessage apiMessage = returnType.getMethodAnnotation(ApiMessage.class);
-            restResponse.setMessage(
-                    apiMessage != null
-                            ? apiMessage.value()
-                            : "Call api successfully"
-            );
+            restResponse.setMessage(apiMessage != null ? apiMessage.value() : "Call api successfully");
         }
 
         return restResponse;

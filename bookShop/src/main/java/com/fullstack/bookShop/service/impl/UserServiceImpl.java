@@ -11,6 +11,8 @@ import com.fullstack.bookShop.repository.UserRepository;
 import com.fullstack.bookShop.service.RoleService;
 import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -232,61 +234,58 @@ public class UserServiceImpl implements UserService {
         );
     }
 
-    @Transactional
     @Override
-    public RestListUsersImportDTO importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList) {
-        RestListUsersImportDTO restListUsersImportDTO = new  RestListUsersImportDTO();
-        List<RestUserCreateDTO> successfulUsers = new ArrayList<>();
-        List<RestUserCreateDTO> errorUsers = new ArrayList<>();
+    public RestListUsersImportDTO<Object> importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList) {
+        RestListUsersImportDTO<Object> restListUsersImportDTO = new RestListUsersImportDTO<>();
+        List<RestUserCreateDTO> successUsers = new ArrayList<>();
+        List<RestListUsersImportDTO.DetailFaultInfo<Object>> detailFaultInfoList = new ArrayList<>();
+
         int countSuccess = 0;
         int countError = 0;
 
-        for (RestUserCreateDTO restUserCreateDTO : restUserCreateDTOList) {
+        for (int i = 0; i < restUserCreateDTOList.size(); i++) {
+            RestUserCreateDTO restUserCreateDTO = restUserCreateDTOList.get(i);
+
             try {
                 if (this.checkEmailExists(restUserCreateDTO.getEmail())) {
                     throw new IllegalArgumentException("User with email '" + restUserCreateDTO.getEmail() + "' already exists!");
                 }
 
-                if(this.checkPhoneExists(restUserCreateDTO.getPhone())) {
-                    throw new IllegalArgumentException("User with Phone '" + restUserCreateDTO.getPhone() + "' already exists!");
+                if (this.checkPhoneExists(restUserCreateDTO.getPhone())) {
+                    throw new IllegalArgumentException("User with phone '" + restUserCreateDTO.getPhone() + "' already exists!");
                 }
 
-                User user = new User();
-                user.setFullName(restUserCreateDTO.getFullName());
-                user.setEmail(restUserCreateDTO.getEmail());
-                user.setPassword(this.passwordEncoder.encode("123456"));
-                user.setPhone(restUserCreateDTO.getPhone());
-                this.userRepository.save(user);
-
-                RestUserCreateDTO userDTO = this.convertUserToRestUserCreateDTO(user);
-                successfulUsers.add(userDTO);
+                User userBuiltFromRestUserCreatedDTO = this.buildUserFromRestUserCreatedDTO(restUserCreateDTO);
+                RestUserCreateDTO userDTO = this.convertUserToRestUserCreateDTO(userBuiltFromRestUserCreatedDTO);
+                successUsers.add(userDTO);
                 countSuccess++;
+
+            } catch (ConstraintViolationException e) {
+                countError++;
+                List<String> errorMessage = e.getConstraintViolations().stream()
+                        .map(ConstraintViolation::getMessage)
+                        .toList();
+                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo<>(i + 1, errorMessage, restUserCreateDTO));
             } catch (Exception e) {
                 countError++;
-                errorUsers.add(restUserCreateDTO);
+                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo<>(i + 1, e.getMessage(), restUserCreateDTO));
             }
         }
 
         restListUsersImportDTO.setCountSuccess(countSuccess);
         restListUsersImportDTO.setCountError(countError);
-        restListUsersImportDTO.setUsers(successfulUsers);
-        restListUsersImportDTO.setDetail("OK");
-
-        if (countError > 0) {
-            List<RestListUsersImportDTO.UserListImportInfo> userListImportInfos = new ArrayList<>();
-            for (RestUserCreateDTO restUserCreateDTO : errorUsers) {
-                int indexOfUser = restUserCreateDTOList.indexOf(restUserCreateDTO);
-                String messageError =
-                        this.checkEmailExists(restUserCreateDTO.getEmail())
-                            ? "User with email '" + restUserCreateDTO.getEmail() + "' already exists!"
-                            : this.checkPhoneExists(restUserCreateDTO.getPhone())
-                                ? "User with phone '" + restUserCreateDTO.getPhone() + "' already exists!"
-                                : "Unknown error";
-                userListImportInfos.add(new RestListUsersImportDTO.UserListImportInfo(indexOfUser, messageError, restUserCreateDTO));
-            }
-            restListUsersImportDTO.setDetail(userListImportInfos);
-        }
+        restListUsersImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import users successfully!");
+        restListUsersImportDTO.setUsers(successUsers);
 
         return restListUsersImportDTO;
+    }
+
+    private User buildUserFromRestUserCreatedDTO(RestUserCreateDTO restUserCreateDTO) {
+        User user = new User();
+        user.setFullName(restUserCreateDTO.getFullName().trim());
+        user.setEmail(restUserCreateDTO.getEmail().trim());
+        user.setPassword(this.passwordEncoder.encode("123456"));
+        user.setPhone(restUserCreateDTO.getPhone().trim());
+        return this.userRepository.save(user);
     }
 }
