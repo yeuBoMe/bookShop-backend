@@ -76,13 +76,15 @@ public class UserServiceImpl implements UserService {
     public User updateUserById(Long id, User userUpdated) {
         User userGetById = this.getUserById(id);
         this.validateAndSetRole(userUpdated, userGetById);
-        userGetById.setFullName(userUpdated.getFullName());
 
         if (this.checkPhoneExists(userUpdated.getPhone())
                 && !userGetById.getPhone().equals(userUpdated.getPhone())
         ) {
-            userGetById.setPhone(userUpdated.getPhone());
+            throw new IllegalArgumentException("User with phone '" + userUpdated.getPhone() + "' already exists!");
         }
+
+        userGetById.setFullName(userUpdated.getFullName());
+        userGetById.setPhone(userUpdated.getPhone());
 
         return this.userRepository.save(userGetById);
     }
@@ -103,10 +105,12 @@ public class UserServiceImpl implements UserService {
             userGetById.setFullName(userUpdated.getFullName());
         }
 
-        if (userUpdated.getPhone() != null
-                && this.checkPhoneExists(userUpdated.getPhone())
-                && !userGetById.getPhone().equals(userUpdated.getPhone())
-        ) {
+        if (userUpdated.getPhone() != null && !userUpdated.getPhone().isEmpty()) {
+            if (this.checkPhoneExists(userUpdated.getPhone())
+                    && !userGetById.getPhone().equals(userUpdated.getPhone())
+            ) {
+                throw new IllegalArgumentException("User with phone '" + userUpdated.getPhone() + "' already exists!");
+            }
             userGetById.setPhone(userUpdated.getPhone());
         }
 
