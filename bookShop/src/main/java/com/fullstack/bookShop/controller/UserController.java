@@ -116,7 +116,7 @@ public class UserController {
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {
         RestListUsersImportDTO restListUsersImportDTO =
-                this.userService.importListUsersFromFileExcel(restUserCreateDTOList);
+                this.userService.importListUsersFromFile(restUserCreateDTOList);
 
         HttpStatus httpStatus;
         if (restListUsersImportDTO.getCountSuccess() == 0) {
