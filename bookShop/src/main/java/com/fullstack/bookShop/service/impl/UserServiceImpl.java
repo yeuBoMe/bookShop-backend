@@ -235,10 +235,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public RestListUsersImportDTO<Object> importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList) {
-        RestListUsersImportDTO<Object> restListUsersImportDTO = new RestListUsersImportDTO<>();
+    public RestListUsersImportDTO importListUsersFromFileExcel(List<RestUserCreateDTO> restUserCreateDTOList) {
+        RestListUsersImportDTO restListUsersImportDTO = new RestListUsersImportDTO();
         List<RestUserCreateDTO> successUsers = new ArrayList<>();
-        List<RestListUsersImportDTO.DetailFaultInfo<Object>> detailFaultInfoList = new ArrayList<>();
+        List<RestListUsersImportDTO.DetailFaultInfo> detailFaultInfoList = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
@@ -265,10 +265,10 @@ public class UserServiceImpl implements UserService {
                 List<String> errorMessage = e.getConstraintViolations().stream()
                         .map(ConstraintViolation::getMessage)
                         .toList();
-                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo<>(i + 1, errorMessage, restUserCreateDTO));
+                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo(i + 1, errorMessage, restUserCreateDTO));
             } catch (Exception e) {
                 countError++;
-                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo<>(i + 1, e.getMessage(), restUserCreateDTO));
+                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo(i + 1, e.getMessage(), restUserCreateDTO));
             }
         }
 

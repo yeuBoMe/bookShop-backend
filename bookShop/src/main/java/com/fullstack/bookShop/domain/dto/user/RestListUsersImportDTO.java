@@ -11,19 +11,19 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RestListUsersImportDTO<T> {
+public class RestListUsersImportDTO {
     private int countSuccess;
     private int countError;
-    private T detail;
+    private Object detail;
     private List<RestUserCreateDTO> users;
 
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class DetailFaultInfo<E> {
+    public static class DetailFaultInfo {
         private int index;
-        private E errorMessage;
+        private Object errorMessage;
         private RestUserCreateDTO user;
     }
 }

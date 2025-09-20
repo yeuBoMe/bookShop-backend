@@ -112,10 +112,10 @@ public class UserController {
 
     @ApiMessage("Import file list users")
     @PostMapping("/import")
-    public ResponseEntity<RestListUsersImportDTO<Object>> importUsersFromFileRequest(
+    public ResponseEntity<RestListUsersImportDTO> importUsersFromFileRequest(
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {
-        RestListUsersImportDTO<Object> restListUsersImportDTO =
+        RestListUsersImportDTO restListUsersImportDTO =
                 this.userService.importListUsersFromFileExcel(restUserCreateDTOList);
 
         HttpStatus httpStatus;
