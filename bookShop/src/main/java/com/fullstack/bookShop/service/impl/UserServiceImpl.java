@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.user.RestListUsersImportDTO;
+import com.fullstack.bookShop.domain.dto.user.RestUserImportDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
@@ -245,10 +245,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public RestListUsersImportDTO importListUsersFromFile(List<RestUserCreateDTO> restUserCreateDTOList) {
-        RestListUsersImportDTO restListUsersImportDTO = new RestListUsersImportDTO();
+    public RestUserImportDTO importListUsersFromFile(List<RestUserCreateDTO> restUserCreateDTOList) {
+        RestUserImportDTO restListUsersImportDTO = new RestUserImportDTO();
         List<RestUserCreateDTO> successUsers = new ArrayList<>();
-        List<RestListUsersImportDTO.DetailFaultInfo> detailFaultInfoList = new ArrayList<>();
+        List<RestUserImportDTO.DetailFaultInfo> detailFaultInfoList = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
@@ -275,7 +275,7 @@ public class UserServiceImpl implements UserService {
                 List<String> errorMessage = e.getConstraintViolations().stream()
                         .map(ConstraintViolation::getMessage)
                         .toList();
-                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo(
+                detailFaultInfoList.add(new RestUserImportDTO.DetailFaultInfo(
                         i + 1,
                         errorMessage,
                         restUserCreateDTO
@@ -283,7 +283,7 @@ public class UserServiceImpl implements UserService {
 
             } catch (Exception e) {
                 countError++;
-                detailFaultInfoList.add(new RestListUsersImportDTO.DetailFaultInfo(
+                detailFaultInfoList.add(new RestUserImportDTO.DetailFaultInfo(
                         i + 1,
                         e.getMessage(),
                         restUserCreateDTO
@@ -295,7 +295,6 @@ public class UserServiceImpl implements UserService {
         restListUsersImportDTO.setCountError(countError);
         restListUsersImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import users successfully!");
         restListUsersImportDTO.setUsers(successUsers);
-
         return restListUsersImportDTO;
     }
 

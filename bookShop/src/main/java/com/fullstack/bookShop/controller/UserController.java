@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.controller;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.user.RestListUsersImportDTO;
+import com.fullstack.bookShop.domain.dto.user.RestUserImportDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
@@ -112,10 +112,10 @@ public class UserController {
 
     @ApiMessage("Import file list users")
     @PostMapping("/import")
-    public ResponseEntity<RestListUsersImportDTO> importUsersFromFileRequest(
+    public ResponseEntity<RestUserImportDTO> importUsersFromFileRequest(
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {
-        RestListUsersImportDTO restListUsersImportDTO =
+        RestUserImportDTO restListUsersImportDTO =
                 this.userService.importListUsersFromFile(restUserCreateDTOList);
 
         HttpStatus httpStatus;

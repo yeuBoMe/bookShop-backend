@@ -1,4 +1,4 @@
-package com.fullstack.bookShop.domain.dto.user;
+package com.fullstack.bookShop.domain.dto.book;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,11 +11,11 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RestListUsersImportDTO {
+public class RestBookImportDTO {
     private int countSuccess;
     private int countError;
     private Object detail;
-    private List<RestUserCreateDTO> users;
+    private List<RestBookCreateDTO> books;
 
     @Getter
     @Setter
@@ -24,6 +24,6 @@ public class RestListUsersImportDTO {
     public static class DetailFaultInfo {
         private int index;
         private Object errorMessage;
-        private RestUserCreateDTO user;
+        private RestBookCreateDTO book;
     }
 }

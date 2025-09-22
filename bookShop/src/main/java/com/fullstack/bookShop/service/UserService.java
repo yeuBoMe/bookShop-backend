@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.service;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.user.RestListUsersImportDTO;
+import com.fullstack.bookShop.domain.dto.user.RestUserImportDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
@@ -32,5 +32,5 @@ public interface UserService {
 
     ResultPaginationDTO fetchAllUsers(Specification<User> spec, Pageable pageable);
 
-    RestListUsersImportDTO importListUsersFromFile(List<RestUserCreateDTO> restUserCreateDTOList);
+    RestUserImportDTO importListUsersFromFile(List<RestUserCreateDTO> restUserCreateDTOList);
 }
