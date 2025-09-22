@@ -1,9 +1,9 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.domain.dto.book.RestBookCreateDTO;
-import com.fullstack.bookShop.domain.dto.book.RestBookImportDTO;
 import com.fullstack.bookShop.domain.dto.book.RestBookUpdateDTO;
 import com.fullstack.bookShop.domain.dto.book.RestBookViewDTO;
+import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.entity.Book;
 import com.fullstack.bookShop.repository.BookRepository;
@@ -106,6 +106,11 @@ public class BookServiceImpl implements BookService {
             bookGetById.setAuthor(bookUpdated.getAuthor());
         }
 
+        if (bookUpdated.getImage() != null) {
+            System.out.println("Updating book image to: " + bookUpdated.getImage());
+            bookGetById.setImage(bookUpdated.getImage());
+        }
+
         return this.bookRepository.save(bookGetById);
     }
 
@@ -197,10 +202,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public RestBookImportDTO importListBooksFromFile(List<RestBookCreateDTO> bookCreateDTOList) {
-        RestBookImportDTO restBookImportDTO = new RestBookImportDTO();
+    public RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<RestBookCreateDTO> bookCreateDTOList) {
+        RestImportDTO<RestBookCreateDTO> restImportDTO = new RestImportDTO<>();
         List<RestBookCreateDTO> successData = new ArrayList<>();
-        List<RestBookImportDTO.DetailFaultInfo> detailFaultInfoList = new ArrayList<>();
+        List<RestImportDTO.DetailFaultInfo<RestBookCreateDTO>> detailFaultInfoList = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
@@ -228,7 +233,7 @@ public class BookServiceImpl implements BookService {
                 List<String> errorMessage = e.getConstraintViolations().stream()
                         .map(ConstraintViolation::getMessage)
                         .toList();
-                detailFaultInfoList.add(new RestBookImportDTO.DetailFaultInfo(
+                detailFaultInfoList.add(new RestImportDTO.DetailFaultInfo<>(
                         i + 1,
                         errorMessage,
                         restBookCreateDTO
@@ -236,7 +241,7 @@ public class BookServiceImpl implements BookService {
 
             } catch (Exception e) {
                 countError++;
-                detailFaultInfoList.add(new RestBookImportDTO.DetailFaultInfo(
+                detailFaultInfoList.add(new RestImportDTO.DetailFaultInfo<>(
                         i + 1,
                         e.getMessage(),
                         restBookCreateDTO
@@ -244,11 +249,11 @@ public class BookServiceImpl implements BookService {
             }
         }
 
-        restBookImportDTO.setCountSuccess(countSuccess);
-        restBookImportDTO.setCountError(countError);
-        restBookImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import books successfully!");
-        restBookImportDTO.setBooks(successData);
-        return restBookImportDTO;
+        restImportDTO.setCountSuccess(countSuccess);
+        restImportDTO.setCountError(countError);
+        restImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import books successfully!");
+        restImportDTO.setItems(successData);
+        return restImportDTO;
     }
 
     private Book buildBookFromRestBookCreateDTO(RestBookCreateDTO restBookCreateDTO) {

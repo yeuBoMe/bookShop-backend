@@ -1,5 +1,6 @@
-package com.fullstack.bookShop.domain.dto.book;
+package com.fullstack.bookShop.domain.dto.imports;
 
+import com.fullstack.bookShop.domain.dto.book.RestBookCreateDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,19 +12,19 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RestBookImportDTO {
+public class RestImportDTO<T> {
     private int countSuccess;
     private int countError;
     private Object detail;
-    private List<RestBookCreateDTO> books;
+    private List<T> items;
 
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class DetailFaultInfo {
+    public static class DetailFaultInfo<U> {
         private int index;
         private Object errorMessage;
-        private RestBookCreateDTO book;
+        private U item;
     }
 }

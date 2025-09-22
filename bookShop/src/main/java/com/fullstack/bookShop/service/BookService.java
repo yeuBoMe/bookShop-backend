@@ -1,9 +1,9 @@
 package com.fullstack.bookShop.service;
 
 import com.fullstack.bookShop.domain.dto.book.RestBookCreateDTO;
-import com.fullstack.bookShop.domain.dto.book.RestBookImportDTO;
 import com.fullstack.bookShop.domain.dto.book.RestBookUpdateDTO;
 import com.fullstack.bookShop.domain.dto.book.RestBookViewDTO;
+import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.entity.Book;
 import org.springframework.data.domain.Pageable;
@@ -28,5 +28,5 @@ public interface BookService {
 
     ResultPaginationDTO fetchListBooks(Specification<Book> spec, Pageable pageable);
 
-    RestBookImportDTO importListBooksFromFile(List<RestBookCreateDTO> bookCreateDTOList);
+    RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<RestBookCreateDTO> bookCreateDTOList);
 }

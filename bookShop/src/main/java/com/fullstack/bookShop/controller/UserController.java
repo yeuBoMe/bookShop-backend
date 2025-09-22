@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.controller;
 
+import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.user.RestUserImportDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
@@ -9,6 +9,7 @@ import com.fullstack.bookShop.domain.entity.User;
 import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
+import com.fullstack.bookShop.util.imports.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -110,25 +111,18 @@ public class UserController {
                 .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @ApiMessage("Import file list users")
+    @ApiMessage("Import users from file")
     @PostMapping("/import")
-    public ResponseEntity<RestUserImportDTO> importUsersFromFileRequest(
+    public ResponseEntity<RestImportDTO<RestUserCreateDTO>> importUsersFromFileRequest(
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {
-        RestUserImportDTO restListUsersImportDTO =
+        RestImportDTO<RestUserCreateDTO> restImportDTO =
                 this.userService.importListUsersFromFile(restUserCreateDTOList);
 
-        HttpStatus httpStatus;
-        if (restListUsersImportDTO.getCountSuccess() == 0) {
-            httpStatus = HttpStatus.BAD_REQUEST;
-        } else if (restListUsersImportDTO.getCountError() > 0) {
-            httpStatus = HttpStatus.MULTI_STATUS;
-        } else {
-            httpStatus = HttpStatus.CREATED;
-        }
+        HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
 
         return ResponseEntity
                 .status(httpStatus)
-                .body(restListUsersImportDTO);
+                .body(restImportDTO);
     }
 }
