@@ -130,6 +130,12 @@ public class UserServiceImpl implements UserService {
         if (!this.checkIdExists(id)) {
             throw new NoSuchElementException("User with id " + id + " not found");
         }
+
+        User userGetById = this.getUserById(id);
+        if (userGetById.getRole() != null && userGetById.getRole().getName().equals("ADMIN")) {
+            throw new IllegalStateException("You do not have permission to delete this user");
+        }
+
         this.userRepository.deleteById(id);
     }
 
