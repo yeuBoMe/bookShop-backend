@@ -4,10 +4,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 
 public interface FileService {
 
     void createUploadFolder(String folder) throws URISyntaxException;
 
-    String storeFile(MultipartFile file, String folder) throws URISyntaxException, IOException;
+    String storeSingleFile(MultipartFile file, String folder) throws URISyntaxException, IOException;
+
+    List<String> storeMultipleFiles(List<MultipartFile> files, String folder) throws URISyntaxException, IOException;
 }

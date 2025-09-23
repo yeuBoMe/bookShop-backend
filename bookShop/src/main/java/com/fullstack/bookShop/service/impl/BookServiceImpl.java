@@ -106,9 +106,9 @@ public class BookServiceImpl implements BookService {
             bookGetById.setAuthor(bookUpdated.getAuthor());
         }
 
-        if (bookUpdated.getImage() != null) {
-            System.out.println("Updating book image to: " + bookUpdated.getImage());
-            bookGetById.setImage(bookUpdated.getImage());
+        if (bookUpdated.getImages() != null && !bookUpdated.getImages().isEmpty()) {
+            System.out.println("Updating book image to: " + bookUpdated.getImages());
+            bookGetById.setImages(bookUpdated.getImages());
         }
 
         return this.bookRepository.save(bookGetById);
@@ -148,7 +148,7 @@ public class BookServiceImpl implements BookService {
                 book.getCategory(),
                 book.getPrice(),
                 book.getQuantity(),
-                book.getImage(),
+                book.getImages(),
                 book.getAuthor(),
                 book.getCreatedAt(),
                 book.getCreatedBy()
@@ -163,7 +163,7 @@ public class BookServiceImpl implements BookService {
                 book.getCategory(),
                 book.getPrice(),
                 book.getQuantity(),
-                book.getImage(),
+                book.getImages(),
                 book.getAuthor(),
                 book.getUpdatedAt(),
                 book.getUpdatedBy()
@@ -178,7 +178,7 @@ public class BookServiceImpl implements BookService {
                 .category(book.getCategory())
                 .price(book.getPrice())
                 .quantity(book.getQuantity())
-                .image(book.getImage())
+                .images(book.getImages())
                 .author(book.getAuthor())
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())

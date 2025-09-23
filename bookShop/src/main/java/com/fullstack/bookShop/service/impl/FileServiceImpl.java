@@ -14,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -40,7 +42,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String storeFile(MultipartFile file, String folder) throws URISyntaxException, IOException {
+    public String storeSingleFile(MultipartFile file, String folder) throws URISyntaxException, IOException {
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         URI uri = new URI(this.baseURI + folder + "/" + fileName);
         Path path = Paths.get(uri);
@@ -49,5 +51,15 @@ public class FileServiceImpl implements FileService {
             Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
         }
         return fileName;
+    }
+
+    @Override
+    public List<String> storeMultipleFiles(List<MultipartFile> files, String folder) throws URISyntaxException, IOException {
+        List<String> fileList = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String fileName = this.storeSingleFile(file, folder);
+            fileList.add(fileName);
+        }
+        return fileList;
     }
 }

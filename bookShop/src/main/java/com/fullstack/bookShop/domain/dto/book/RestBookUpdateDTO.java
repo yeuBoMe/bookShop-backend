@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,7 +18,7 @@ public class RestBookUpdateDTO {
     private String category;
     private Double price;
     private Integer quantity;
-    private String image;
+    private List<String> images;
     private String author;
     private Instant updatedAt;
     private String updatedBy;

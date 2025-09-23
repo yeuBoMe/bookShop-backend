@@ -98,6 +98,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam("fileName") String fileName
     ) throws StorageException {
+
         if (fileName == null || fileName.isEmpty()) {
             throw new StorageException("File name cannot be empty");
         }

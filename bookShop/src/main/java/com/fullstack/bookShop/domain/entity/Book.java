@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "books")
@@ -25,8 +26,8 @@ public class Book {
     @NotBlank(message = "Book's name is required")
     @Size(max = 100, message = "Name must be less than 100 characters")
     @Pattern(
-            regexp = "^[A-Za-zÀ-ỹà-ỹ'\\-\\.\\s]{1,100}$",
-            message = "Name must only contain letters, spaces, apostrophes, dashes or dots"
+            regexp = "^[A-Za-zÀ-ỹà-ỹ0-9'\\-\\.\\:\\s]{1,100}$",
+            message = "Name must only contain letters, numbers, spaces, apostrophes, dashes, dots or colons"
     )
     private String name;
 
@@ -47,7 +48,7 @@ public class Book {
     @Max(value = 1000, message = "Quantity must not exceed 1000")
     private Integer quantity;
 
-    private String image;
+    private List<String> images;
 
     @NotBlank(message = "Author is required")
     @Size(max = 100, message = "Author must be less than 100 characters")

@@ -3,6 +3,7 @@ package com.fullstack.bookShop.domain.dto.book;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.List;
 
 @Builder
 @Getter
@@ -15,7 +16,7 @@ public class RestBookViewDTO {
     private String category;
     private Double price;
     private Integer quantity;
-    private String image;
+    private List<String> images;
     private String author;
     private Instant createdAt;
     private Instant updatedAt;

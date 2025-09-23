@@ -112,7 +112,7 @@ public class GlobalException {
     }
 
     // Handle validation errors or request body after go through controller
-    @ExceptionHandler(ConstraintViolationException.class)
+/*    @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<RestResponse<Object>> handleConstraintViolationException(ConstraintViolationException ex) {
         List<String> errors = ex.getConstraintViolations()
                 .stream()
@@ -128,7 +128,7 @@ public class GlobalException {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(response);
-    }
+    }*/
 
     // Handle 404 not found or invalid URLs
     @ExceptionHandler(NoResourceFoundException.class)
