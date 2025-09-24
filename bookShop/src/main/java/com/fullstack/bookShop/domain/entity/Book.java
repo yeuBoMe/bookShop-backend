@@ -58,6 +58,8 @@ public class Book {
     )
     private String author;
 
+    private String sold;
+
     private Instant createdAt;
 
     private Instant updatedAt;
