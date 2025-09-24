@@ -108,16 +108,15 @@ public class BookController {
     @PatchMapping("/{id}/image")
     public ResponseEntity<RestBookUpdateDTO> updateBookImageRequest(
             @PathVariable Long id,
-            @RequestParam(name = "fileName") MultipartFile fileName,
-            @RequestParam(name = "folder") String folder
+            @RequestParam(name = "file") MultipartFile file
     ) throws
             StorageException,
             URISyntaxException,
             IOException {
 
-        FileValidUtil.validateFile(fileName);
-        this.fileService.createUploadFolder(this.baseUri + folder);
-        String fileUploaded =  this.fileService.storeSingleFile(fileName, folder);
+        FileValidUtil.validateFile(file);
+        this.fileService.createUploadFolder(this.baseUri + "book");
+        String fileUploaded =  this.fileService.storeSingleFile(file, "book");
 
         Book book = new Book();
         book.setImages(List.of(fileUploaded));
@@ -132,16 +131,15 @@ public class BookController {
     @PatchMapping("/{id}/multiple-images")
     public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImageRequest(
             @PathVariable Long id,
-            @RequestParam(name = "fileNames") List<MultipartFile> files,
-            @RequestParam(name = "folder") String folder
+            @RequestParam(name = "files") List<MultipartFile> files
     ) throws
             StorageException,
             URISyntaxException,
             IOException {
 
         FileValidUtil.validateListFiles(files);
-        this.fileService.createUploadFolder(this.baseUri + folder);
-        List<String> fileNames = this.fileService.storeMultipleFiles(files, folder);
+        this.fileService.createUploadFolder(this.baseUri + "book");
+        List<String> fileNames = this.fileService.storeMultipleFiles(files, "book");
 
         Book book = new Book();
         book.setImages(fileNames);

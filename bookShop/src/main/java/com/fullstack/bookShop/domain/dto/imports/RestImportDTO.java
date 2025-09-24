@@ -1,6 +1,5 @@
 package com.fullstack.bookShop.domain.dto.imports;
 
-import com.fullstack.bookShop.domain.dto.book.RestBookCreateDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
