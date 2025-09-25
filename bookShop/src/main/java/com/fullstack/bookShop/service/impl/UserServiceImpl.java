@@ -295,6 +295,7 @@ public class UserServiceImpl implements UserService {
         restImportDTO.setCountError(countError);
         restImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import users successfully!");
         restImportDTO.setItems(successUsers);
+
         return restImportDTO;
     }
 

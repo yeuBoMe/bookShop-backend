@@ -106,9 +106,9 @@ public class BookController {
 
     @ApiMessage("Update book image")
     @PatchMapping("/{id}/image")
-    public ResponseEntity<RestBookUpdateDTO> updateBookImageRequest(
+    public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageRequest(
             @PathVariable Long id,
-            @RequestParam(name = "file") MultipartFile file
+            @RequestParam(name = "file", required = false) MultipartFile file
     ) throws
             StorageException,
             URISyntaxException,
@@ -116,7 +116,7 @@ public class BookController {
 
         FileValidUtil.validateFile(file);
         this.fileService.createUploadFolder(this.baseUri + "book");
-        String fileUploaded =  this.fileService.storeSingleFile(file, "book");
+        String fileUploaded = this.fileService.storeSingleFile(file, "book");
 
         Book book = new Book();
         book.setImages(List.of(fileUploaded));
@@ -129,9 +129,9 @@ public class BookController {
 
     @ApiMessage("Update book multiple images")
     @PatchMapping("/{id}/multiple-images")
-    public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImageRequest(
+    public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesRequest(
             @PathVariable Long id,
-            @RequestParam(name = "files") List<MultipartFile> files
+            @RequestParam(name = "files", required = false) List<MultipartFile> files
     ) throws
             StorageException,
             URISyntaxException,
@@ -150,16 +150,60 @@ public class BookController {
                 .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @ApiMessage("Delete book single image")
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "imageName", required = false) String fileName
+    ) throws URISyntaxException, IOException {
+
+        this.fileService.deleteSingleFile(fileName, "book");
+
+        Book bookGetById = this.bookService.getBookById(id);
+        List<String> currentImages = bookGetById.getImages();
+        if (currentImages != null && !currentImages.isEmpty()) {
+            currentImages.remove(fileName);
+            bookGetById.setImages(currentImages);
+        }
+
+        Book bookUpdated = this.bookService.updateBookPartialById(id, bookGetById);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+    }
+
+    @ApiMessage("Delete book multiple image")
+    @DeleteMapping("/{id}/multiple-images")
+    public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageRequest(
+            @PathVariable Long id,
+            @RequestBody List<String> fileNames
+    ) throws URISyntaxException, IOException {
+
+        this.fileService.deleteMultipleFiles(fileNames, "book");
+
+        Book bookGetById = this.bookService.getBookById(id);
+        List<String> currentImages = bookGetById.getImages();
+        if (currentImages != null && !currentImages.isEmpty()) {
+            currentImages.removeAll(fileNames);
+            bookGetById.setImages(currentImages);
+        }
+
+        Book bookUpdated = this.bookService.updateBookPartialById(id, bookGetById);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+    }
+
     @ApiMessage("Import books from file")
     @PostMapping("/import")
     public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(
-            @Valid @RequestBody List<RestBookCreateDTO> bookCreateDTOList
+            @Valid @RequestBody List<Book> bookList
     ) {
         RestImportDTO<RestBookCreateDTO> restImportDTO =
-                this.bookService.importListBooksFromFile(bookCreateDTOList);
-
+                this.bookService.importListBooksFromFile(bookList);
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
-
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);

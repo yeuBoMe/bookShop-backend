@@ -6,8 +6,10 @@ import com.fullstack.bookShop.domain.dto.book.RestBookViewDTO;
 import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.entity.Book;
+import com.fullstack.bookShop.domain.entity.Category;
 import com.fullstack.bookShop.repository.BookRepository;
 import com.fullstack.bookShop.service.BookService;
+import com.fullstack.bookShop.service.CategoryService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -20,14 +22,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
 
-    public BookServiceImpl(BookRepository bookRepository) {
+    private final CategoryService categoryService;
+
+    public BookServiceImpl(BookRepository bookRepository, CategoryService categoryService) {
         this.bookRepository = bookRepository;
+        this.categoryService = categoryService;
+    }
+
+    private void checkNullAndSetCategory(Book bookRequest, Book currentBook) {
+        if (bookRequest.getCategory() != null) {
+            if (!this.categoryService.checkIdExists(bookRequest.getCategory().getId())) {
+                throw new NoSuchElementException("Category with id '" + bookRequest.getCategory().getId() + "' not exist");
+            }
+            Category categoryGetById = this.categoryService.getCategoryById(bookRequest.getCategory().getId());
+            currentBook.setCategory(categoryGetById);
+        }
     }
 
     @Transactional
@@ -41,6 +57,8 @@ public class BookServiceImpl implements BookService {
                     )
             );
         }
+
+        this.checkNullAndSetCategory(book, book);
         return this.bookRepository.save(book);
     }
 
@@ -61,8 +79,9 @@ public class BookServiceImpl implements BookService {
             );
         }
 
+        this.checkNullAndSetCategory(bookUpdated, bookGetById);
+
         bookGetById.setName(bookUpdated.getName());
-        bookGetById.setCategory(bookUpdated.getCategory());
         bookGetById.setPrice(bookUpdated.getPrice());
         bookGetById.setQuantity(bookUpdated.getQuantity());
         bookGetById.setAuthor(bookUpdated.getAuthor());
@@ -76,7 +95,7 @@ public class BookServiceImpl implements BookService {
 
         if (this.checkNameAndAuthorExists(bookUpdated.getName(), bookUpdated.getAuthor())
                 && !(bookGetById.getName().equals(bookUpdated.getName())
-                    && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
+                && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
         ) {
             throw new IllegalArgumentException(
                     String.format("Book with name '%s' and author '%s' already exists!",
@@ -88,10 +107,6 @@ public class BookServiceImpl implements BookService {
 
         if (bookUpdated.getName() != null && !bookUpdated.getName().isEmpty()) {
             bookGetById.setName(bookUpdated.getName());
-        }
-
-        if (bookUpdated.getCategory() != null && !bookUpdated.getCategory().isEmpty()) {
-            bookGetById.setCategory(bookUpdated.getCategory());
         }
 
         if (bookUpdated.getPrice() != null) {
@@ -111,6 +126,7 @@ public class BookServiceImpl implements BookService {
             bookGetById.setImages(bookUpdated.getImages());
         }
 
+        this.checkNullAndSetCategory(bookUpdated, bookGetById);
         return this.bookRepository.save(bookGetById);
     }
 
@@ -142,10 +158,13 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public RestBookCreateDTO convertBookToRestBookCreateDTO(Book book) {
+        String categoryName = Optional.ofNullable(book.getCategory())
+                .map(Category::getName)
+                .orElse(null);
         return new RestBookCreateDTO(
                 book.getId(),
                 book.getName(),
-                book.getCategory(),
+                categoryName,
                 book.getPrice(),
                 book.getQuantity(),
                 book.getImages(),
@@ -157,10 +176,13 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public RestBookUpdateDTO convertBookToRestBookUpdateDTO(Book book) {
+        String categoryName = Optional.ofNullable(book.getCategory())
+                .map(Category::getName)
+                .orElse(null);
         return new RestBookUpdateDTO(
                 book.getId(),
                 book.getName(),
-                book.getCategory(),
+                categoryName,
                 book.getPrice(),
                 book.getQuantity(),
                 book.getImages(),
@@ -172,10 +194,13 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public RestBookViewDTO convertBookToRestBookViewDTO(Book book) {
+        String categoryName = Optional.ofNullable(book.getCategory())
+                .map(Category::getName)
+                .orElse(null);
         return RestBookViewDTO.builder()
                 .id(book.getId())
                 .name(book.getName())
-                .category(book.getCategory())
+                .category(categoryName)
                 .price(book.getPrice())
                 .quantity(book.getQuantity())
                 .images(book.getImages())
@@ -202,7 +227,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<RestBookCreateDTO> bookCreateDTOList) {
+    public RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<Book> bookList) {
         RestImportDTO<RestBookCreateDTO> restImportDTO = new RestImportDTO<>();
         List<RestBookCreateDTO> successData = new ArrayList<>();
         List<RestImportDTO.DetailFaultInfo<RestBookCreateDTO>> detailFaultInfoList = new ArrayList<>();
@@ -210,25 +235,28 @@ public class BookServiceImpl implements BookService {
         int countSuccess = 0;
         int countError = 0;
 
-        for (int i = 0; i < bookCreateDTOList.size(); i++) {
-            RestBookCreateDTO restBookCreateDTO = bookCreateDTOList.get(i);
+        for (int i = 0; i < bookList.size(); i++) {
+            Book book = bookList.get(i);
 
             try {
-                if (this.checkNameAndAuthorExists(restBookCreateDTO.getName(), restBookCreateDTO.getAuthor())) {
+                if (this.checkNameAndAuthorExists(book.getName(), book.getAuthor())) {
                     throw new IllegalArgumentException(
                             String.format("Book with name '%s' and author '%s' already exists!",
-                                    restBookCreateDTO.getName(),
-                                    restBookCreateDTO.getAuthor()
+                                    book.getName(),
+                                    book.getAuthor()
                             )
                     );
                 }
 
-                Book book = this.buildBookFromRestBookCreateDTO(restBookCreateDTO);
-                RestBookCreateDTO bookDTO = this.convertBookToRestBookCreateDTO(book);
-                successData.add(bookDTO);
+                this.checkNullAndSetCategory(book, book);
+                this.bookRepository.save(book);
+
+                RestBookCreateDTO restBookCreateDTO = this.convertBookToRestBookCreateDTO(book);
+                successData.add(restBookCreateDTO);
                 countSuccess++;
 
             } catch (ConstraintViolationException e) {
+                RestBookCreateDTO restBookCreateDTO = this.convertBookToRestBookCreateDTO(book);
                 countError++;
                 List<String> errorMessage = e.getConstraintViolations().stream()
                         .map(ConstraintViolation::getMessage)
@@ -240,6 +268,7 @@ public class BookServiceImpl implements BookService {
                 ));
 
             } catch (Exception e) {
+                RestBookCreateDTO restBookCreateDTO = this.convertBookToRestBookCreateDTO(book);
                 countError++;
                 detailFaultInfoList.add(new RestImportDTO.DetailFaultInfo<>(
                         i + 1,
@@ -253,16 +282,7 @@ public class BookServiceImpl implements BookService {
         restImportDTO.setCountError(countError);
         restImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import books successfully!");
         restImportDTO.setItems(successData);
-        return restImportDTO;
-    }
 
-    private Book buildBookFromRestBookCreateDTO(RestBookCreateDTO restBookCreateDTO) {
-        Book book = new Book();
-        book.setName(restBookCreateDTO.getName());
-        book.setCategory(restBookCreateDTO.getCategory());
-        book.setPrice(restBookCreateDTO.getPrice());
-        book.setQuantity(restBookCreateDTO.getQuantity());
-        book.setAuthor(restBookCreateDTO.getAuthor());
-        return this.bookRepository.save(book);
+        return restImportDTO;
     }
 }

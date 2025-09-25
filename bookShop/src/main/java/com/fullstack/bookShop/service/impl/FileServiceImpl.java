@@ -62,4 +62,24 @@ public class FileServiceImpl implements FileService {
         }
         return fileList;
     }
+
+    @Override
+    public void deleteSingleFile(String fileName, String folder) throws URISyntaxException, IOException {
+        URI uri = new URI(this.baseURI + folder + "/" + fileName);
+        Path path = Paths.get(uri);
+
+        if (Files.exists(path)) {
+            Files.delete(path);
+            System.out.println("DELETED FILE SUCCESSFULLY: " + path);
+        } else {
+            System.out.println("FILE NOT FOUND, SKIPPING DELETE: " + path);
+        }
+    }
+
+    @Override
+    public void deleteMultipleFiles(List<String> fileNames, String folder) throws URISyntaxException, IOException {
+        for (String fileName : fileNames) {
+            this.deleteSingleFile(fileName, folder);
+        }
+    }
 }

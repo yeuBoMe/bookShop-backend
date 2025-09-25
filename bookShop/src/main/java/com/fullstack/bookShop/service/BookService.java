@@ -28,5 +28,5 @@ public interface BookService {
 
     ResultPaginationDTO fetchListBooks(Specification<Book> spec, Pageable pageable);
 
-    RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<RestBookCreateDTO> bookCreateDTOList);
+    RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<Book> bookList);
 }
