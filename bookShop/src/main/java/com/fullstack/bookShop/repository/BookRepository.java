@@ -10,4 +10,7 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
 
     // check exists
     boolean existsByNameAndAuthor(String name, String author);
+
+    // delete by category id
+    void deleteByCategoryId(Long categoryId);
 }

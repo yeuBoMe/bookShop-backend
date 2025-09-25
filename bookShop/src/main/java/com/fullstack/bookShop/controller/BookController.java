@@ -153,13 +153,11 @@ public class BookController {
     @ApiMessage("Import books from file")
     @PostMapping("/import")
     public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(
-            @Valid @RequestBody List<RestBookCreateDTO> bookCreateDTOList
+            @Valid @RequestBody List<Book> bookList
     ) {
         RestImportDTO<RestBookCreateDTO> restImportDTO =
-                this.bookService.importListBooksFromFile(bookCreateDTOList);
-
+                this.bookService.importListBooksFromFile(bookList);
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
-
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);
