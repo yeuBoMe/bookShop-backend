@@ -31,14 +31,6 @@ public class Book {
     )
     private String name;
 
-    @NotBlank(message = "Category is required")
-    @Size(max = 100, message = "Category must be less than 100 characters")
-    @Pattern(
-            regexp = "^[A-Za-zÀ-ỹà-ỹ'\\-\\.\\s]{1,100}$",
-            message = "Category must only contain letters, spaces, apostrophes, dashes or dots"
-    )
-    private String category;
-
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", message = "Price must be a positive number")
     private Double price;
@@ -67,6 +59,10 @@ public class Book {
     private String createdBy;
 
     private String updatedBy;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @PrePersist
     public void prePersist() {
