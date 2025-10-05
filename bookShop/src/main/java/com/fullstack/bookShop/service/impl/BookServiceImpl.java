@@ -85,6 +85,9 @@ public class BookServiceImpl implements BookService {
         bookGetById.setPrice(bookUpdated.getPrice());
         bookGetById.setQuantity(bookUpdated.getQuantity());
         bookGetById.setAuthor(bookUpdated.getAuthor());
+        bookGetById.setDescription(bookUpdated.getDescription());
+        bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
+        bookGetById.setReader(bookUpdated.getReader());
         return this.bookRepository.save(bookGetById);
     }
 
@@ -119,6 +122,18 @@ public class BookServiceImpl implements BookService {
 
         if (bookUpdated.getAuthor() != null) {
             bookGetById.setAuthor(bookUpdated.getAuthor());
+        }
+
+        if (bookUpdated.getDescription() != null) {
+            bookGetById.setDescription(bookUpdated.getDescription());
+        }
+
+        if (bookUpdated.getIntroduceText() != null) {
+            bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
+        }
+
+        if (bookUpdated.getReader() != null) {
+            bookGetById.setReader(bookUpdated.getReader());
         }
 
         if (bookUpdated.getImages() != null && !bookUpdated.getImages().isEmpty()) {
@@ -169,6 +184,9 @@ public class BookServiceImpl implements BookService {
                 book.getQuantity(),
                 book.getImages(),
                 book.getAuthor(),
+                book.getIntroduceText(),
+                book.getDescription(),
+                book.getReader(),
                 book.getCreatedAt(),
                 book.getCreatedBy()
         );
@@ -187,6 +205,9 @@ public class BookServiceImpl implements BookService {
                 book.getQuantity(),
                 book.getImages(),
                 book.getAuthor(),
+                book.getIntroduceText(),
+                book.getDescription(),
+                book.getReader(),
                 book.getUpdatedAt(),
                 book.getUpdatedBy()
         );
@@ -205,6 +226,9 @@ public class BookServiceImpl implements BookService {
                 .quantity(book.getQuantity())
                 .images(book.getImages())
                 .author(book.getAuthor())
+                .introduceText(book.getIntroduceText())
+                .description(book.getDescription())
+                .reader(book.getReader())
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())
                 .createdBy(book.getCreatedBy())

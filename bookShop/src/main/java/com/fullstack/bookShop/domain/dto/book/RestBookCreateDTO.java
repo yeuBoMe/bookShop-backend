@@ -17,6 +17,9 @@ public class RestBookCreateDTO {
     private Integer quantity;
     private List<String> images;
     private String author;
+    private String introduceText;
+    private String description;
+    private String reader;
     private Instant createdAt;
     private String createdBy;
 }

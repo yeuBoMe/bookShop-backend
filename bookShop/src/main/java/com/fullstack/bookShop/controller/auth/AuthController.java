@@ -120,7 +120,8 @@ public class AuthController {
         Jwt jwtChecked = this.securityUtil.checkValidRefreshToken(refreshTokenFromCookie);
         String emailGetFromJwt = jwtChecked.getSubject();
 
-        User userGetByEmailAndRefreshToken = this.userService.getUserByEmailAndRefreshToken(emailGetFromJwt, refreshTokenFromCookie);
+        User userGetByEmailAndRefreshToken =
+                this.userService.getUserByEmailAndRefreshToken(emailGetFromJwt, refreshTokenFromCookie);
         if (userGetByEmailAndRefreshToken == null) {
             throw new NoSuchElementException("User not found");
         }

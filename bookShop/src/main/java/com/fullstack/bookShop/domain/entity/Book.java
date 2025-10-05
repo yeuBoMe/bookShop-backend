@@ -31,6 +31,21 @@ public class Book {
     )
     private String name;
 
+    @NotBlank(message = "Introduce text must not be blank")
+    @Size(max = 200, message = "Introduce text must not exceed 200 characters")
+    @Column(columnDefinition = "TEXT")
+    private String introduceText;
+
+    @NotBlank(message = "Description must not be blank")
+    @Size(max = 5000, message = "Description must not exceed 5000 characters")
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @NotBlank(message = "Reader must not be blank")
+    @Size(max = 200, message = "Reader must not exceed 200 characters")
+    @Column(columnDefinition = "TEXT")
+    private String reader;
+
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", message = "Price must be a positive number")
     private Double price;
