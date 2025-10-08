@@ -33,7 +33,7 @@ public class SecurityConfiguration {
     @Value("${bookshop.jwt.base64-secret}")
     private String jwtKey;
 
-    // decode base 64 key and wrap to secret key
+    // decode base 64 key to byte[] and wrap to secret key
     @Bean
     public SecretKey getSecretKey() {
         byte[] bytes = Base64.from(this.jwtKey).decode();

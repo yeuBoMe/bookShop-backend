@@ -61,7 +61,7 @@ public class AuthController {
          * then AuthenticationManager will use func loadUserByUsername in CustomUserDetailsService to
          * compare duplicated data before validate right/wrong login request
          */
-        Authentication authentication = authenticationManagerBuilder.getObject()
+        Authentication authentication = this.authenticationManagerBuilder.getObject()
                 .authenticate(usernamePasswordAuthenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);

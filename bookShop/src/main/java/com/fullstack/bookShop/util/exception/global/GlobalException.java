@@ -4,7 +4,6 @@ import com.fullstack.bookShop.domain.response.RestResponse;
 import com.fullstack.bookShop.util.exception.custom.PermissionException;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
 import jakarta.mail.MessagingException;
-import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
@@ -47,8 +46,8 @@ public class GlobalException {
 
     // Handle authentication errors (wrong username/password)
     @ExceptionHandler(value = {
-            UsernameNotFoundException.class,
-            BadCredentialsException.class
+            UsernameNotFoundException.class, // username not found
+            BadCredentialsException.class // username fit but wrong password
     })
     public ResponseEntity<RestResponse<Object>> handleAuthException(Exception ex) {
         RestResponse<Object> response = new RestResponse<>();
