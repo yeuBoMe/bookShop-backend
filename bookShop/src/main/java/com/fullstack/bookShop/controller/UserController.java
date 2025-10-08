@@ -6,28 +6,40 @@ import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
 import com.fullstack.bookShop.domain.entity.User;
+import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
+import com.fullstack.bookShop.util.imports.FileValidUtil;
 import com.fullstack.bookShop.util.imports.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
 
+    @Value("${bookshop.upload-file.base-uri}")
+    private String baseUri;
+
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    private final FileService fileService;
+
+    public UserController(UserService userService, FileService fileService) {
         this.userService = userService;
+        this.fileService = fileService;
     }
 
     @PostMapping
@@ -96,15 +108,18 @@ public class UserController {
     @PatchMapping("/{id}/avatar")
     public ResponseEntity<RestUserUpdateDTO> uploadUserAvatarRequest(
             @PathVariable Long id,
-            @RequestParam("fileName") String fileName
-    ) throws StorageException {
+            @RequestParam(name = "fileName", required = false) MultipartFile file
+    ) throws
+            StorageException,
+            URISyntaxException,
+            IOException {
 
-        if (fileName == null || fileName.isEmpty()) {
-            throw new StorageException("File name cannot be empty");
-        }
+        FileValidUtil.validateFile(file);
+        this.fileService.createUploadFolder(this.baseUri + "avatar");
+        String fileUploaded = this.fileService.storeSingleFile(file, "avatar");
 
         User user = new User();
-        user.setAvatar(fileName);
+        user.setAvatar(fileUploaded);
         User userUpdated = this.userService.updateUserPartialById(id, user);
 
         return ResponseEntity
