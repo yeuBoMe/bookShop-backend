@@ -127,6 +127,27 @@ public class UserController {
                 .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
+    @ApiMessage("Delete user avatar")
+    @DeleteMapping("/{id}/avatar")
+    public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "fileName", required = false) String fileName
+    ) throws URISyntaxException, IOException {
+
+        this.fileService.deleteSingleFile(fileName, "avatar");
+
+        User userGetById = this.userService.getUserById(id);
+        if (userGetById.getAvatar() != null && userGetById.getAvatar().equals(fileName)) {
+            userGetById.setAvatar(null);
+        }
+
+        User userUpdated = this.userService.updateUserPartialById(id, userGetById);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+    }
+
     @ApiMessage("Import users from file")
     @PostMapping("/import")
     public ResponseEntity<RestImportDTO<RestUserCreateDTO>> importUsersFromFileRequest(
