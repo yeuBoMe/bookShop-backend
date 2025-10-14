@@ -72,8 +72,7 @@ public class OrderServiceImpl implements OrderService {
         this.orderDetailRepository.saveAll(orderDetailList);
         orderSaved.setDetail(orderDetailList);
 
-        Order orderGetById = this.getOrderById(orderSaved.getId());
-        return orderGetById;
+        return orderSaved;
     }
 
     @Override
