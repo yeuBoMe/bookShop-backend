@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.domain.dto.order.RestOrderCreateDTO;
+import com.fullstack.bookShop.domain.dto.order.RestOrderDetailViewDTO;
 import com.fullstack.bookShop.domain.dto.order.RestOrderUpdateDTO;
 import com.fullstack.bookShop.domain.dto.order.RestOrderViewDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
@@ -11,6 +12,8 @@ import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.OrderRepository;
 import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.OrderService;
+import com.fullstack.bookShop.util.pagination.PageUtil;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -45,29 +48,32 @@ public class OrderServiceImpl implements OrderService {
     public Order createOrder(Order order) {
         Order orderSaved = this.orderRepository.save(order);
 
-        List<OrderDetail> orderDetailList = order.getDetail().stream()
-                .map(orderDetail -> {
-                    OrderDetail orderDetailNeedToSave = new OrderDetail();
+        List<OrderDetail> orderDetailList = Optional.ofNullable(order.getDetail())
+                .map(orderDetails -> orderDetails.stream()
+                        .map(orderDetail -> {
+                            OrderDetail orderDetailNeedToSave = new OrderDetail();
 
-                    if (orderDetail.getBook() != null) {
-                        if (!this.bookService.checkIdExists(orderDetail.getBook().getId())) {
-                            throw new NoSuchElementException("Book with id " + orderDetail.getBook().getId() + " not found");
-                        }
-                        Book bookGetById = this.bookService.getBookById(orderDetail.getBook().getId());
-                        orderDetailNeedToSave.setBook(bookGetById);
-                        orderDetailNeedToSave.setBookName(orderDetail.getBook().getName());
-                    }
+                            if (orderDetail.getBook() != null) {
+                                if (!this.bookService.checkIdExists(orderDetail.getBook().getId())) {
+                                    throw new NoSuchElementException("Book with id " + orderDetail.getBook().getId() + " not found");
+                                }
+                                Book bookGetById = this.bookService.getBookById(orderDetail.getBook().getId());
+                                orderDetailNeedToSave.setBook(bookGetById);
+                            }
 
-                    orderDetailNeedToSave.setOrder(orderSaved);
-                    orderDetailNeedToSave.setQuantity(orderDetail.getQuantity());
-                    return orderDetailNeedToSave;
-                })
-                .toList();
+                            orderDetailNeedToSave.setBookName(orderDetail.getBookName());
+                            orderDetailNeedToSave.setOrder(orderSaved);
+                            orderDetailNeedToSave.setQuantity(orderDetail.getQuantity());
+                            return orderDetailNeedToSave;
+                        })
+                        .toList())
+                .orElse(new ArrayList<>());
 
         this.orderDetailRepository.saveAll(orderDetailList);
         orderSaved.setDetail(orderDetailList);
 
-        return orderSaved;
+        Order orderGetById = this.getOrderById(orderSaved.getId());
+        return orderGetById;
     }
 
     @Override
@@ -98,14 +104,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public RestOrderCreateDTO convertOrderToRestOrderCreateDTO(Order order) {
-        List<OrderDetail> orderDetailList = Optional.ofNullable(order.getDetail())
+        List<RestOrderDetailViewDTO> orderDetailViewDTOList = Optional.ofNullable(order.getDetail())
                 .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> new OrderDetail(
+                        .map(orderDetail -> new RestOrderDetailViewDTO(
                                 orderDetail.getId(),
                                 orderDetail.getQuantity(),
-                                orderDetail.getBookName(),
-                                orderDetail.getBook(),
-                                orderDetail.getOrder()
+                                orderDetail.getBookName()
                         ))
                         .toList()
                 )
@@ -119,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getAddress(),
                 order.getPaymentMethod(),
                 order.getTotalPrice(),
-                orderDetailList,
+                orderDetailViewDTOList,
                 order.getCreatedAt(),
                 order.getCreatedBy()
         );
@@ -127,14 +131,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public RestOrderUpdateDTO convertOrderToRestOrderUpdateDTO(Order order) {
-        List<OrderDetail> orderDetailList = Optional.ofNullable(order.getDetail())
+        List<RestOrderDetailViewDTO> orderDetailViewDTOList = Optional.ofNullable(order.getDetail())
                 .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> new OrderDetail(
+                        .map(orderDetail -> new RestOrderDetailViewDTO(
                                 orderDetail.getId(),
                                 orderDetail.getQuantity(),
-                                orderDetail.getBookName(),
-                                orderDetail.getBook(),
-                                orderDetail.getOrder()
+                                orderDetail.getBookName()
                         ))
                         .toList()
                 )
@@ -148,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getAddress(),
                 order.getPaymentMethod(),
                 order.getTotalPrice(),
-                orderDetailList,
+                orderDetailViewDTOList,
                 order.getUpdatedAt(),
                 order.getUpdatedBy()
         );
@@ -156,14 +158,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public RestOrderViewDTO convertOrderToRestOrderViewDTO(Order order) {
-        List<OrderDetail> orderDetailList = Optional.ofNullable(order.getDetail())
+        List<RestOrderDetailViewDTO> orderDetailViewDTOList = Optional.ofNullable(order.getDetail())
                 .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> new OrderDetail(
+                        .map(orderDetail -> new RestOrderDetailViewDTO(
                                 orderDetail.getId(),
                                 orderDetail.getQuantity(),
-                                orderDetail.getBookName(),
-                                orderDetail.getBook(),
-                                orderDetail.getOrder()
+                                orderDetail.getBookName()
                         ))
                         .toList()
                 )
@@ -177,7 +177,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getAddress(),
                 order.getPaymentMethod(),
                 order.getTotalPrice(),
-                orderDetailList,
+                orderDetailViewDTOList,
                 order.getCreatedAt(),
                 order.getUpdatedAt(),
                 order.getCreatedBy(),
@@ -187,7 +187,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResultPaginationDTO fetchListOrders(Specification<Order> spec, Pageable pageable) {
+        Page<Order> orderPage = this.orderRepository.findAll(spec, pageable);
 
-        return null;
+        List<RestOrderViewDTO> restOrderViewDTOList = orderPage.getContent()
+                .stream()
+                .map(this::convertOrderToRestOrderViewDTO)
+                .toList();
+
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(orderPage, pageable);
+        resultPaginationDTO.setResult(restOrderViewDTOList);
+        return resultPaginationDTO;
     }
 }

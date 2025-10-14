@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -33,7 +34,6 @@ public class Order {
 
     @Email(message = "Email should be valid")
     @Size(max = 150, message = "Email must not exceed 150 characters")
-    @Column(unique = true)
     @Pattern(
             regexp = "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z]{2,6}$",
             message = "Email format is invalid"
@@ -45,7 +45,6 @@ public class Order {
             regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",
             message = "Phone number is invalid. Example: 0912345678 or +84912345678"
     )
-    @Column(unique = true, length = 15)
     private String phone;
 
     @NotBlank(message = "Address is required")
@@ -62,6 +61,7 @@ public class Order {
     private Double totalPrice;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+//    @JsonIgnore
     private List<OrderDetail> detail;
 
     private Instant createdAt;

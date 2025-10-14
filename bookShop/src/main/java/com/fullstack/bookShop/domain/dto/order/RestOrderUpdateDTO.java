@@ -21,7 +21,7 @@ public class RestOrderUpdateDTO {
     private String address;
     private String paymentMethod;
     private Double totalPrice;
-    private List<OrderDetail> detail;
+    private List<RestOrderDetailViewDTO> detail;
     private Instant updatedAt;
     private String updatedBy;
 }

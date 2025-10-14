@@ -42,15 +42,16 @@ public class OrderController {
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(null);
+                .body(this.orderService.fetchListOrders(spec, pageable));
     }
 
     @ApiMessage("Get an order")
     @GetMapping("/{id}")
     public ResponseEntity<RestOrderViewDTO> getOrderByIdRequest(@PathVariable Long id) {
+        Order orderGetById  = this.orderService.getOrderById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(null);
+                .body(this.orderService.convertOrderToRestOrderViewDTO(orderGetById));
     }
 
     @ApiMessage("Update an order")
@@ -66,7 +67,8 @@ public class OrderController {
 
     @ApiMessage("Delete an order")
     @DeleteMapping("/{id}")
-    public ResponseEntity<RestOrderViewDTO> deleteOrderRequest(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteOrderRequest(@PathVariable Long id) {
+        this.orderService.deleteOrderById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(null);
