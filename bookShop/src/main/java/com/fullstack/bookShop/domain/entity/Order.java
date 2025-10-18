@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fullstack.bookShop.util.constant.StatusEnum;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -59,6 +60,11 @@ public class Order {
     private String paymentMethod;
 
     private Double totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    @NotNull(message = "Status is required")
+    @Column(length = 20, nullable = false)
+    private StatusEnum status;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
 //    @JsonIgnore

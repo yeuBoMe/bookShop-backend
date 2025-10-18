@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.domain.dto.order;
 
 import com.fullstack.bookShop.domain.entity.OrderDetail;
+import com.fullstack.bookShop.util.constant.StatusEnum;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -26,6 +27,7 @@ public class RestOrderCreateDTO {
     private String address;
     private String paymentMethod;
     private Double totalPrice;
+    private StatusEnum status;
     private List<RestOrderDetailViewDTO> detail;
     private Instant createdAt;
     private String createdBy;

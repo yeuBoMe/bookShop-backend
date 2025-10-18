@@ -12,6 +12,7 @@ public interface OrderService {
     Order createOrder(Order order);
     Order updateOrderById(Long id, Order order);
     Order getOrderById(Long id);
+    Order getOrderByEmail(String email);
 
     boolean checkIdExists(Long id);
     void deleteOrderById(Long id);

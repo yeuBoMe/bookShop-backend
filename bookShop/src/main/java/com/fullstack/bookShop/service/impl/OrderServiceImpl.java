@@ -12,6 +12,7 @@ import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.OrderRepository;
 import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.OrderService;
+import com.fullstack.bookShop.util.constant.StatusEnum;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -75,6 +76,7 @@ public class OrderServiceImpl implements OrderService {
         return orderSaved;
     }
 
+    @Transactional
     @Override
     public Order updateOrderById(Long id, Order order) {
         return null;
@@ -88,10 +90,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Order getOrderByEmail(String email) {
+        return this.orderRepository.findByEmail(email);
+    }
+
+    @Override
     public boolean checkIdExists(Long id) {
         return this.orderRepository.existsById(id);
     }
 
+    @Transactional
     @Override
     public void deleteOrderById(Long id) {
         if(!this.checkIdExists(id)) {
@@ -122,6 +130,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getAddress(),
                 order.getPaymentMethod(),
                 order.getTotalPrice(),
+                order.getStatus(),
                 orderDetailViewDTOList,
                 order.getCreatedAt(),
                 order.getCreatedBy()
@@ -149,6 +158,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getAddress(),
                 order.getPaymentMethod(),
                 order.getTotalPrice(),
+                order.getStatus(),
                 orderDetailViewDTOList,
                 order.getUpdatedAt(),
                 order.getUpdatedBy()
@@ -176,6 +186,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getAddress(),
                 order.getPaymentMethod(),
                 order.getTotalPrice(),
+                order.getStatus(),
                 orderDetailViewDTOList,
                 order.getCreatedAt(),
                 order.getUpdatedAt(),

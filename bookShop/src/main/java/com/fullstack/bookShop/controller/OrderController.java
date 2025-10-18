@@ -7,6 +7,7 @@ import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.entity.Order;
 import com.fullstack.bookShop.service.OrderService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
+import com.fullstack.bookShop.util.security.SecurityUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,7 @@ public class OrderController {
     @ApiMessage("Get an order")
     @GetMapping("/{id}")
     public ResponseEntity<RestOrderViewDTO> getOrderByIdRequest(@PathVariable Long id) {
-        Order orderGetById  = this.orderService.getOrderById(id);
+        Order orderGetById = this.orderService.getOrderById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.orderService.convertOrderToRestOrderViewDTO(orderGetById));
@@ -72,5 +73,15 @@ public class OrderController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(null);
+    }
+
+    @ApiMessage("Get order history")
+    @GetMapping("/history")
+    public ResponseEntity<RestOrderViewDTO> getOrderHistoryRequest() {
+        String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
+        Order orderGetByEmail = this.orderService.getOrderByEmail(email);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.orderService.convertOrderToRestOrderViewDTO(orderGetByEmail));
     }
 }
