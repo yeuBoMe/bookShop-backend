@@ -12,7 +12,6 @@ import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.OrderRepository;
 import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.OrderService;
-import com.fullstack.bookShop.util.constant.StatusEnum;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -90,11 +89,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order getOrderByEmail(String email) {
-        return this.orderRepository.findByEmail(email);
-    }
-
-    @Override
     public boolean checkIdExists(Long id) {
         return this.orderRepository.existsById(id);
     }
@@ -102,7 +96,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void deleteOrderById(Long id) {
-        if(!this.checkIdExists(id)) {
+        if (!this.checkIdExists(id)) {
             throw new NoSuchElementException("Order with id '" + id + "' does not exist");
         }
         this.orderDetailRepository.deleteByOrderId(id);
@@ -206,6 +200,21 @@ public class OrderServiceImpl implements OrderService {
 
         ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(orderPage, pageable);
         resultPaginationDTO.setResult(restOrderViewDTOList);
+        return resultPaginationDTO;
+    }
+
+    @Override
+    public ResultPaginationDTO fetchListOrdersHistory(String email, Pageable pageable) {
+        Page<Order> orderPage = this.orderRepository.findAllByEmail(email, pageable);
+
+        List<RestOrderViewDTO> restOrderDetailViewDTOList = orderPage.getContent()
+                .stream()
+                .map(this::convertOrderToRestOrderViewDTO)
+                .toList();
+
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(orderPage, pageable);
+        resultPaginationDTO.setResult(restOrderDetailViewDTOList);
+
         return resultPaginationDTO;
     }
 }

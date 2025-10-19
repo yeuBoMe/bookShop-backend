@@ -77,11 +77,10 @@ public class OrderController {
 
     @ApiMessage("Get order history")
     @GetMapping("/history")
-    public ResponseEntity<RestOrderViewDTO> getOrderHistoryRequest() {
+    public ResponseEntity<ResultPaginationDTO> getOrderHistoryRequest(Pageable pageable) {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
-        Order orderGetByEmail = this.orderService.getOrderByEmail(email);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(this.orderService.convertOrderToRestOrderViewDTO(orderGetByEmail));
+                .body(this.orderService.fetchListOrdersHistory(email, pageable));
     }
 }
