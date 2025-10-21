@@ -123,7 +123,7 @@ public class UserServiceImpl implements UserService {
     public User updateUserPasswordById(Long id, RestUserPassDTO restUserPassDTO) {
         User userGetById = this.getUserById(id);
 
-        if (!passwordEncoder.matches(restUserPassDTO.getCurrentPassword(), userGetById.getPassword())) {
+        if (!this.passwordEncoder.matches(restUserPassDTO.getCurrentPassword(), userGetById.getPassword())) {
             throw new IllegalArgumentException("Current password doesn't match!");
         }
 

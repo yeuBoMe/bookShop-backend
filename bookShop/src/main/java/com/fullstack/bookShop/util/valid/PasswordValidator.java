@@ -13,8 +13,16 @@ public class PasswordValidator implements ConstraintValidator<PasswordChecked, R
         boolean valid = true;
 
         if (!restUserPassDTO.getNewPassword().equals(restUserPassDTO.getConfirmPassword())) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("Passwords do not match")
+            constraintValidatorContext.buildConstraintViolationWithTemplate("Confirm password does not match the new password.")
                     .addPropertyNode("confirmPassword")
+                    .addConstraintViolation()
+                    .disableDefaultConstraintViolation();
+            valid = false;
+        }
+
+        if (restUserPassDTO.getNewPassword().equals(restUserPassDTO.getCurrentPassword())) {
+            constraintValidatorContext.buildConstraintViolationWithTemplate("New password must not be the same as the current password.")
+                    .addPropertyNode("newPassword")
                     .addConstraintViolation()
                     .disableDefaultConstraintViolation();
             valid = false;
