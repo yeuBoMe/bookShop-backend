@@ -3,6 +3,7 @@ package com.fullstack.bookShop.controller;
 import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
+import com.fullstack.bookShop.domain.dto.user.RestUserPassDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
 import com.fullstack.bookShop.domain.entity.User;
@@ -90,6 +91,18 @@ public class UserController {
             @Valid @RequestBody User userRequest
     ) {
         User userUpdated = this.userService.updateUserPartialById(id, userRequest);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+    }
+
+    @PatchMapping("/{id}/password")
+    @ApiMessage("Update user password")
+    public ResponseEntity<RestUserUpdateDTO> updateUserPasswordByIdRequest(
+            @PathVariable Long id,
+            @Valid @RequestBody RestUserPassDTO restUserPassDTO
+    ) {
+        User userUpdated = this.userService.updateUserPasswordById(id, restUserPassDTO);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));

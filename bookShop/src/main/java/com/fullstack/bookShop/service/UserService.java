@@ -3,6 +3,7 @@ package com.fullstack.bookShop.service;
 import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
+import com.fullstack.bookShop.domain.dto.user.RestUserPassDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
 import com.fullstack.bookShop.domain.entity.User;
@@ -15,6 +16,7 @@ public interface UserService {
     User createUser(User user);
     User updateUserById(Long id, User user);
     User updateUserPartialById(Long id, User user);
+    User updateUserPasswordById(Long id, RestUserPassDTO restUserPassDTO);
     User getUserById(Long id);
     User getUserByEmail(String email);
     User getUserByEmailAndRefreshToken(String email, String refreshToken);

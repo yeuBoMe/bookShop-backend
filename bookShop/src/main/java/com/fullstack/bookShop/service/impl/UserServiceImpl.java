@@ -3,6 +3,7 @@ package com.fullstack.bookShop.service.impl;
 import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
+import com.fullstack.bookShop.domain.dto.user.RestUserPassDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
 import com.fullstack.bookShop.domain.entity.Role;
@@ -112,6 +113,22 @@ public class UserServiceImpl implements UserService {
                 throw new IllegalArgumentException("User with phone '" + userUpdated.getPhone() + "' already exists!");
             }
             userGetById.setPhone(userUpdated.getPhone());
+        }
+
+        return this.userRepository.save(userGetById);
+    }
+
+    @Transactional
+    @Override
+    public User updateUserPasswordById(Long id, RestUserPassDTO restUserPassDTO) {
+        User userGetById = this.getUserById(id);
+
+        if (!passwordEncoder.matches(restUserPassDTO.getCurrentPassword(), userGetById.getPassword())) {
+            throw new IllegalArgumentException("Current password doesn't match!");
+        }
+
+        if (restUserPassDTO.getNewPassword() != null) {
+            userGetById.setPassword(this.passwordEncoder.encode(restUserPassDTO.getNewPassword()));
         }
 
         return this.userRepository.save(userGetById);
