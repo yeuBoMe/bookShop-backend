@@ -77,9 +77,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public Order updateOrderById(Long id, Order order) {
+    public Order updateOrderPartialById(Long id, Order orderRequest) {
         Order orderGetById = this.getOrderById(id);
-        order.setStatus(order.getStatus());
+
+        if (orderRequest.getStatus() != null) {
+            orderGetById.setStatus(orderRequest.getStatus());
+        }
+
         return this.orderRepository.save(orderGetById);
     }
 

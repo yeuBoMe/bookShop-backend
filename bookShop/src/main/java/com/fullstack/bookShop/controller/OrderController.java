@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.controller;
 
 import com.fullstack.bookShop.domain.dto.order.RestOrderCreateDTO;
+import com.fullstack.bookShop.domain.dto.order.RestOrderStatusDTO;
 import com.fullstack.bookShop.domain.dto.order.RestOrderUpdateDTO;
 import com.fullstack.bookShop.domain.dto.order.RestOrderViewDTO;
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
@@ -56,12 +57,15 @@ public class OrderController {
     }
 
     @ApiMessage("Update an order")
-    @PutMapping("/{id}")
-    public ResponseEntity<RestOrderUpdateDTO> updateOrderRequest(
+    @PatchMapping("/{id}")
+    public ResponseEntity<RestOrderUpdateDTO> updateOrderPartialRequest(
             @PathVariable Long id,
-            @Valid @RequestBody Order order
+            @Valid @RequestBody RestOrderStatusDTO restOrderStatusDTO
     ) {
-        Order orderUpdated = this.orderService.updateOrderById(id, order);
+        Order order = new Order();
+        order.setStatus(restOrderStatusDTO.getStatus());
+
+        Order orderUpdated = this.orderService.updateOrderPartialById(id, order);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.orderService.convertOrderToRestOrderUpdateDTO(orderUpdated));

@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 public interface OrderService {
     Order createOrder(Order order);
-    Order updateOrderById(Long id, Order order);
+    Order updateOrderPartialById(Long id, Order orderRequest);
     Order getOrderById(Long id);
 
     boolean checkIdExists(Long id);
