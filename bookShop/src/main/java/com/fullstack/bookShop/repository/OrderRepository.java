@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
 
-    // find by email
+    // find all order by email
     Page<Order> findAllByEmail(String email, Pageable pageable);
 }

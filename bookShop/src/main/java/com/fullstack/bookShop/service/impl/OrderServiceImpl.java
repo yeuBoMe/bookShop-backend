@@ -78,7 +78,9 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public Order updateOrderById(Long id, Order order) {
-        return null;
+        Order orderGetById = this.getOrderById(id);
+        order.setStatus(order.getStatus());
+        return this.orderRepository.save(orderGetById);
     }
 
     @Override
@@ -110,7 +112,8 @@ public class OrderServiceImpl implements OrderService {
                         .map(orderDetail -> new RestOrderDetailViewDTO(
                                 orderDetail.getId(),
                                 orderDetail.getQuantity(),
-                                orderDetail.getBookName()
+                                orderDetail.getBookName(),
+                                orderDetail.getBook().getPrice()
                         ))
                         .toList()
                 )
@@ -138,7 +141,8 @@ public class OrderServiceImpl implements OrderService {
                         .map(orderDetail -> new RestOrderDetailViewDTO(
                                 orderDetail.getId(),
                                 orderDetail.getQuantity(),
-                                orderDetail.getBookName()
+                                orderDetail.getBookName(),
+                                orderDetail.getBook().getPrice()
                         ))
                         .toList()
                 )
@@ -166,7 +170,8 @@ public class OrderServiceImpl implements OrderService {
                         .map(orderDetail -> new RestOrderDetailViewDTO(
                                 orderDetail.getId(),
                                 orderDetail.getQuantity(),
-                                orderDetail.getBookName()
+                                orderDetail.getBookName(),
+                                orderDetail.getBook().getPrice()
                         ))
                         .toList()
                 )

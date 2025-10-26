@@ -13,4 +13,5 @@ public class RestOrderDetailViewDTO {
     private Long id;
     private int quantity;
     private String bookName;
+    private Double price;
 }

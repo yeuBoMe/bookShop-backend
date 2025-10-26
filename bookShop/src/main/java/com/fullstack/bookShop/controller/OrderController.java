@@ -61,9 +61,10 @@ public class OrderController {
             @PathVariable Long id,
             @Valid @RequestBody Order order
     ) {
+        Order orderUpdated = this.orderService.updateOrderById(id, order);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(null);
+                .body(this.orderService.convertOrderToRestOrderUpdateDTO(orderUpdated));
     }
 
     @ApiMessage("Delete an order")
