@@ -20,7 +20,7 @@ public interface CategoryService {
     void deleteCategoryById(Long id);
 
     boolean checkIdExists(Long id);
-    boolean checkNameExists(String name);
+    boolean checkNameExistsIgnoreCase(String name);
 
     RestCategoryCreateDTO convertCategoryToRestCategoryCreateDTO(Category category);
     RestCategoryUpdateDTO convertCategoryToRestCategoryUpdateDTO(Category category);

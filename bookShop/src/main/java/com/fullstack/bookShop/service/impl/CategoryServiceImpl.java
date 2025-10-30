@@ -37,7 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public Category createCategory(Category category) {
-        if (this.checkNameExists(category.getName())) {
+        if (this.checkNameExistsIgnoreCase(category.getName())) {
             throw new IllegalArgumentException("Category with name '" + category.getName() + "' already exists");
         }
         return this.categoryRepository.save(category);
@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Category updateCategoryById(Long id, Category categoryUpdated) {
         Category categoryGetById = this.getCategoryById(id);
 
-        if (this.checkNameExists(categoryUpdated.getName())
+        if (this.checkNameExistsIgnoreCase(categoryUpdated.getName())
                 && !categoryGetById.getName().equals(categoryUpdated.getName())
         ) {
             throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists");
@@ -63,7 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Category updateCategoryPartialById(Long id, Category categoryUpdated) {
         Category categoryGetById = this.getCategoryById(id);
 
-        if (this.checkNameExists(categoryUpdated.getName())
+        if (this.checkNameExistsIgnoreCase(categoryUpdated.getName())
                 && !categoryGetById.getName().equals(categoryUpdated.getName())
         ) {
             throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists");
@@ -99,8 +99,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public boolean checkNameExists(String name) {
-        return this.categoryRepository.existsByName(name);
+    public boolean checkNameExistsIgnoreCase(String name) {
+        return this.categoryRepository.existsByNameIgnoreCase(name);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class CategoryServiceImpl implements CategoryService {
             RestCategoryCreateDTO restCategoryCreateDTO = restCategoryCreateDTOList.get(i);
 
             try {
-                if (this.checkNameExists(restCategoryCreateDTO.getName())) {
+                if (this.checkNameExistsIgnoreCase(restCategoryCreateDTO.getName())) {
                     throw new IllegalArgumentException("Category with name '" + restCategoryCreateDTO.getName() + "' already exists");
                 }
 
