@@ -79,6 +79,10 @@ public class Book {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Rating> ratings;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
