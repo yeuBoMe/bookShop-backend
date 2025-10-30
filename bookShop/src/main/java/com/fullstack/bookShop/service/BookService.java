@@ -20,7 +20,7 @@ public interface BookService {
     void deleteBookById(Long id);
 
     boolean checkIdExists(Long id);
-    boolean checkNameAndAuthorExists(String name, String author);
+    boolean checkNameAndAuthorExistsIgnoreCase(String name, String author);
 
     RestBookCreateDTO convertBookToRestBookCreateDTO(Book book);
     RestBookUpdateDTO convertBookToRestBookUpdateDTO(Book book);

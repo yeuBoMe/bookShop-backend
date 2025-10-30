@@ -49,7 +49,7 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Override
     public Book createBook(Book book) {
-        if (this.checkNameAndAuthorExists(book.getName(), book.getAuthor())) {
+        if (this.checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
             throw new IllegalArgumentException(
                     String.format("Book with name '%s' and author '%s' already exists!",
                             book.getName(),
@@ -67,7 +67,7 @@ public class BookServiceImpl implements BookService {
     public Book updateBookById(Long id, Book bookUpdated) {
         Book bookGetById = this.getBookById(id);
 
-        if (this.checkNameAndAuthorExists(bookUpdated.getName(), bookUpdated.getAuthor())
+        if (this.checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
                 && !(bookGetById.getName().equals(bookUpdated.getName())
                 && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
         ) {
@@ -96,7 +96,7 @@ public class BookServiceImpl implements BookService {
     public Book updateBookPartialById(Long id, Book bookUpdated) {
         Book bookGetById = this.getBookById(id);
 
-        if (this.checkNameAndAuthorExists(bookUpdated.getName(), bookUpdated.getAuthor())
+        if (this.checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
                 && !(bookGetById.getName().equals(bookUpdated.getName())
                 && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
         ) {
@@ -167,8 +167,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public boolean checkNameAndAuthorExists(String name, String author) {
-        return this.bookRepository.existsByNameAndAuthor(name, author);
+    public boolean checkNameAndAuthorExistsIgnoreCase(String name, String author) {
+        return this.bookRepository.existsByNameAndAuthorIgnoreCase(name, author);
     }
 
     @Override
@@ -263,7 +263,7 @@ public class BookServiceImpl implements BookService {
             Book book = bookList.get(i);
 
             try {
-                if (this.checkNameAndAuthorExists(book.getName(), book.getAuthor())) {
+                if (this.checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
                     throw new IllegalArgumentException(
                             String.format("Book with name '%s' and author '%s' already exists!",
                                     book.getName(),
