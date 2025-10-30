@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
