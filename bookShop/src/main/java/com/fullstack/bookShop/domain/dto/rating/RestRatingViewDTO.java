@@ -1,0 +1,24 @@
+package com.fullstack.bookShop.domain.dto.rating;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.Instant;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class RestRatingViewDTO {
+    private Long id;
+    private int stars;
+    private String comment;
+    private String user;
+    private String book;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private String createdBy;
+    private String updatedBy;
+}
