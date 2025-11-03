@@ -2,10 +2,8 @@ package com.fullstack.bookShop.service;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.dto.rating.RestRatingCreateDTO;
-import com.fullstack.bookShop.domain.dto.rating.RestRatingUpdateDTO;
 import com.fullstack.bookShop.domain.dto.rating.RestRatingViewDTO;
 import com.fullstack.bookShop.domain.entity.Rating;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -21,6 +19,5 @@ public interface RatingService {
     void deleteRatingById(Long id);
 
     RestRatingCreateDTO convertRatingToRestRatingCreateDTO(Rating rating);
-    RestRatingUpdateDTO convertRatingToRestRatingUpdateDTO(Rating rating);
     RestRatingViewDTO convertRatingToRestRatingViewDTO(Rating rating);
 }

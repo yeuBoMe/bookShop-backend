@@ -2,7 +2,6 @@ package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.dto.rating.RestRatingCreateDTO;
-import com.fullstack.bookShop.domain.dto.rating.RestRatingUpdateDTO;
 import com.fullstack.bookShop.domain.dto.rating.RestRatingViewDTO;
 import com.fullstack.bookShop.domain.entity.Book;
 import com.fullstack.bookShop.domain.entity.Rating;
@@ -119,8 +118,12 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public RestRatingCreateDTO convertRatingToRestRatingCreateDTO(Rating rating) {
-        String userName = Optional.ofNullable(rating.getUser())
-                .map(User::getFullName)
+        RestRatingCreateDTO.UserRatingCreateDTO userRatingCreateDTO = Optional.ofNullable(rating.getUser())
+                .map(user -> new RestRatingCreateDTO.UserRatingCreateDTO(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getAvatar()
+                ))
                 .orElse(null);
 
         String bookName = Optional.ofNullable(rating.getBook())
@@ -131,7 +134,7 @@ public class RatingServiceImpl implements RatingService {
                 rating.getId(),
                 rating.getStars(),
                 rating.getComment(),
-                userName,
+                userRatingCreateDTO,
                 bookName,
                 rating.getCreatedAt(),
                 rating.getCreatedBy()
@@ -139,30 +142,13 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public RestRatingUpdateDTO convertRatingToRestRatingUpdateDTO(Rating rating) {
-        String userName = Optional.ofNullable(rating.getUser())
-                .map(User::getFullName)
-                .orElse(null);
-
-        String bookName = Optional.ofNullable(rating.getBook())
-                .map(Book::getName)
-                .orElse(null);
-
-        return new RestRatingUpdateDTO(
-                rating.getId(),
-                rating.getStars(),
-                rating.getComment(),
-                userName,
-                bookName,
-                rating.getUpdatedAt(),
-                rating.getUpdatedBy()
-        );
-    }
-
-    @Override
     public RestRatingViewDTO convertRatingToRestRatingViewDTO(Rating rating) {
-        String userName = Optional.ofNullable(rating.getUser())
-                .map(User::getFullName)
+        RestRatingViewDTO.UserRatingViewDTO userRatingViewDTO = Optional.ofNullable(rating.getUser())
+                .map(user -> new RestRatingViewDTO.UserRatingViewDTO(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getAvatar()
+                ))
                 .orElse(null);
 
         String bookName = Optional.ofNullable(rating.getBook())
@@ -173,7 +159,7 @@ public class RatingServiceImpl implements RatingService {
                 rating.getId(),
                 rating.getStars(),
                 rating.getComment(),
-                userName,
+                userRatingViewDTO,
                 bookName,
                 rating.getCreatedAt(),
                 rating.getUpdatedAt(),
