@@ -17,4 +17,9 @@ public interface RatingRepository extends JpaRepository<Rating, Long>, JpaSpecif
 
     // find by user and book
     Optional<Rating> findByUserIdAndBookId(Long userId, Long bookId);
+
+    // delete by user, book
+    void deleteByUserId(Long userId);
+
+    void deleteByBookId(Long bookId);
 }

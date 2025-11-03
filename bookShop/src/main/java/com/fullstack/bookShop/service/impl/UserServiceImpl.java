@@ -8,6 +8,7 @@ import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
 import com.fullstack.bookShop.domain.entity.Role;
 import com.fullstack.bookShop.domain.entity.User;
+import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.repository.UserRepository;
 import com.fullstack.bookShop.service.RoleService;
 import com.fullstack.bookShop.service.UserService;
@@ -31,16 +32,20 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private final RatingRepository ratingRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     private final RoleService roleService;
 
     public UserServiceImpl(
             UserRepository userRepository,
+            RatingRepository ratingRepository,
             PasswordEncoder passwordEncoder,
             RoleService roleService
     ) {
         this.userRepository = userRepository;
+        this.ratingRepository = ratingRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
     }
@@ -153,6 +158,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalStateException("You do not have permission to delete this user");
         }
 
+        this.ratingRepository.deleteByUserId(id);
         this.userRepository.deleteById(id);
     }
 

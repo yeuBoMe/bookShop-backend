@@ -16,6 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     User findByEmail(String email);
     User findByEmailAndRefreshToken(String email, String refreshToken);
 
-    // delete by
+    // delete by role
     void deleteByRoleId(Long roleId);
 }

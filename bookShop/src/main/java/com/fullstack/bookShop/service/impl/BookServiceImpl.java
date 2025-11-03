@@ -8,6 +8,7 @@ import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.domain.entity.Book;
 import com.fullstack.bookShop.domain.entity.Category;
 import com.fullstack.bookShop.repository.BookRepository;
+import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.CategoryService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
@@ -29,10 +30,17 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
 
+    private final RatingRepository ratingRepository;
+
     private final CategoryService categoryService;
 
-    public BookServiceImpl(BookRepository bookRepository, CategoryService categoryService) {
+    public BookServiceImpl(
+            BookRepository bookRepository,
+            RatingRepository ratingRepository,
+            CategoryService categoryService
+    ) {
         this.bookRepository = bookRepository;
+        this.ratingRepository = ratingRepository;
         this.categoryService = categoryService;
     }
 
@@ -158,6 +166,7 @@ public class BookServiceImpl implements BookService {
         if (!this.checkIdExists(id)) {
             throw new NoSuchElementException("Book with id '" + id + "' not found");
         }
+        this.ratingRepository.deleteByBookId(id);
         this.bookRepository.deleteById(id);
     }
 
