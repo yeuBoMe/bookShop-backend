@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -41,7 +42,7 @@ public class RatingServiceImpl implements RatingService {
 
     private void validateAndSetUserAndBook(Rating ratingRequest, Rating currentRating) {
         if (ratingRequest.getUser() != null) {
-            if(!this.userService.checkIdExists(ratingRequest.getUser().getId())) {
+            if (!this.userService.checkIdExists(ratingRequest.getUser().getId())) {
                 throw new NoSuchElementException("User with id '" + ratingRequest.getUser().getId() + "' not exist!");
             }
             User userGetById = this.userService.getUserById(ratingRequest.getUser().getId());
@@ -49,7 +50,7 @@ public class RatingServiceImpl implements RatingService {
         }
 
         if (ratingRequest.getBook() != null) {
-            if(!this.bookService.checkIdExists(ratingRequest.getBook().getId())) {
+            if (!this.bookService.checkIdExists(ratingRequest.getBook().getId())) {
                 throw new NoSuchElementException("Book with id '" + ratingRequest.getBook().getId() + "' not exist!");
             }
             Book bookGetById = this.bookService.getBookById(ratingRequest.getBook().getId());
@@ -57,6 +58,7 @@ public class RatingServiceImpl implements RatingService {
         }
     }
 
+    @Transactional
     @Override
     public Rating createRating(Rating rating) {
         this.validateAndSetUserAndBook(rating, rating);
@@ -108,6 +110,7 @@ public class RatingServiceImpl implements RatingService {
         return this.ratingRepository.existsById(id);
     }
 
+    @Transactional
     @Override
     public void deleteRatingById(Long id) {
         if (!this.checkIdExists(id)) {
