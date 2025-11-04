@@ -14,4 +14,5 @@ public class RestDashboardDTO {
     private Long countUsers;
     private Long countBooks;
     private Long countCategories;
+    private Long countRatings;
 }

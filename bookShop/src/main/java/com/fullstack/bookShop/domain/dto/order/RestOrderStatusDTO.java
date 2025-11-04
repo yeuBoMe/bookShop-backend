@@ -12,6 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RestOrderStatusDTO {
+
     @NotNull(message = "Status is required")
     private StatusEnum status;
 }
