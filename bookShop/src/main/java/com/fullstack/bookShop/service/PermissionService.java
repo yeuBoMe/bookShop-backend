@@ -17,7 +17,7 @@ public interface PermissionService {
 
     void deletePermissionById(Long id);
 
-    boolean checkNameExists(String name);
+    boolean checkNameExistsIgnoreCase(String name);
     boolean checkIdExists(Long id);
     boolean checkApiPathAndMethodAndModuleExists(String apiPath, String method, String module);
 

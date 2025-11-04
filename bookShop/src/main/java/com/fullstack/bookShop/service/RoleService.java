@@ -15,7 +15,7 @@ public interface RoleService {
 
     void deleteRoleById(Long id);
 
-    boolean checkNameExists(String name);
+    boolean checkNameExistsIgnoreCase(String name);
     boolean checkIdExists(Long id);
 
     RestRoleCreateDTO convertRoleToRestRoleCreateDTO(Role role);

@@ -45,7 +45,7 @@ public class RoleServiceImpl implements RoleService {
         if (!roleRequest.getPermissions().isEmpty()) {
             for (Permission permission : roleRequest.getPermissions()) {
                 if (!this.permissionRepository.existsById(permission.getId())) {
-                    throw new NoSuchElementException("Permission with id " + permission.getId() + " not found");
+                    throw new NoSuchElementException("Permission with id " + permission.getId() + " not found!");
                 }
             }
 
@@ -62,8 +62,8 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @Override
     public Role createRole(Role role) {
-        if (this.checkNameExists(role.getName())) {
-            throw new IllegalArgumentException(String.format("Role with name '%s' already exists", role.getName()));
+        if (this.checkNameExistsIgnoreCase(role.getName())) {
+            throw new IllegalArgumentException(String.format("Role with name '%s' already exists!", role.getName()));
         }
         this.checkNullAndSetListPermissions(role, role);
         return this.roleRepository.save(role);
@@ -74,10 +74,10 @@ public class RoleServiceImpl implements RoleService {
     public Role updateRoleById(Long id, Role roleUpdated) {
         Role roleGetById = this.getRoleById(id);
 
-        if (this.checkNameExists(roleUpdated.getName())
+        if (this.checkNameExistsIgnoreCase(roleUpdated.getName())
             && !roleGetById.getName().equals(roleUpdated.getName())
         ) {
-            throw new IllegalArgumentException(String.format("Role with name '%s' already exists", roleUpdated.getName()));
+            throw new IllegalArgumentException(String.format("Role with name '%s' already exists!", roleUpdated.getName()));
         }
 
         this.checkNullAndSetListPermissions(roleUpdated, roleGetById);
@@ -93,14 +93,14 @@ public class RoleServiceImpl implements RoleService {
     public Role getRoleById(Long id) {
         return this.roleRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Role with id " + id + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("Role with id " + id + " not found!"));
     }
 
     @Transactional
     @Override
     public void deleteRoleById(Long id) {
         if (!this.checkIdExists(id)) {
-            throw new NoSuchElementException("Role with id " + id + " not found");
+            throw new NoSuchElementException("Role with id " + id + " not found!");
         }
         this.userRepository.deleteByRoleId(id);
         this.roleRepository.deleteById(id);
@@ -112,8 +112,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public boolean checkNameExists(String name) {
-        return this.roleRepository.existsByName(name);
+    public boolean checkNameExistsIgnoreCase(String name) {
+        return this.roleRepository.existsByNameIgnoreCase(name);
     }
 
     @Override

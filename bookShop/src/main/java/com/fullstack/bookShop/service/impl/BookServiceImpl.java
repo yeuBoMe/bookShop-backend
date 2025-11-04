@@ -47,7 +47,7 @@ public class BookServiceImpl implements BookService {
     private void checkNullAndSetCategory(Book bookRequest, Book currentBook) {
         if (bookRequest.getCategory() != null) {
             if (!this.categoryService.checkIdExists(bookRequest.getCategory().getId())) {
-                throw new NoSuchElementException("Category with id '" + bookRequest.getCategory().getId() + "' not exist");
+                throw new NoSuchElementException("Category with id '" + bookRequest.getCategory().getId() + "' not exist!");
             }
             Category categoryGetById = this.categoryService.getCategoryById(bookRequest.getCategory().getId());
             currentBook.setCategory(categoryGetById);
@@ -157,14 +157,14 @@ public class BookServiceImpl implements BookService {
     public Book getBookById(Long id) {
         return this.bookRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Book with id '" + id + "' not found"));
+                .orElseThrow(() -> new NoSuchElementException("Book with id '" + id + "' not found!"));
     }
 
     @Transactional
     @Override
     public void deleteBookById(Long id) {
         if (!this.checkIdExists(id)) {
-            throw new NoSuchElementException("Book with id '" + id + "' not found");
+            throw new NoSuchElementException("Book with id '" + id + "' not found!");
         }
         this.ratingRepository.deleteByBookId(id);
         this.bookRepository.deleteById(id);

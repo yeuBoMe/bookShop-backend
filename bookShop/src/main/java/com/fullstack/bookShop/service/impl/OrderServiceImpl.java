@@ -55,7 +55,7 @@ public class OrderServiceImpl implements OrderService {
 
                             if (orderDetail.getBook() != null) {
                                 if (!this.bookService.checkIdExists(orderDetail.getBook().getId())) {
-                                    throw new NoSuchElementException("Book with id " + orderDetail.getBook().getId() + " not found");
+                                    throw new NoSuchElementException("Book with id " + orderDetail.getBook().getId() + " not found!");
                                 }
                                 Book bookGetById = this.bookService.getBookById(orderDetail.getBook().getId());
                                 orderDetailNeedToSave.setBook(bookGetById);
@@ -91,7 +91,7 @@ public class OrderServiceImpl implements OrderService {
     public Order getOrderById(Long id) {
         return this.orderRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Order with id '" + id + "' not found"));
+                .orElseThrow(() -> new NoSuchElementException("Order with id '" + id + "' not found!"));
     }
 
     @Override
@@ -103,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void deleteOrderById(Long id) {
         if (!this.checkIdExists(id)) {
-            throw new NoSuchElementException("Order with id '" + id + "' does not exist");
+            throw new NoSuchElementException("Order with id '" + id + "' does not exist!");
         }
         this.orderDetailRepository.deleteByOrderId(id);
         this.orderRepository.deleteById(id);

@@ -29,10 +29,10 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional
     @Override
     public Permission createPermission(Permission permission) {
-        if (!this.checkNameExists(permission.getName())
+        if (!this.checkNameExistsIgnoreCase(permission.getName())
                 || this.checkApiPathAndMethodAndModuleExists(permission.getApiPath(), permission.getMethod(), permission.getModule())
         ) {
-            throw new IllegalArgumentException(String.format("Permission with name '%s' already exists", permission.getName()));
+            throw new IllegalArgumentException(String.format("Permission with name '%s' already exists!", permission.getName()));
         }
         return this.permissionRepository.save(permission);
     }
@@ -42,10 +42,10 @@ public class PermissionServiceImpl implements PermissionService {
     public Permission updatePermission(Long id, Permission permissionUpdated) {
         Permission permissionGetById = this.getPermissionById(id);
 
-        if (this.checkNameExists(permissionUpdated.getName())
+        if (this.checkNameExistsIgnoreCase(permissionUpdated.getName())
                 && !permissionGetById.getName().equals(permissionUpdated.getName())
         ) {
-            throw new IllegalArgumentException(String.format("Permission with name '%s' already exists", permissionUpdated.getName()));
+            throw new IllegalArgumentException(String.format("Permission with name '%s' already exists!", permissionUpdated.getName()));
         }
 
         if (this.checkApiPathAndMethodAndModuleExists(permissionUpdated.getApiPath(), permissionUpdated.getMethod(), permissionUpdated.getModule())
@@ -53,7 +53,7 @@ public class PermissionServiceImpl implements PermissionService {
                     && permissionGetById.getModule().equals(permissionUpdated.getModule())
                     && permissionGetById.getMethod().equals(permissionUpdated.getMethod()))
         ) {
-            throw new IllegalArgumentException(String.format("Permission with apiPath: '%s', method: '%s', module: '%s' already exists",
+            throw new IllegalArgumentException(String.format("Permission with apiPath: '%s', method: '%s', module: '%s' already exists!",
                     permissionUpdated.getApiPath(), permissionUpdated.getMethod(), permissionUpdated.getModule())
             );
         }
@@ -70,7 +70,7 @@ public class PermissionServiceImpl implements PermissionService {
     public Permission getPermissionById(Long id) {
         return this.permissionRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Permission with id " + id + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("Permission with id " + id + " not found!"));
     }
 
     @Override
@@ -92,7 +92,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public void deletePermissionById(Long id) {
         if (!this.checkIdExists(id)) {
-            throw new NoSuchElementException("Permission with id " + id + " not found");
+            throw new NoSuchElementException("Permission with id " + id + " not found!");
         }
 
         Permission permissionGetById = this.getPermissionById(id);
@@ -104,8 +104,8 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public boolean checkNameExists(String name) {
-        return this.permissionRepository.existsByName(name);
+    public boolean checkNameExistsIgnoreCase(String name) {
+        return this.permissionRepository.existsByNameIgnoreCase(name);
     }
 
     @Override

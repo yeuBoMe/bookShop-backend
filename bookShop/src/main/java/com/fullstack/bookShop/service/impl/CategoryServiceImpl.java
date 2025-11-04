@@ -38,7 +38,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category createCategory(Category category) {
         if (this.checkNameExistsIgnoreCase(category.getName())) {
-            throw new IllegalArgumentException("Category with name '" + category.getName() + "' already exists");
+            throw new IllegalArgumentException("Category with name '" + category.getName() + "' already exists!");
         }
         return this.categoryRepository.save(category);
     }
@@ -51,7 +51,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (this.checkNameExistsIgnoreCase(categoryUpdated.getName())
                 && !categoryGetById.getName().equals(categoryUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists");
+            throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists!");
         }
 
         categoryGetById.setName(categoryUpdated.getName());
@@ -66,7 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (this.checkNameExistsIgnoreCase(categoryUpdated.getName())
                 && !categoryGetById.getName().equals(categoryUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists");
+            throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists!");
         }
 
         if (categoryUpdated.getName() != null && !categoryUpdated.getName().isEmpty()) {

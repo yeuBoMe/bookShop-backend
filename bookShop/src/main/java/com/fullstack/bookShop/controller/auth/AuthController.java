@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -122,9 +121,6 @@ public class AuthController {
 
         User userGetByEmailAndRefreshToken =
                 this.userService.getUserByEmailAndRefreshToken(emailGetFromJwt, refreshTokenFromCookie);
-        if (userGetByEmailAndRefreshToken == null) {
-            throw new NoSuchElementException("User not found");
-        }
 
         RestLoginDTO restLoginDTO = new RestLoginDTO();
         restLoginDTO.setUser(this.buildUserLogin(userGetByEmailAndRefreshToken));

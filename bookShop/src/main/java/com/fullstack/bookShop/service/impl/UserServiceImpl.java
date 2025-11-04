@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
     private void validateAndSetRole(User userRequest, User currentUser) {
         if (userRequest.getRole() != null) {
             if (!this.roleService.checkIdExists(userRequest.getRole().getId())) {
-                throw new NoSuchElementException("Role with id " + userRequest.getRole().getId() + " not found");
+                throw new NoSuchElementException("Role with id " + userRequest.getRole().getId() + " not found!");
             }
             Role roleGetById = this.roleService.getRoleById(userRequest.getRole().getId());
             currentUser.setRole(roleGetById);
@@ -64,11 +64,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(User user) {
         if (this.checkEmailExists(user.getEmail())) {
-            throw new IllegalArgumentException("User with email '" + user.getEmail() + "' already exists");
+            throw new IllegalArgumentException("User with email '" + user.getEmail() + "' already exists!");
         }
 
         if (this.checkPhoneExists(user.getPhone())) {
-            throw new IllegalArgumentException("User with phone '" + user.getPhone() + "' already exists");
+            throw new IllegalArgumentException("User with phone '" + user.getPhone() + "' already exists!");
         }
 
         this.validateAndSetRole(user, user);
@@ -143,19 +143,19 @@ public class UserServiceImpl implements UserService {
     public User getUserById(Long id) {
         return this.userRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User with id " + id + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("User with id " + id + " not found!"));
     }
 
     @Transactional
     @Override
     public void deleteUserById(Long id) {
         if (!this.checkIdExists(id)) {
-            throw new NoSuchElementException("User with id " + id + " not found");
+            throw new NoSuchElementException("User with id " + id + " not found!");
         }
 
         User userGetById = this.getUserById(id);
         if (userGetById.getRole() != null && userGetById.getRole().getName().equals("ADMIN")) {
-            throw new IllegalStateException("You do not have permission to delete this user");
+            throw new IllegalStateException("You do not have permission to delete this user!");
         }
 
         this.ratingRepository.deleteByUserId(id);
@@ -164,12 +164,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserByEmail(String email) {
-        return this.userRepository.findByEmail(email);
+        return this.userRepository.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("User with email '" + email + "' not found!"));
     }
 
     @Override
     public User getUserByEmailAndRefreshToken(String email, String refreshToken) {
-        return this.userRepository.findByEmailAndRefreshToken(email, refreshToken);
+        return this.userRepository.findByEmailAndRefreshToken(email, refreshToken)
+                .orElseThrow(() -> new NoSuchElementException("User not found!"));
     }
 
     @Override
