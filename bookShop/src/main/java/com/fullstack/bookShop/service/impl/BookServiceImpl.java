@@ -262,6 +262,22 @@ public class BookServiceImpl implements BookService {
 
         ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(bookPage, pageable);
         resultPaginationDTO.setResult(restBookViewDTOList);
+
+        return resultPaginationDTO;
+    }
+
+    @Override
+    public ResultPaginationDTO fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable) {
+        Page<Book> bookPage = this.bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
+
+        List<RestBookViewDTO> restBookViewDTOList = bookPage.getContent()
+                .stream()
+                .map(this::convertBookToRestBookViewDTO)
+                .toList();
+
+        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(bookPage, pageable);
+        resultPaginationDTO.setResult(restBookViewDTOList);
+
         return resultPaginationDTO;
     }
 

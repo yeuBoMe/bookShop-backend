@@ -19,7 +19,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long>, JpaSpecif
 
     // find by user and book
     Optional<Rating> findByUserIdAndBookId(Long userId, Long bookId);
-    
+
     // Calculate average rating of book
     @Query("SELECT COALESCE(AVG(r.stars), 0) FROM Rating r WHERE r.book.id = :bookId")
     Double getAverageRatingByBookId(@Param(("bookId")) Long bookId);

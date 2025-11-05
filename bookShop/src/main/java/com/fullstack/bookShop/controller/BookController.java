@@ -62,6 +62,17 @@ public class BookController {
                 .body(this.bookService.fetchListBooks(spec, pageable));
     }
 
+    @ApiMessage("Fetch list books by average rating")
+    @GetMapping("/average-rating")
+    public ResponseEntity<ResultPaginationDTO> fetchListBooksByMinRatingGreaterThaneEqualRequest(
+            @RequestParam(defaultValue = "0") Double minRating,
+            Pageable pageable
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
+    }
+
     @ApiMessage("Get book")
     @GetMapping("/{id}")
     public ResponseEntity<RestBookViewDTO> getBookByIdRequest(@PathVariable Long id) {
