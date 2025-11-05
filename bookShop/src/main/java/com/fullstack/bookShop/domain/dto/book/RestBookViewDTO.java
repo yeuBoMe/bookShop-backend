@@ -21,6 +21,7 @@ public class RestBookViewDTO {
     private String introduceText;
     private String description;
     private String reader;
+    private Double averageStars;
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;

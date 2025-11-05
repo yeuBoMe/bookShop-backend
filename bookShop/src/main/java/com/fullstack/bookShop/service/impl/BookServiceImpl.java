@@ -185,6 +185,7 @@ public class BookServiceImpl implements BookService {
         String categoryName = Optional.ofNullable(book.getCategory())
                 .map(Category::getName)
                 .orElse(null);
+
         return new RestBookCreateDTO(
                 book.getId(),
                 book.getName(),
@@ -206,6 +207,7 @@ public class BookServiceImpl implements BookService {
         String categoryName = Optional.ofNullable(book.getCategory())
                 .map(Category::getName)
                 .orElse(null);
+
         return new RestBookUpdateDTO(
                 book.getId(),
                 book.getName(),
@@ -227,6 +229,9 @@ public class BookServiceImpl implements BookService {
         String categoryName = Optional.ofNullable(book.getCategory())
                 .map(Category::getName)
                 .orElse(null);
+
+        Double averageStars = this.ratingRepository.getAverageRatingByBookId(book.getId());
+
         return RestBookViewDTO.builder()
                 .id(book.getId())
                 .name(book.getName())
@@ -238,6 +243,7 @@ public class BookServiceImpl implements BookService {
                 .introduceText(book.getIntroduceText())
                 .description(book.getDescription())
                 .reader(book.getReader())
+                .averageStars(averageStars)
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())
                 .createdBy(book.getCreatedBy())
