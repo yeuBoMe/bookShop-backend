@@ -69,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
                             orderDetailNeedToSave.setBookName(orderDetail.getBookName());
                             orderDetailNeedToSave.setOrder(orderSaved);
                             orderDetailNeedToSave.setQuantity(orderDetail.getQuantity());
+
                             return orderDetailNeedToSave;
                         })
                         .toList())
@@ -88,7 +89,7 @@ public class OrderServiceImpl implements OrderService {
                     restOrderCreateDTO
             );
         } catch (Exception e) {
-            System.out.println("❌ Gửi email thất bại >>> " + e.getMessage());
+            System.out.println("Gửi email thất bại >>> " + e.getMessage());
         }
 
         return orderSaved;
@@ -98,11 +99,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order updateOrderPartialById(Long id, Order orderRequest) {
         Order orderGetById = this.getOrderById(id);
-
         if (orderRequest.getStatus() != null) {
             orderGetById.setStatus(orderRequest.getStatus());
         }
-
         return this.orderRepository.save(orderGetById);
     }
 
@@ -228,6 +227,7 @@ public class OrderServiceImpl implements OrderService {
 
         ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(orderPage, pageable);
         resultPaginationDTO.setResult(restOrderViewDTOList);
+
         return resultPaginationDTO;
     }
 

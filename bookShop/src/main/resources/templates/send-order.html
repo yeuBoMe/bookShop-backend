@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #fff;
+            max-width: 650px;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #2f54eb, #597ef7);
+            color: white;
+            text-align: center;
+            padding: 25px 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            font-size: 15px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .content h2 {
+            margin-top: 0;
+            color: #1f1f1f;
+            font-size: 20px;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .order-table th, .order-table td {
+            border: 1px solid #e8e8e8;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .order-table th {
+            background-color: #fafafa;
+            font-weight: 600;
+        }
+
+        .order-table tr:hover td {
+            background-color: #f9f9ff;
+        }
+
+        .summary {
+            margin-top: 20px;
+            font-size: 15px;
+        }
+
+        .summary p {
+            margin: 6px 0;
+        }
+
+        .summary strong {
+            color: #2f54eb;
+        }
+
+        .total {
+            font-weight: bold;
+            font-size: 16px;
+            text-align: right;
+            margin-top: 15px;
+            color: #222;
+        }
+
+        .footer {
+            background-color: #fafafa;
+            text-align: center;
+            padding: 18px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📚 BookShop</h1>
+        <p>Xác nhận đơn hàng thành công</p>
+    </div>
+
+    <div class="content">
+        <h2>Xin chào, <span th:text="${userName}"></span> 👋</h2>
+        <p>Cảm ơn bạn đã tin tưởng mua hàng tại <strong>BookShop</strong>! Dưới đây là chi tiết đơn hàng của bạn:</p>
+
+        <table class="order-table">
+            <thead>
+            <tr>
+                <th>Tên sách</th>
+                <th>Số lượng</th>
+                <th>Giá</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${order.detail}">
+                <td th:text="${item.bookName}"></td>
+                <td th:text="${item.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <p class="total">
+                Tổng tiền: <span
+                    th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+            </p>
+            <p>
+                Phí vận chuyển:
+                <strong th:if="${order.totalPrice < 150000}">30,000₫</strong>
+                <strong th:unless="${order.totalPrice < 150000}">Miễn phí</strong>
+            </p>
+            <p>
+                Phương thức thanh toán:
+                <strong th:switch="${order.paymentMethod}">
+                    <span th:case="'cod'">Thanh toán khi nhận hàng</span>
+                    <span th:case="'banking'">Chuyển khoản</span>
+                </strong>
+            </p>
+            <p>Địa chỉ giao hàng: <strong th:text="${order.address}"></strong></p>
+            <p>
+                Trạng thái đơn hàng:
+                <strong th:text="${
+                    order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).PENDING ? 'Đang xử lý' :
+                    order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).SUCCESS ? 'Thành công' :
+                    order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).SHIPPING ? 'Đang vận chuyển' :
+                    order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).CANCEL ? 'Đã hủy' :
+                    'Không xác định'
+                }"></strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2025 <strong>BookShop</strong> — Cảm ơn bạn đã đồng hành cùng chúng tôi 💙
+    </div>
+</div>
+</body>
+</html>
