@@ -11,6 +11,7 @@ import com.fullstack.bookShop.domain.entity.OrderDetail;
 import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.OrderRepository;
 import com.fullstack.bookShop.service.BookService;
+import com.fullstack.bookShop.service.EmailService;
 import com.fullstack.bookShop.service.OrderService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import org.springframework.data.domain.Page;
@@ -33,14 +34,18 @@ public class OrderServiceImpl implements OrderService {
 
     private final BookService bookService;
 
+    private final EmailService emailService;
+
     public OrderServiceImpl(
             OrderRepository orderRepository,
             OrderDetailRepository orderDetailRepository,
-            BookService bookService
+            BookService bookService,
+            EmailService emailService
     ) {
         this.orderRepository = orderRepository;
         this.orderDetailRepository = orderDetailRepository;
         this.bookService = bookService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -71,6 +76,20 @@ public class OrderServiceImpl implements OrderService {
 
         this.orderDetailRepository.saveAll(orderDetailList);
         orderSaved.setDetail(orderDetailList);
+
+        // send order to email
+        RestOrderCreateDTO restOrderCreateDTO = this.convertOrderToRestOrderCreateDTO(orderSaved);
+        try {
+            this.emailService.sendEmailWithTemplateSync(
+                    orderSaved.getEmail(),
+                    "Xác nhận đơn hàng #" + orderSaved.getId(),
+                    "send-order",
+                    orderSaved.getName(),
+                    restOrderCreateDTO
+            );
+        } catch (Exception e) {
+            System.out.println("❌ Gửi email thất bại >>> " + e.getMessage());
+        }
 
         return orderSaved;
     }

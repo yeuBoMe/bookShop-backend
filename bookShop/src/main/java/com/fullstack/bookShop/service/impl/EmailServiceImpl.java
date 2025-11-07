@@ -40,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
             mimeMessageHelper.setText(content, isHtml);
             this.javaMailSender.send(mimeMessage);
         } catch (MailException | MessagingException ex) {
-            System.out.println("ERROR SEND EMAIL >>>" + ex.getMessage());
+            System.out.println("ERROR SEND EMAIL >>> " + ex.getMessage());
         }
     }
 

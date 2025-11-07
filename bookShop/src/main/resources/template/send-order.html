@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f6f7fb;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff;
+            max-width: 600px;
+            margin: 30px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background-color: #2f54eb;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .content h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .order-table th, .order-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .order-table th {
+            background-color: #f4f5f7;
+        }
+
+        .total {
+            text-align: right;
+            font-weight: bold;
+            padding-top: 10px;
+        }
+
+        .footer {
+            background-color: #f4f5f7;
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📚 BookShop</h1>
+        <p>Xác nhận đơn hàng thành công</p>
+    </div>
+
+    <div class="content">
+        <h2>Xin chào, <span th:text="${userName}"></span>!</h2>
+        <p>Cảm ơn bạn đã đặt hàng tại <strong>BookShop</strong>. Dưới đây là thông tin đơn hàng của bạn:</p>
+
+        <table class="order-table">
+            <thead>
+            <tr>
+                <th>Tên sách</th>
+                <th>Số lượng</th>
+                <th>Giá</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="orderDetail : ${order.orderDetails}">
+                <td th:text="${orderDetail.bookName}"></td>
+                <td th:text="${orderDetail.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(orderDetail.book.price, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p class="total">
+            Tổng tiền: <span th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+        </p>
+
+        <p>Phương thức thanh toán: <strong th:text="${order.paymentMethod}"></strong></p>
+        <p>Địa chỉ giao hàng: <strong th:text="${order.address}"></strong></p>
+
+        <p>Trạng thái đơn hàng: <strong th:text="${order.status}"></strong></p>
+    </div>
+
+    <div class="footer">
+        © 2025 BookShop - Cảm ơn bạn đã mua hàng 💙
+    </div>
+</div>
+</body>
+</html>
