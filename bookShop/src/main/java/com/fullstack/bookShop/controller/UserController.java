@@ -15,6 +15,7 @@ import com.fullstack.bookShop.util.imports.FileValidUtil;
 import com.fullstack.bookShop.util.imports.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,6 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
 
     @Value("${bookshop.upload-file.base-uri}")
@@ -38,18 +40,13 @@ public class UserController {
 
     private final FileService fileService;
 
-    public UserController(UserService userService, FileService fileService) {
-        this.userService = userService;
-        this.fileService = fileService;
-    }
-
     @PostMapping
     @ApiMessage("Create user")
     public ResponseEntity<RestUserCreateDTO> createUserRequest(@Valid @RequestBody User userRequest) {
-        User userCreated = this.userService.createUser(userRequest);
+        User userCreated = userService.createUser(userRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(this.userService.convertUserToRestUserCreateDTO(userCreated));
+                .body(userService.convertUserToRestUserCreateDTO(userCreated));
     }
 
     @GetMapping
@@ -58,18 +55,14 @@ public class UserController {
             @Filter Specification<User> spec,
             Pageable pageable
     ) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.fetchAllUsers(spec, pageable));
+        return ResponseEntity.ok(userService.fetchAllUsers(spec, pageable));
     }
 
     @GetMapping("/{id}")
     @ApiMessage("Get user")
     public ResponseEntity<RestUserViewDTO> getUserByIdRequest(@PathVariable Long id) {
-        User userGetById = this.userService.getUserById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.convertUserToRestUserViewDTO(userGetById));
+        User userGetById = userService.getUserById(id);
+        return ResponseEntity.ok(userService.convertUserToRestUserViewDTO(userGetById));
     }
 
     @PutMapping("/{id}")
@@ -78,10 +71,8 @@ public class UserController {
             @PathVariable Long id,
             @Valid @RequestBody User userRequest
     ) {
-        User userUpdated = this.userService.updateUserById(id, userRequest);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+        User userUpdated = userService.updateUserById(id, userRequest);
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
     @PatchMapping("/{id}")
@@ -90,10 +81,8 @@ public class UserController {
             @PathVariable Long id,
             @Valid @RequestBody User userRequest
     ) {
-        User userUpdated = this.userService.updateUserPartialById(id, userRequest);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+        User userUpdated = userService.updateUserPartialById(id, userRequest);
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
     @PatchMapping("/{id}/password")
@@ -102,19 +91,15 @@ public class UserController {
             @PathVariable Long id,
             @Valid @RequestBody RestUserPassDTO restUserPassDTO
     ) {
-        User userUpdated = this.userService.updateUserPasswordById(id, restUserPassDTO);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+        User userUpdated = userService.updateUserPasswordById(id, restUserPassDTO);
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete user")
     public ResponseEntity<Void> deleteUserByIdRequest(@PathVariable Long id) {
-        this.userService.deleteUserById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(null);
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @ApiMessage("Update user avatar")
@@ -126,18 +111,15 @@ public class UserController {
             StorageException,
             URISyntaxException,
             IOException {
-
         FileValidUtil.validateFile(file);
-        this.fileService.createUploadFolder(this.baseUri + "avatar");
-        String fileUploaded = this.fileService.storeSingleFile(file, "avatar");
+        fileService.createUploadFolder(baseUri + "avatar");
+        String fileUploaded = fileService.storeSingleFile(file, "avatar");
 
         User user = new User();
         user.setAvatar(fileUploaded);
-        User userUpdated = this.userService.updateUserPartialById(id, user);
+        User userUpdated = userService.updateUserPartialById(id, user);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
     @ApiMessage("Delete user avatar")
@@ -146,19 +128,16 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws URISyntaxException, IOException {
+        fileService.deleteSingleFile(fileName, "avatar");
 
-        this.fileService.deleteSingleFile(fileName, "avatar");
-
-        User userGetById = this.userService.getUserById(id);
+        User userGetById = userService.getUserById(id);
         if (userGetById.getAvatar() != null && userGetById.getAvatar().equals(fileName)) {
             userGetById.setAvatar(null);
+
         }
 
-        User userUpdated = this.userService.updateUserPartialById(id, userGetById);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.userService.convertUserToRestUserUpdateDTO(userUpdated));
+        User userUpdated = userService.updateUserPartialById(id, userGetById);
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
     @ApiMessage("Import users from file")
@@ -166,8 +145,8 @@ public class UserController {
     public ResponseEntity<RestImportDTO<RestUserCreateDTO>> importUsersFromFileRequest(
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {
-        RestImportDTO<RestUserCreateDTO> restImportDTO =
-                this.userService.importListUsersFromFile(restUserCreateDTOList);
+        RestImportDTO<RestUserCreateDTO> restImportDTO
+                = userService.importListUsersFromFile(restUserCreateDTOList);
 
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
 

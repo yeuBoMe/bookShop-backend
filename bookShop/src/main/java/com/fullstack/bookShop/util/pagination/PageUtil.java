@@ -16,6 +16,7 @@ public class PageUtil {
 
         ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
         resultPaginationDTO.setMeta(meta);
+
         return resultPaginationDTO;
     }
 }

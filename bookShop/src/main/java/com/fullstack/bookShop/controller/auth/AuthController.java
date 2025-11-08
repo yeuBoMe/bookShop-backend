@@ -52,9 +52,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<RestLoginDTO> loginRequest(@Valid @RequestBody LoginDTO loginDTO) {
         // class contains login info not validate
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                loginDTO.getUsername(), loginDTO.getPassword()
-        );
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
+                = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
 
         /* AuthenticationManagerBuilder calls AuthenticationManager to validate login info
          * then AuthenticationManager will use func loadUserByUsername in CustomUserDetailsService to
@@ -176,10 +175,8 @@ public class AuthController {
                     )
                     .orElse(new ArrayList<>());
 
-            RestLoginDTO.UserLogin.RoleOfUserLogin roleOfUserLogin = new RestLoginDTO.UserLogin.RoleOfUserLogin(
-                    user.getRole().getName(),
-                    permissionList
-            );
+            RestLoginDTO.UserLogin.RoleOfUserLogin roleOfUserLogin
+                    = new RestLoginDTO.UserLogin.RoleOfUserLogin(user.getRole().getName(), permissionList);
 
             return new RestLoginDTO.UserLogin(
                     user.getId(),

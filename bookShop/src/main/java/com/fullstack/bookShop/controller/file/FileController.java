@@ -5,6 +5,7 @@ import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
 import com.fullstack.bookShop.util.imports.FileValidUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,16 +22,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/files")
+@RequiredArgsConstructor
 public class FileController {
 
     @Value("${bookshop.upload-file.base-uri}")
     private String baseURI;
 
     private final FileService fileService;
-
-    public FileController(FileService fileService) {
-        this.fileService = fileService;
-    }
 
     @ApiMessage("Upload single file")
     @PostMapping("/single")
@@ -51,9 +49,7 @@ public class FileController {
         String fileUploaded = this.fileService.storeSingleFile(file, folder);
         RestUploadFileDTO restUploadFileDTO = new RestUploadFileDTO(fileUploaded, Instant.now());
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(restUploadFileDTO);
+        return ResponseEntity.ok(restUploadFileDTO);
     }
 
     @ApiMessage("Upload multiple files")
@@ -75,8 +71,6 @@ public class FileController {
         List<String> fileListUploaded = this.fileService.storeMultipleFiles(files, folder);
         RestUploadFileDTO restUploadFileDTO = new RestUploadFileDTO(fileListUploaded, Instant.now());
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(restUploadFileDTO);
+        return ResponseEntity.ok(restUploadFileDTO);
     }
 }

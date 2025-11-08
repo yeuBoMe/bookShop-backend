@@ -44,7 +44,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public String storeSingleFile(MultipartFile file, String folder) throws URISyntaxException, IOException {
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        URI uri = new URI(this.baseURI + folder + "/" + fileName);
+        URI uri = new URI(baseURI + folder + "/" + fileName);
         Path path = Paths.get(uri);
 
         try (InputStream inputStream = file.getInputStream()) {
@@ -54,10 +54,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<String> storeMultipleFiles(List<MultipartFile> files, String folder) throws URISyntaxException, IOException {
+    public List<String> storeMultipleFiles(List<MultipartFile> files, String folder)
+            throws URISyntaxException, IOException {
         List<String> fileList = new ArrayList<>();
         for (MultipartFile file : files) {
-            String fileName = this.storeSingleFile(file, folder);
+            String fileName = storeSingleFile(file, folder);
             fileList.add(fileName);
         }
         return fileList;
@@ -65,7 +66,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void deleteSingleFile(String fileName, String folder) throws URISyntaxException, IOException {
-        URI uri = new URI(this.baseURI + folder + "/" + fileName);
+        URI uri = new URI(baseURI + folder + "/" + fileName);
         Path path = Paths.get(uri);
 
         if (Files.exists(path)) {
@@ -79,7 +80,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public void deleteMultipleFiles(List<String> fileNames, String folder) throws URISyntaxException, IOException {
         for (String fileName : fileNames) {
-            this.deleteSingleFile(fileName, folder);
+            deleteSingleFile(fileName, folder);
         }
     }
 }

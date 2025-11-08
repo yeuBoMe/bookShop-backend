@@ -27,7 +27,9 @@ public class PermissionController {
 
     @PostMapping
     @ApiMessage("Create permission")
-    public ResponseEntity<RestPermissionCreateDTO> createPermissionRequest(@Valid @RequestBody Permission permissionRequest) {
+    public ResponseEntity<RestPermissionCreateDTO> createPermissionRequest(
+            @Valid @RequestBody Permission permissionRequest
+    ) {
         Permission permissionCreated = this.permissionService.createPermission(permissionRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)

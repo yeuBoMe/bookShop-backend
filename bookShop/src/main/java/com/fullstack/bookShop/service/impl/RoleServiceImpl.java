@@ -11,6 +11,7 @@ import com.fullstack.bookShop.repository.RoleRepository;
 import com.fullstack.bookShop.repository.UserRepository;
 import com.fullstack.bookShop.service.RoleService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,6 +24,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
@@ -31,20 +33,10 @@ public class RoleServiceImpl implements RoleService {
 
     private final PermissionRepository permissionRepository;
 
-    public RoleServiceImpl(
-            RoleRepository roleRepository,
-            UserRepository userRepository,
-            PermissionRepository permissionRepository
-    ) {
-        this.roleRepository = roleRepository;
-        this.userRepository = userRepository;
-        this.permissionRepository = permissionRepository;
-    }
-
     private void checkNullAndSetListPermissions(Role roleRequest, Role currentRole) {
         if (!roleRequest.getPermissions().isEmpty()) {
             for (Permission permission : roleRequest.getPermissions()) {
-                if (!this.permissionRepository.existsById(permission.getId())) {
+                if (!permissionRepository.existsById(permission.getId())) {
                     throw new NoSuchElementException("Permission with id " + permission.getId() + " not found!");
                 }
             }
@@ -54,7 +46,7 @@ public class RoleServiceImpl implements RoleService {
                     .map(Permission::getId)
                     .toList();
 
-            List<Permission> permissionList = this.permissionRepository.findALlByIdIn(permissionIds);
+            List<Permission> permissionList = permissionRepository.findALlByIdIn(permissionIds);
             currentRole.setPermissions(permissionList);
         }
     }
@@ -62,36 +54,35 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @Override
     public Role createRole(Role role) {
-        if (this.checkNameExistsIgnoreCase(role.getName())) {
+        if (checkNameExistsIgnoreCase(role.getName())) {
             throw new IllegalArgumentException(String.format("Role with name '%s' already exists!", role.getName()));
         }
-        this.checkNullAndSetListPermissions(role, role);
-        return this.roleRepository.save(role);
+        checkNullAndSetListPermissions(role, role);
+        return roleRepository.save(role);
     }
 
     @Transactional
     @Override
     public Role updateRoleById(Long id, Role roleUpdated) {
-        Role roleGetById = this.getRoleById(id);
+        Role roleGetById = getRoleById(id);
+        checkNullAndSetListPermissions(roleUpdated, roleGetById);
 
-        if (this.checkNameExistsIgnoreCase(roleUpdated.getName())
+        if (checkNameExistsIgnoreCase(roleUpdated.getName())
             && !roleGetById.getName().equals(roleUpdated.getName())
         ) {
             throw new IllegalArgumentException(String.format("Role with name '%s' already exists!", roleUpdated.getName()));
         }
 
-        this.checkNullAndSetListPermissions(roleUpdated, roleGetById);
-
         roleGetById.setName(roleUpdated.getName());
         roleGetById.setActive(roleUpdated.isActive());
         roleGetById.setDescription(roleUpdated.getDescription());
 
-        return this.roleRepository.save(roleGetById);
+        return roleRepository.save(roleGetById);
     }
 
     @Override
     public Role getRoleById(Long id) {
-        return this.roleRepository
+        return roleRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Role with id " + id + " not found!"));
     }
@@ -99,21 +90,21 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @Override
     public void deleteRoleById(Long id) {
-        if (!this.checkIdExists(id)) {
+        if (!checkIdExists(id)) {
             throw new NoSuchElementException("Role with id " + id + " not found!");
         }
-        this.userRepository.deleteByRoleId(id);
-        this.roleRepository.deleteById(id);
+        userRepository.deleteByRoleId(id);
+        roleRepository.deleteById(id);
     }
 
     @Override
     public boolean checkIdExists(Long id) {
-        return this.roleRepository.existsById(id);
+        return roleRepository.existsById(id);
     }
 
     @Override
     public boolean checkNameExistsIgnoreCase(String name) {
-        return this.roleRepository.existsByNameIgnoreCase(name);
+        return roleRepository.existsByNameIgnoreCase(name);
     }
 
     @Override
@@ -180,7 +171,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public ResultPaginationDTO fetchAllRoles(Specification<Role> spec, Pageable pageable) {
-        Page<Role> pageHavRoles = this.roleRepository.findAll(spec, pageable);
+        Page<Role> pageHavRoles = roleRepository.findAll(spec, pageable);
 
         List<RestRoleViewDTO> restRoleViewDTOList = pageHavRoles.getContent()
                 .stream()

@@ -12,6 +12,7 @@ import com.fullstack.bookShop.service.CategoryService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,62 +24,62 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
 
     private final BookRepository bookRepository;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository, BookRepository bookRepository) {
-        this.categoryRepository = categoryRepository;
-        this.bookRepository = bookRepository;
-    }
-
     @Transactional
     @Override
     public Category createCategory(Category category) {
-        if (this.checkNameExistsIgnoreCase(category.getName())) {
+        if (checkNameExistsIgnoreCase(category.getName())) {
             throw new IllegalArgumentException("Category with name '" + category.getName() + "' already exists!");
         }
-        return this.categoryRepository.save(category);
+        return categoryRepository.save(category);
     }
 
     @Transactional
     @Override
     public Category updateCategoryById(Long id, Category categoryUpdated) {
-        Category categoryGetById = this.getCategoryById(id);
+        Category categoryGetById = getCategoryById(id);
 
-        if (this.checkNameExistsIgnoreCase(categoryUpdated.getName())
+        if (checkNameExistsIgnoreCase(categoryUpdated.getName())
                 && !categoryGetById.getName().equals(categoryUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists!");
+            throw new IllegalArgumentException(
+                    "Category with name '" + categoryUpdated.getName() + "' already exists!"
+            );
         }
 
         categoryGetById.setName(categoryUpdated.getName());
-        return this.categoryRepository.save(categoryGetById);
+        return categoryRepository.save(categoryGetById);
     }
 
     @Transactional
     @Override
     public Category updateCategoryPartialById(Long id, Category categoryUpdated) {
-        Category categoryGetById = this.getCategoryById(id);
+        Category categoryGetById = getCategoryById(id);
 
-        if (this.checkNameExistsIgnoreCase(categoryUpdated.getName())
+        if (checkNameExistsIgnoreCase(categoryUpdated.getName())
                 && !categoryGetById.getName().equals(categoryUpdated.getName())
         ) {
-            throw new IllegalArgumentException("Category with name '" + categoryUpdated.getName() + "' already exists!");
+            throw new IllegalArgumentException(
+                    "Category with name '" + categoryUpdated.getName() + "' already exists!"
+            );
         }
 
         if (categoryUpdated.getName() != null && !categoryUpdated.getName().isEmpty()) {
             categoryGetById.setName(categoryUpdated.getName());
         }
 
-        return this.categoryRepository.save(categoryGetById);
+        return categoryRepository.save(categoryGetById);
     }
 
     @Override
     public Category getCategoryById(Long id) {
-        return this.categoryRepository
+        return categoryRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Category with id '" + id + "' does not exist!"));
     }
@@ -86,21 +87,21 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public void deleteCategoryById(Long id) {
-        if (!this.checkIdExists(id)) {
+        if (!checkIdExists(id)) {
             throw new NoSuchElementException("Category with id '" + id + "' does not exist!");
         }
-        this.bookRepository.deleteByCategoryId(id);
-        this.categoryRepository.deleteById(id);
+        bookRepository.deleteByCategoryId(id);
+        categoryRepository.deleteById(id);
     }
 
     @Override
     public boolean checkIdExists(Long id) {
-        return this.categoryRepository.existsById(id);
+        return categoryRepository.existsById(id);
     }
 
     @Override
     public boolean checkNameExistsIgnoreCase(String name) {
-        return this.categoryRepository.existsByNameIgnoreCase(name);
+        return categoryRepository.existsByNameIgnoreCase(name);
     }
 
     @Override
@@ -137,7 +138,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public ResultPaginationDTO fetchAllCategories(Specification<Category> spec, Pageable pageable) {
-        Page<Category> categoryPage = this.categoryRepository.findAll(spec, pageable);
+        Page<Category> categoryPage = categoryRepository.findAll(spec, pageable);
 
         List<RestCategoryViewDTO> restCategoryViewDTOList = categoryPage.getContent()
                 .stream()
@@ -146,11 +147,14 @@ public class CategoryServiceImpl implements CategoryService {
 
         ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(categoryPage, pageable);
         resultPaginationDTO.setResult(restCategoryViewDTOList);
+
         return resultPaginationDTO;
     }
 
     @Override
-    public RestImportDTO<RestCategoryCreateDTO> importListCategoriesFromFile(List<RestCategoryCreateDTO> restCategoryCreateDTOList) {
+    public RestImportDTO<RestCategoryCreateDTO> importListCategoriesFromFile(
+            List<RestCategoryCreateDTO> restCategoryCreateDTOList
+    ) {
         RestImportDTO<RestCategoryCreateDTO> restImportDTO = new RestImportDTO<>();
         List<RestCategoryCreateDTO> successData = new ArrayList<>();
         List<RestImportDTO.DetailFaultInfo<RestCategoryCreateDTO>> detailFaultInfoList = new ArrayList<>();
@@ -162,12 +166,14 @@ public class CategoryServiceImpl implements CategoryService {
             RestCategoryCreateDTO restCategoryCreateDTO = restCategoryCreateDTOList.get(i);
 
             try {
-                if (this.checkNameExistsIgnoreCase(restCategoryCreateDTO.getName())) {
-                    throw new IllegalArgumentException("Category with name '" + restCategoryCreateDTO.getName() + "' already exists");
+                if (checkNameExistsIgnoreCase(restCategoryCreateDTO.getName())) {
+                    throw new IllegalArgumentException(
+                            "Category with name '" + restCategoryCreateDTO.getName() + "' already exists"
+                    );
                 }
 
-                Category category = this.buildCategoryFromRestCategoryCreateDTO(restCategoryCreateDTO);
-                RestCategoryCreateDTO categoryCreateDTO = this.convertCategoryToRestCategoryCreateDTO(category);
+                Category category = buildCategoryFromRestCategoryCreateDTO(restCategoryCreateDTO);
+                RestCategoryCreateDTO categoryCreateDTO = convertCategoryToRestCategoryCreateDTO(category);
                 successData.add(categoryCreateDTO);
                 countSuccess++;
 
@@ -203,6 +209,6 @@ public class CategoryServiceImpl implements CategoryService {
     private Category buildCategoryFromRestCategoryCreateDTO(RestCategoryCreateDTO restCategoryCreateDTO) {
         Category category = new Category();
         category.setName(restCategoryCreateDTO.getName());
-        return this.categoryRepository.save(category);
+        return categoryRepository.save(category);
     }
 }

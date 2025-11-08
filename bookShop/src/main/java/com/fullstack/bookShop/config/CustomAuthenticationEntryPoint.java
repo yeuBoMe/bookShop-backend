@@ -5,6 +5,7 @@ import com.fullstack.bookShop.domain.response.RestResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
@@ -15,15 +16,12 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final AuthenticationEntryPoint delegate = new BearerTokenAuthenticationEntryPoint();
 
     private final ObjectMapper objectMapper;
-
-    public CustomAuthenticationEntryPoint(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public void commence(
@@ -31,7 +29,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException, ServletException {
-        this.delegate.commence(request, response, authException);
+        delegate.commence(request, response, authException);
         response.setContentType("application/json;charset=UTF-8");
 
         String errorMessage = Optional.ofNullable(authException.getCause())
@@ -41,7 +39,9 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
         restResponse.setError(errorMessage);
-        restResponse.setMessage("Token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền vào JWT ở header)...");
+        restResponse.setMessage(
+                "Token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền vào JWT ở header)..."
+        );
 
         objectMapper.writeValue(response.getWriter(), restResponse);
     }

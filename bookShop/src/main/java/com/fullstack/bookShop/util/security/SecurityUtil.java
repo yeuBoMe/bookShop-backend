@@ -2,6 +2,7 @@ package com.fullstack.bookShop.util.security;
 
 import com.fullstack.bookShop.domain.dto.auth.RestLoginDTO;
 import com.nimbusds.jose.util.Base64;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -18,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class SecurityUtil {
 
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
@@ -32,10 +34,6 @@ public class SecurityUtil {
     private Long refreshTokenExpiration;
 
     private final JwtEncoder jwtEncoder;
-
-    public SecurityUtil(JwtEncoder jwtEncoder) {
-        this.jwtEncoder = jwtEncoder;
-    }
 
     public SecretKey getSecretKey() {
         byte[] bytes = Base64.from(this.jwtKey).decode();

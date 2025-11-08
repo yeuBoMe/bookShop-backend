@@ -14,6 +14,7 @@ import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.EmailService;
 import com.fullstack.bookShop.service.OrderService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
@@ -36,22 +38,10 @@ public class OrderServiceImpl implements OrderService {
 
     private final EmailService emailService;
 
-    public OrderServiceImpl(
-            OrderRepository orderRepository,
-            OrderDetailRepository orderDetailRepository,
-            BookService bookService,
-            EmailService emailService
-    ) {
-        this.orderRepository = orderRepository;
-        this.orderDetailRepository = orderDetailRepository;
-        this.bookService = bookService;
-        this.emailService = emailService;
-    }
-
     @Transactional
     @Override
     public Order createOrder(Order order) {
-        Order orderSaved = this.orderRepository.save(order);
+        Order orderSaved = orderRepository.save(order);
 
         List<OrderDetail> orderDetailList = Optional.ofNullable(order.getDetail())
                 .map(orderDetails -> orderDetails.stream()
@@ -59,10 +49,12 @@ public class OrderServiceImpl implements OrderService {
                             OrderDetail orderDetailNeedToSave = new OrderDetail();
 
                             if (orderDetail.getBook() != null) {
-                                if (!this.bookService.checkIdExists(orderDetail.getBook().getId())) {
-                                    throw new NoSuchElementException("Book with id " + orderDetail.getBook().getId() + " not found!");
+                                if (!bookService.checkIdExists(orderDetail.getBook().getId())) {
+                                    throw new NoSuchElementException(
+                                            "Book with id " + orderDetail.getBook().getId() + " not found!"
+                                    );
                                 }
-                                Book bookGetById = this.bookService.getBookById(orderDetail.getBook().getId());
+                                Book bookGetById = bookService.getBookById(orderDetail.getBook().getId());
                                 orderDetailNeedToSave.setBook(bookGetById);
                             }
 
@@ -75,13 +67,13 @@ public class OrderServiceImpl implements OrderService {
                         .toList())
                 .orElse(new ArrayList<>());
 
-        this.orderDetailRepository.saveAll(orderDetailList);
+        orderDetailRepository.saveAll(orderDetailList);
         orderSaved.setDetail(orderDetailList);
 
         // send order to email
-        RestOrderCreateDTO restOrderCreateDTO = this.convertOrderToRestOrderCreateDTO(orderSaved);
+        RestOrderCreateDTO restOrderCreateDTO = convertOrderToRestOrderCreateDTO(orderSaved);
         try {
-            this.emailService.sendEmailWithTemplateSync(
+            emailService.sendEmailWithTemplateSync(
                     orderSaved.getEmail(),
                     "Xác nhận đơn hàng #" + orderSaved.getId(),
                     "send-order",
@@ -98,33 +90,33 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public Order updateOrderPartialById(Long id, Order orderRequest) {
-        Order orderGetById = this.getOrderById(id);
+        Order orderGetById = getOrderById(id);
         if (orderRequest.getStatus() != null) {
             orderGetById.setStatus(orderRequest.getStatus());
         }
-        return this.orderRepository.save(orderGetById);
+        return orderRepository.save(orderGetById);
     }
 
     @Override
     public Order getOrderById(Long id) {
-        return this.orderRepository
+        return orderRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Order with id '" + id + "' not found!"));
     }
 
     @Override
     public boolean checkIdExists(Long id) {
-        return this.orderRepository.existsById(id);
+        return orderRepository.existsById(id);
     }
 
     @Transactional
     @Override
     public void deleteOrderById(Long id) {
-        if (!this.checkIdExists(id)) {
+        if (!checkIdExists(id)) {
             throw new NoSuchElementException("Order with id '" + id + "' does not exist!");
         }
-        this.orderDetailRepository.deleteByOrderId(id);
-        this.orderRepository.deleteById(id);
+        orderDetailRepository.deleteByOrderId(id);
+        orderRepository.deleteById(id);
     }
 
     @Override
@@ -218,7 +210,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResultPaginationDTO fetchListOrders(Specification<Order> spec, Pageable pageable) {
-        Page<Order> orderPage = this.orderRepository.findAll(spec, pageable);
+        Page<Order> orderPage = orderRepository.findAll(spec, pageable);
 
         List<RestOrderViewDTO> restOrderViewDTOList = orderPage.getContent()
                 .stream()
@@ -233,7 +225,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ResultPaginationDTO fetchListOrdersHistory(String email, Pageable pageable) {
-        Page<Order> orderPage = this.orderRepository.findAllByEmail(email, pageable);
+        Page<Order> orderPage = orderRepository.findAllByEmail(email, pageable);
 
         List<RestOrderViewDTO> restOrderDetailViewDTOList = orderPage.getContent()
                 .stream()

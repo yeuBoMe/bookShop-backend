@@ -11,6 +11,7 @@ import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -19,21 +20,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
-
     @ApiMessage("Create an order")
     @PostMapping
     public ResponseEntity<RestOrderCreateDTO> createOrderRequest(@Valid @RequestBody Order order) {
-        Order orderCreated = this.orderService.createOrder(order);
+        Order orderCreated = orderService.createOrder(order);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(this.orderService.convertOrderToRestOrderCreateDTO(orderCreated));
+                .body(orderService.convertOrderToRestOrderCreateDTO(orderCreated));
     }
 
     @ApiMessage("Fetch list orders")
@@ -42,18 +40,14 @@ public class OrderController {
             @Filter Specification<Order> spec,
             Pageable pageable
     ) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.orderService.fetchListOrders(spec, pageable));
+        return ResponseEntity.ok(orderService.fetchListOrders(spec, pageable));
     }
 
     @ApiMessage("Get an order")
     @GetMapping("/{id}")
     public ResponseEntity<RestOrderViewDTO> getOrderByIdRequest(@PathVariable Long id) {
-        Order orderGetById = this.orderService.getOrderById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.orderService.convertOrderToRestOrderViewDTO(orderGetById));
+        Order orderGetById = orderService.getOrderById(id);
+        return ResponseEntity.ok(orderService.convertOrderToRestOrderViewDTO(orderGetById));
     }
 
     @ApiMessage("Update an order")
@@ -65,27 +59,21 @@ public class OrderController {
         Order order = new Order();
         order.setStatus(restOrderStatusDTO.getStatus());
 
-        Order orderUpdated = this.orderService.updateOrderPartialById(id, order);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.orderService.convertOrderToRestOrderUpdateDTO(orderUpdated));
+        Order orderUpdated = orderService.updateOrderPartialById(id, order);
+        return ResponseEntity.ok(orderService.convertOrderToRestOrderUpdateDTO(orderUpdated));
     }
 
     @ApiMessage("Delete an order")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrderRequest(@PathVariable Long id) {
-        this.orderService.deleteOrderById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(null);
+        orderService.deleteOrderById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @ApiMessage("Get order history")
     @GetMapping("/history")
     public ResponseEntity<ResultPaginationDTO> getOrderHistoryRequest(Pageable pageable) {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.orderService.fetchListOrdersHistory(email, pageable));
+        return ResponseEntity.ok(orderService.fetchListOrdersHistory(email, pageable));
     }
 }

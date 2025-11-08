@@ -98,7 +98,9 @@ public class CategoryController {
     ) {
         RestImportDTO<RestCategoryCreateDTO> restImportDTO
                 = this.categoryService.importListCategoriesFromFile(restCategoryCreateDTOList);
+
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
+
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);

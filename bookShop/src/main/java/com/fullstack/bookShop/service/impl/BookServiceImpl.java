@@ -14,6 +14,7 @@ import com.fullstack.bookShop.service.CategoryService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
@@ -34,22 +36,14 @@ public class BookServiceImpl implements BookService {
 
     private final CategoryService categoryService;
 
-    public BookServiceImpl(
-            BookRepository bookRepository,
-            RatingRepository ratingRepository,
-            CategoryService categoryService
-    ) {
-        this.bookRepository = bookRepository;
-        this.ratingRepository = ratingRepository;
-        this.categoryService = categoryService;
-    }
-
     private void checkNullAndSetCategory(Book bookRequest, Book currentBook) {
         if (bookRequest.getCategory() != null) {
-            if (!this.categoryService.checkIdExists(bookRequest.getCategory().getId())) {
-                throw new NoSuchElementException("Category with id '" + bookRequest.getCategory().getId() + "' not exist!");
+            if (!categoryService.checkIdExists(bookRequest.getCategory().getId())) {
+                throw new NoSuchElementException(
+                        "Category with id '" + bookRequest.getCategory().getId() + "' not exist!"
+                );
             }
-            Category categoryGetById = this.categoryService.getCategoryById(bookRequest.getCategory().getId());
+            Category categoryGetById = categoryService.getCategoryById(bookRequest.getCategory().getId());
             currentBook.setCategory(categoryGetById);
         }
     }
@@ -57,37 +51,33 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Override
     public Book createBook(Book book) {
-        if (this.checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
-            throw new IllegalArgumentException(
-                    String.format("Book with name '%s' and author '%s' already exists!",
-                            book.getName(),
-                            book.getAuthor()
-                    )
-            );
+        if (checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
+            throw new IllegalArgumentException(String.format(
+                    "Book with name '%s' and author '%s' already exists!",
+                    book.getName(),
+                    book.getAuthor()
+            ));
         }
-
-        this.checkNullAndSetCategory(book, book);
-        return this.bookRepository.save(book);
+        checkNullAndSetCategory(book, book);
+        return bookRepository.save(book);
     }
 
     @Transactional
     @Override
     public Book updateBookById(Long id, Book bookUpdated) {
-        Book bookGetById = this.getBookById(id);
+        Book bookGetById = getBookById(id);
+        checkNullAndSetCategory(bookUpdated, bookGetById);
 
-        if (this.checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
+        if (checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
                 && !(bookGetById.getName().equals(bookUpdated.getName())
                 && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
         ) {
-            throw new IllegalArgumentException(
-                    String.format("Book with name '%s' and author '%s' already exists!",
-                            bookUpdated.getName(),
-                            bookUpdated.getAuthor()
-                    )
-            );
+            throw new IllegalArgumentException(String.format(
+                    "Book with name '%s' and author '%s' already exists!",
+                    bookUpdated.getName(),
+                    bookUpdated.getAuthor()
+            ));
         }
-
-        this.checkNullAndSetCategory(bookUpdated, bookGetById);
 
         bookGetById.setName(bookUpdated.getName());
         bookGetById.setPrice(bookUpdated.getPrice());
@@ -96,66 +86,59 @@ public class BookServiceImpl implements BookService {
         bookGetById.setDescription(bookUpdated.getDescription());
         bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
         bookGetById.setReader(bookUpdated.getReader());
-        return this.bookRepository.save(bookGetById);
+
+        return bookRepository.save(bookGetById);
     }
 
     @Transactional
     @Override
     public Book updateBookPartialById(Long id, Book bookUpdated) {
-        Book bookGetById = this.getBookById(id);
+        Book bookGetById = getBookById(id);
 
-        if (this.checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
+        if (checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
                 && !(bookGetById.getName().equals(bookUpdated.getName())
                 && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
         ) {
-            throw new IllegalArgumentException(
-                    String.format("Book with name '%s' and author '%s' already exists!",
-                            bookUpdated.getName(),
-                            bookUpdated.getAuthor()
-                    )
-            );
+            throw new IllegalArgumentException(String.format(
+                    "Book with name '%s' and author '%s' already exists!",
+                    bookUpdated.getName(),
+                    bookUpdated.getAuthor()
+            ));
         }
 
         if (bookUpdated.getName() != null && !bookUpdated.getName().isEmpty()) {
             bookGetById.setName(bookUpdated.getName());
         }
-
         if (bookUpdated.getPrice() != null) {
             bookGetById.setPrice(bookUpdated.getPrice());
         }
-
         if (bookUpdated.getQuantity() != null) {
             bookGetById.setQuantity(bookUpdated.getQuantity());
         }
-
         if (bookUpdated.getAuthor() != null) {
             bookGetById.setAuthor(bookUpdated.getAuthor());
         }
-
         if (bookUpdated.getDescription() != null) {
             bookGetById.setDescription(bookUpdated.getDescription());
         }
-
         if (bookUpdated.getIntroduceText() != null) {
             bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
         }
-
         if (bookUpdated.getReader() != null) {
             bookGetById.setReader(bookUpdated.getReader());
         }
-
         if (bookUpdated.getImages() != null && !bookUpdated.getImages().isEmpty()) {
             System.out.println("Updating book image to: " + bookUpdated.getImages());
             bookGetById.setImages(bookUpdated.getImages());
         }
 
-        this.checkNullAndSetCategory(bookUpdated, bookGetById);
-        return this.bookRepository.save(bookGetById);
+        checkNullAndSetCategory(bookUpdated, bookGetById);
+        return bookRepository.save(bookGetById);
     }
 
     @Override
     public Book getBookById(Long id) {
-        return this.bookRepository
+        return bookRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Book with id '" + id + "' not found!"));
     }
@@ -163,21 +146,21 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Override
     public void deleteBookById(Long id) {
-        if (!this.checkIdExists(id)) {
+        if (!checkIdExists(id)) {
             throw new NoSuchElementException("Book with id '" + id + "' not found!");
         }
-        this.ratingRepository.deleteByBookId(id);
-        this.bookRepository.deleteById(id);
+        ratingRepository.deleteByBookId(id);
+        bookRepository.deleteById(id);
     }
 
     @Override
     public boolean checkIdExists(Long id) {
-        return this.bookRepository.existsById(id);
+        return bookRepository.existsById(id);
     }
 
     @Override
     public boolean checkNameAndAuthorExistsIgnoreCase(String name, String author) {
-        return this.bookRepository.existsByNameAndAuthorIgnoreCase(name, author);
+        return bookRepository.existsByNameAndAuthorIgnoreCase(name, author);
     }
 
     @Override
@@ -230,7 +213,7 @@ public class BookServiceImpl implements BookService {
                 .map(Category::getName)
                 .orElse(null);
 
-        Double averageStars = this.ratingRepository.getAverageRatingByBookId(book.getId());
+        Double averageStars = ratingRepository.getAverageRatingByBookId(book.getId());
 
         return RestBookViewDTO.builder()
                 .id(book.getId())
@@ -253,7 +236,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public ResultPaginationDTO fetchListBooks(Specification<Book> spec, Pageable pageable) {
-        Page<Book> bookPage = this.bookRepository.findAll(spec, pageable);
+        Page<Book> bookPage = bookRepository.findAll(spec, pageable);
 
         List<RestBookViewDTO> restBookViewDTOList = bookPage.getContent()
                 .stream()
@@ -268,7 +251,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public ResultPaginationDTO fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable) {
-        Page<Book> bookPage = this.bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
+        Page<Book> bookPage = bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
 
         List<RestBookViewDTO> restBookViewDTOList = bookPage.getContent()
                 .stream()
@@ -294,24 +277,23 @@ public class BookServiceImpl implements BookService {
             Book book = bookList.get(i);
 
             try {
-                if (this.checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
-                    throw new IllegalArgumentException(
-                            String.format("Book with name '%s' and author '%s' already exists!",
-                                    book.getName(),
-                                    book.getAuthor()
-                            )
-                    );
+                if (checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
+                    throw new IllegalArgumentException(String.format(
+                            "Book with name '%s' and author '%s' already exists!",
+                            book.getName(),
+                            book.getAuthor()
+                    ));
                 }
 
-                this.checkNullAndSetCategory(book, book);
-                this.bookRepository.save(book);
+                checkNullAndSetCategory(book, book);
+                bookRepository.save(book);
 
-                RestBookCreateDTO restBookCreateDTO = this.convertBookToRestBookCreateDTO(book);
+                RestBookCreateDTO restBookCreateDTO = convertBookToRestBookCreateDTO(book);
                 successData.add(restBookCreateDTO);
                 countSuccess++;
 
             } catch (ConstraintViolationException e) {
-                RestBookCreateDTO restBookCreateDTO = this.convertBookToRestBookCreateDTO(book);
+                RestBookCreateDTO restBookCreateDTO = convertBookToRestBookCreateDTO(book);
                 countError++;
                 List<String> errorMessage = e.getConstraintViolations().stream()
                         .map(ConstraintViolation::getMessage)
@@ -323,7 +305,7 @@ public class BookServiceImpl implements BookService {
                 ));
 
             } catch (Exception e) {
-                RestBookCreateDTO restBookCreateDTO = this.convertBookToRestBookCreateDTO(book);
+                RestBookCreateDTO restBookCreateDTO = convertBookToRestBookCreateDTO(book);
                 countError++;
                 detailFaultInfoList.add(new RestImportDTO.DetailFaultInfo<>(
                         i + 1,

@@ -15,6 +15,7 @@ import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -38,24 +40,12 @@ public class UserServiceImpl implements UserService {
 
     private final RoleService roleService;
 
-    public UserServiceImpl(
-            UserRepository userRepository,
-            RatingRepository ratingRepository,
-            PasswordEncoder passwordEncoder,
-            RoleService roleService
-    ) {
-        this.userRepository = userRepository;
-        this.ratingRepository = ratingRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.roleService = roleService;
-    }
-
     private void validateAndSetRole(User userRequest, User currentUser) {
         if (userRequest.getRole() != null) {
-            if (!this.roleService.checkIdExists(userRequest.getRole().getId())) {
+            if (!roleService.checkIdExists(userRequest.getRole().getId())) {
                 throw new NoSuchElementException("Role with id " + userRequest.getRole().getId() + " not found!");
             }
-            Role roleGetById = this.roleService.getRoleById(userRequest.getRole().getId());
+            Role roleGetById = roleService.getRoleById(userRequest.getRole().getId());
             currentUser.setRole(roleGetById);
         }
     }
@@ -63,27 +53,26 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User createUser(User user) {
-        if (this.checkEmailExists(user.getEmail())) {
+        if (checkEmailExists(user.getEmail())) {
             throw new IllegalArgumentException("User with email '" + user.getEmail() + "' already exists!");
         }
-
-        if (this.checkPhoneExists(user.getPhone())) {
+        if (checkPhoneExists(user.getPhone())) {
             throw new IllegalArgumentException("User with phone '" + user.getPhone() + "' already exists!");
         }
 
-        this.validateAndSetRole(user, user);
+        validateAndSetRole(user, user);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
-        return this.userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Transactional
     @Override
     public User updateUserById(Long id, User userUpdated) {
-        User userGetById = this.getUserById(id);
-        this.validateAndSetRole(userUpdated, userGetById);
+        User userGetById = getUserById(id);
+        validateAndSetRole(userUpdated, userGetById);
 
-        if (this.checkPhoneExists(userUpdated.getPhone())
+        if (checkPhoneExists(userUpdated.getPhone())
                 && !userGetById.getPhone().equals(userUpdated.getPhone())
         ) {
             throw new IllegalArgumentException("User with phone '" + userUpdated.getPhone() + "' already exists!");
@@ -92,27 +81,24 @@ public class UserServiceImpl implements UserService {
         userGetById.setFullName(userUpdated.getFullName());
         userGetById.setPhone(userUpdated.getPhone());
 
-        return this.userRepository.save(userGetById);
+        return userRepository.save(userGetById);
     }
 
     @Transactional
     @Override
     public User updateUserPartialById(Long id, User userUpdated) {
-        User userGetById = this.getUserById(id);
-
-        this.validateAndSetRole(userUpdated, userGetById);
+        User userGetById = getUserById(id);
+        validateAndSetRole(userUpdated, userGetById);
 
         if (userUpdated.getAvatar() != null) {
             System.out.println("Updating avatar to: " + userUpdated.getAvatar());
             userGetById.setAvatar(userUpdated.getAvatar());
         }
-
         if (userUpdated.getFullName() != null && !userUpdated.getFullName().isEmpty()) {
             userGetById.setFullName(userUpdated.getFullName());
         }
-
         if (userUpdated.getPhone() != null && !userUpdated.getPhone().isEmpty()) {
-            if (this.checkPhoneExists(userUpdated.getPhone())
+            if (checkPhoneExists(userUpdated.getPhone())
                     && !userGetById.getPhone().equals(userUpdated.getPhone())
             ) {
                 throw new IllegalArgumentException("User with phone '" + userUpdated.getPhone() + "' already exists!");
@@ -120,28 +106,27 @@ public class UserServiceImpl implements UserService {
             userGetById.setPhone(userUpdated.getPhone());
         }
 
-        return this.userRepository.save(userGetById);
+        return userRepository.save(userGetById);
     }
 
     @Transactional
     @Override
     public User updateUserPasswordById(Long id, RestUserPassDTO restUserPassDTO) {
-        User userGetById = this.getUserById(id);
+        User userGetById = getUserById(id);
 
-        if (!this.passwordEncoder.matches(restUserPassDTO.getCurrentPassword(), userGetById.getPassword())) {
+        if (!passwordEncoder.matches(restUserPassDTO.getCurrentPassword(), userGetById.getPassword())) {
             throw new IllegalArgumentException("Current password doesn't match!");
         }
-
         if (restUserPassDTO.getNewPassword() != null) {
-            userGetById.setPassword(this.passwordEncoder.encode(restUserPassDTO.getNewPassword()));
+            userGetById.setPassword(passwordEncoder.encode(restUserPassDTO.getNewPassword()));
         }
 
-        return this.userRepository.save(userGetById);
+        return userRepository.save(userGetById);
     }
 
     @Override
     public User getUserById(Long id) {
-        return this.userRepository
+        return userRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("User with id " + id + " not found!"));
     }
@@ -149,43 +134,45 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void deleteUserById(Long id) {
-        if (!this.checkIdExists(id)) {
+        if (!checkIdExists(id)) {
             throw new NoSuchElementException("User with id " + id + " not found!");
         }
 
-        User userGetById = this.getUserById(id);
-        if (userGetById.getRole() != null && userGetById.getRole().getName().equals("ADMIN")) {
+        User userGetById = getUserById(id);
+        if (userGetById.getRole() != null
+                && userGetById.getRole().getName().equals("ADMIN")
+        ) {
             throw new IllegalStateException("You do not have permission to delete this user!");
         }
 
-        this.ratingRepository.deleteByUserId(id);
-        this.userRepository.deleteById(id);
+        ratingRepository.deleteByUserId(id);
+        userRepository.deleteById(id);
     }
 
     @Override
     public User getUserByEmail(String email) {
-        return this.userRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("User with email '" + email + "' not found!"));
     }
 
     @Override
     public User getUserByEmailAndRefreshToken(String email, String refreshToken) {
-        return this.userRepository.findByEmailAndRefreshToken(email, refreshToken)
+        return userRepository.findByEmailAndRefreshToken(email, refreshToken)
                 .orElseThrow(() -> new NoSuchElementException("User not found!"));
     }
 
     @Override
     public void handleSaveUserRefreshToken(String email, String refreshToken) {
-        User userGetByEmail = this.getUserByEmail(email);
+        User userGetByEmail = getUserByEmail(email);
         if (userGetByEmail != null) {
             userGetByEmail.setRefreshToken(refreshToken);
-            this.userRepository.save(userGetByEmail);
+            userRepository.save(userGetByEmail);
         }
     }
 
     @Override
     public ResultPaginationDTO fetchAllUsers(Specification<User> spec, Pageable pageable) {
-        Page<User> pageHavUsers = this.userRepository.findAll(spec, pageable);
+        Page<User> pageHavUsers = userRepository.findAll(spec, pageable);
 
         List<RestUserViewDTO> restUserViewDTOList = pageHavUsers.getContent()
                 .stream()
@@ -200,17 +187,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean checkEmailExists(String email) {
-        return this.userRepository.existsByEmail(email);
+        return userRepository.existsByEmail(email);
     }
 
     @Override
     public boolean checkPhoneExists(String phone) {
-        return this.userRepository.existsByPhone(phone);
+        return userRepository.existsByPhone(phone);
     }
 
     @Override
     public boolean checkIdExists(Long id) {
-        return this.userRepository.existsById(id);
+        return userRepository.existsById(id);
     }
 
     @Override
@@ -282,16 +269,20 @@ public class UserServiceImpl implements UserService {
             RestUserCreateDTO restUserCreateDTO = restUserCreateDTOList.get(i);
 
             try {
-                if (this.checkEmailExists(restUserCreateDTO.getEmail())) {
-                    throw new IllegalArgumentException("User with email '" + restUserCreateDTO.getEmail() + "' already exists!");
+                if (checkEmailExists(restUserCreateDTO.getEmail())) {
+                    throw new IllegalArgumentException(
+                            "User with email '" + restUserCreateDTO.getEmail() + "' already exists!"
+                    );
                 }
 
-                if (this.checkPhoneExists(restUserCreateDTO.getPhone())) {
-                    throw new IllegalArgumentException("User with phone '" + restUserCreateDTO.getPhone() + "' already exists!");
+                if (checkPhoneExists(restUserCreateDTO.getPhone())) {
+                    throw new IllegalArgumentException(
+                            "User with phone '" + restUserCreateDTO.getPhone() + "' already exists!"
+                    );
                 }
 
-                User userBuiltFromRestUserCreatedDTO = this.buildUserFromRestUserCreatedDTO(restUserCreateDTO);
-                RestUserCreateDTO userDTO = this.convertUserToRestUserCreateDTO(userBuiltFromRestUserCreatedDTO);
+                User userBuiltFromRestUserCreatedDTO = buildUserFromRestUserCreatedDTO(restUserCreateDTO);
+                RestUserCreateDTO userDTO = convertUserToRestUserCreateDTO(userBuiltFromRestUserCreatedDTO);
                 successUsers.add(userDTO);
                 countSuccess++;
 
@@ -328,8 +319,8 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setFullName(restUserCreateDTO.getFullName().trim());
         user.setEmail(restUserCreateDTO.getEmail().trim());
-        user.setPassword(this.passwordEncoder.encode("123456"));
+        user.setPassword(passwordEncoder.encode("123456"));
         user.setPhone(restUserCreateDTO.getPhone().trim());
-        return this.userRepository.save(user);
+        return userRepository.save(user);
     }
 }

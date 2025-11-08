@@ -8,6 +8,7 @@ import com.fullstack.bookShop.domain.entity.Permission;
 import com.fullstack.bookShop.repository.PermissionRepository;
 import com.fullstack.bookShop.service.PermissionService;
 import com.fullstack.bookShop.util.pagination.PageUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,44 +19,50 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository permissionRepository;
 
-    public PermissionServiceImpl(PermissionRepository permissionRepository) {
-        this.permissionRepository = permissionRepository;
-    }
-
     @Transactional
     @Override
     public Permission createPermission(Permission permission) {
-        if (!this.checkNameExistsIgnoreCase(permission.getName())
-                || this.checkApiPathAndMethodAndModuleExists(permission.getApiPath(), permission.getMethod(), permission.getModule())
+        if (!checkNameExistsIgnoreCase(permission.getName())
+                || checkApiPathAndMethodAndModuleExists(
+                        permission.getApiPath(), permission.getMethod(), permission.getModule())
         ) {
-            throw new IllegalArgumentException(String.format("Permission with name '%s' already exists!", permission.getName()));
+            throw new IllegalArgumentException(String.format(
+                    "Permission with name '%s' already exists!", permission.getName()
+            ));
         }
-        return this.permissionRepository.save(permission);
+        return permissionRepository.save(permission);
     }
 
     @Transactional
     @Override
     public Permission updatePermission(Long id, Permission permissionUpdated) {
-        Permission permissionGetById = this.getPermissionById(id);
+        Permission permissionGetById = getPermissionById(id);
 
-        if (this.checkNameExistsIgnoreCase(permissionUpdated.getName())
+        if (checkNameExistsIgnoreCase(permissionUpdated.getName())
                 && !permissionGetById.getName().equals(permissionUpdated.getName())
         ) {
-            throw new IllegalArgumentException(String.format("Permission with name '%s' already exists!", permissionUpdated.getName()));
+            throw new IllegalArgumentException(String.format(
+                    "Permission with name '%s' already exists!", permissionUpdated.getName())
+            );
         }
 
-        if (this.checkApiPathAndMethodAndModuleExists(permissionUpdated.getApiPath(), permissionUpdated.getMethod(), permissionUpdated.getModule())
+        if (checkApiPathAndMethodAndModuleExists(
+                permissionUpdated.getApiPath(), permissionUpdated.getMethod(), permissionUpdated.getModule())
                 && !(permissionGetById.getApiPath().equals(permissionUpdated.getApiPath())
                     && permissionGetById.getModule().equals(permissionUpdated.getModule())
                     && permissionGetById.getMethod().equals(permissionUpdated.getMethod()))
         ) {
-            throw new IllegalArgumentException(String.format("Permission with apiPath: '%s', method: '%s', module: '%s' already exists!",
-                    permissionUpdated.getApiPath(), permissionUpdated.getMethod(), permissionUpdated.getModule())
-            );
+            throw new IllegalArgumentException(String.format(
+                    "Permission with apiPath: '%s', method: '%s', module: '%s' already exists!",
+                    permissionUpdated.getApiPath(),
+                    permissionUpdated.getMethod(),
+                    permissionUpdated.getModule()
+            ));
         }
 
         permissionGetById.setName(permissionUpdated.getName());
@@ -63,26 +70,27 @@ public class PermissionServiceImpl implements PermissionService {
         permissionGetById.setMethod(permissionUpdated.getMethod());
         permissionGetById.setModule(permissionUpdated.getModule());
 
-        return this.permissionRepository.save(permissionGetById);
+        return permissionRepository.save(permissionGetById);
     }
 
     @Override
     public Permission getPermissionById(Long id) {
-        return this.permissionRepository
+        return permissionRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Permission with id " + id + " not found!"));
     }
 
     @Override
     public ResultPaginationDTO fetchAllPermissions(Specification<Permission> spec, Pageable pageable) {
-        Page<Permission> pageHavPermissions = this.permissionRepository.findAll(spec, pageable);
+        Page<Permission> pageHavPermissions = permissionRepository.findAll(spec, pageable);
 
         List<RestPermissionViewDTO> permissionViewDTOList = pageHavPermissions.getContent()
                 .stream()
                 .map(this::convertPermissionToRestPermissionViewDTO)
                 .toList();
 
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavPermissions, pageable);
+        ResultPaginationDTO resultPaginationDTO
+                = PageUtil.handleFetchAllDataWithPagination(pageHavPermissions, pageable);
         resultPaginationDTO.setResult(permissionViewDTOList);
 
         return resultPaginationDTO;
@@ -91,31 +99,31 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional
     @Override
     public void deletePermissionById(Long id) {
-        if (!this.checkIdExists(id)) {
+        if (!checkIdExists(id)) {
             throw new NoSuchElementException("Permission with id " + id + " not found!");
         }
 
-        Permission permissionGetById = this.getPermissionById(id);
-        permissionGetById.getRoles().forEach(role -> role
-                .getPermissions().remove(permissionGetById)
+        Permission permissionGetById = getPermissionById(id);
+        permissionGetById.getRoles().forEach(role -> role.getPermissions()
+                .remove(permissionGetById)
         );
 
-        this.permissionRepository.delete(permissionGetById);
+        permissionRepository.delete(permissionGetById);
     }
 
     @Override
     public boolean checkNameExistsIgnoreCase(String name) {
-        return this.permissionRepository.existsByNameIgnoreCase(name);
+        return permissionRepository.existsByNameIgnoreCase(name);
     }
 
     @Override
     public boolean checkIdExists(Long id) {
-        return this.permissionRepository.existsById(id);
+        return permissionRepository.existsById(id);
     }
 
     @Override
     public boolean checkApiPathAndMethodAndModuleExists(String apiPath, String method, String module) {
-        return this.permissionRepository.existsByApiPathAndMethodAndModule(apiPath, method, module);
+        return permissionRepository.existsByApiPathAndMethodAndModule(apiPath, method, module);
     }
 
     @Override

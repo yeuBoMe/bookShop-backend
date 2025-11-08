@@ -9,6 +9,7 @@ import com.fullstack.bookShop.service.RoleService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -17,21 +18,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/roles")
+@RequiredArgsConstructor
 public class RoleController {
 
     private final RoleService roleService;
 
-    public RoleController(RoleService roleService) {
-        this.roleService = roleService;
-    }
-
     @PostMapping
     @ApiMessage("Create role")
     public ResponseEntity<RestRoleCreateDTO> createRoleRequest(@Valid @RequestBody Role roleRequest) {
-        Role roleCreated = this.roleService.createRole(roleRequest);
+        Role roleCreated = roleService.createRole(roleRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(this.roleService.convertRoleToRestRoleCreateDTO(roleCreated));
+                .body(roleService.convertRoleToRestRoleCreateDTO(roleCreated));
     }
 
     @GetMapping
@@ -40,18 +38,14 @@ public class RoleController {
             @Filter Specification<Role> spec,
             Pageable pageable
     ) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.roleService.fetchAllRoles(spec, pageable));
+        return ResponseEntity.ok(roleService.fetchAllRoles(spec, pageable));
     }
 
     @GetMapping("/{id}")
     @ApiMessage("Get role")
     public ResponseEntity<RestRoleViewDTO> getRoleByIdRequest(@PathVariable Long id) {
-        Role roleGetById = this.roleService.getRoleById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.roleService.convertRoleToRestRoleViewDTO(roleGetById));
+        Role roleGetById = roleService.getRoleById(id);
+        return ResponseEntity.ok(roleService.convertRoleToRestRoleViewDTO(roleGetById));
     }
 
     @PutMapping("/{id}")
@@ -60,19 +54,15 @@ public class RoleController {
             @PathVariable Long id,
             @Valid @RequestBody Role roleRequest
     ) {
-        Role roleUpdated = this.roleService.updateRoleById(id, roleRequest);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.roleService.convertRoleToRestRoleUpdateDTO(roleUpdated));
+        Role roleUpdated = roleService.updateRoleById(id, roleRequest);
+        return ResponseEntity.ok(roleService.convertRoleToRestRoleUpdateDTO(roleUpdated));
     }
 
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete role")
     public ResponseEntity<Void> deleteRoleByIdRequest(@PathVariable Long id) {
-        this.roleService.deleteRoleById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(null);
+        roleService.deleteRoleById(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -14,6 +14,7 @@ import com.fullstack.bookShop.util.imports.FileValidUtil;
 import com.fullstack.bookShop.util.imports.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +29,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/books")
+@RequiredArgsConstructor
 public class BookController {
 
     @Value("${bookshop.upload-file.base-uri}")
@@ -37,18 +39,13 @@ public class BookController {
 
     private final FileService fileService;
 
-    public BookController(BookService bookService, FileService fileService) {
-        this.bookService = bookService;
-        this.fileService = fileService;
-    }
-
     @ApiMessage("Create book")
     @PostMapping
     public ResponseEntity<RestBookCreateDTO> createBookRequest(@Valid @RequestBody Book book) {
-        Book bookCreated = this.bookService.createBook(book);
+        Book bookCreated = bookService.createBook(book);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(this.bookService.convertBookToRestBookCreateDTO(bookCreated));
+                .body(bookService.convertBookToRestBookCreateDTO(bookCreated));
     }
 
     @ApiMessage("Fetch list books")
@@ -57,9 +54,7 @@ public class BookController {
             @Filter Specification<Book> spec,
             Pageable pageable
     ) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.bookService.fetchListBooks(spec, pageable));
+        return ResponseEntity.ok(bookService.fetchListBooks(spec, pageable));
     }
 
     @ApiMessage("Fetch list books by average rating")
@@ -68,18 +63,14 @@ public class BookController {
             @RequestParam(defaultValue = "0") Double minRating,
             Pageable pageable
     ) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
+        return ResponseEntity.ok(bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
     }
 
     @ApiMessage("Get book")
     @GetMapping("/{id}")
     public ResponseEntity<RestBookViewDTO> getBookByIdRequest(@PathVariable Long id) {
-        Book bookGetById = this.bookService.getBookById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.bookService.convertBookToRestBookViewDTO(bookGetById));
+        Book bookGetById = bookService.getBookById(id);
+        return ResponseEntity.ok(bookService.convertBookToRestBookViewDTO(bookGetById));
     }
 
     @ApiMessage("Update book")
@@ -88,10 +79,8 @@ public class BookController {
             @Valid @RequestBody Book book,
             @PathVariable Long id
     ) {
-        Book bookUpdated = this.bookService.updateBookById(id, book);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.updateBookById(id, book);
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
     @ApiMessage("Update book partial")
@@ -100,19 +89,15 @@ public class BookController {
             @Valid @RequestBody Book book,
             @PathVariable Long id
     ) {
-        Book bookUpdated = this.bookService.updateBookPartialById(id, book);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.updateBookPartialById(id, book);
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
     @ApiMessage("Delete book")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBookByIdRequest(@PathVariable Long id) {
-        this.bookService.deleteBookById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(null);
+        bookService.deleteBookById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @ApiMessage("Update book image")
@@ -124,18 +109,15 @@ public class BookController {
             StorageException,
             URISyntaxException,
             IOException {
-
         FileValidUtil.validateFile(file);
-        this.fileService.createUploadFolder(this.baseUri + "book");
-        String fileUploaded = this.fileService.storeSingleFile(file, "book");
+        fileService.createUploadFolder(baseUri + "book");
+        String fileUploaded = fileService.storeSingleFile(file, "book");
 
         Book book = new Book();
         book.setImages(List.of(fileUploaded));
-        Book bookUpdated = this.bookService.updateBookPartialById(id, book);
+        Book bookUpdated = bookService.updateBookPartialById(id, book);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
     @ApiMessage("Update book multiple images")
@@ -149,16 +131,14 @@ public class BookController {
             IOException {
 
         FileValidUtil.validateListFiles(files);
-        this.fileService.createUploadFolder(this.baseUri + "book");
-        List<String> fileNames = this.fileService.storeMultipleFiles(files, "book");
+        fileService.createUploadFolder(baseUri + "book");
+        List<String> fileNames = fileService.storeMultipleFiles(files, "book");
 
         Book book = new Book();
         book.setImages(fileNames);
-        Book bookUpdated = this.bookService.updateBookPartialById(id, book);
+        Book bookUpdated = bookService.updateBookPartialById(id, book);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
     @ApiMessage("Delete book single image")
@@ -167,21 +147,17 @@ public class BookController {
             @PathVariable Long id,
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws URISyntaxException, IOException {
+        fileService.deleteSingleFile(fileName, "book");
 
-        this.fileService.deleteSingleFile(fileName, "book");
-
-        Book bookGetById = this.bookService.getBookById(id);
+        Book bookGetById = bookService.getBookById(id);
         List<String> currentImages = bookGetById.getImages();
         if (currentImages != null && !currentImages.isEmpty()) {
             currentImages.remove(fileName);
             bookGetById.setImages(currentImages);
         }
 
-        Book bookUpdated = this.bookService.updateBookPartialById(id, bookGetById);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
     @ApiMessage("Delete book multiple image")
@@ -190,21 +166,17 @@ public class BookController {
             @PathVariable Long id,
             @RequestBody List<String> fileNames
     ) throws URISyntaxException, IOException {
+        fileService.deleteMultipleFiles(fileNames, "book");
 
-        this.fileService.deleteMultipleFiles(fileNames, "book");
-
-        Book bookGetById = this.bookService.getBookById(id);
+        Book bookGetById = bookService.getBookById(id);
         List<String> currentImages = bookGetById.getImages();
         if (currentImages != null && !currentImages.isEmpty()) {
             currentImages.removeAll(fileNames);
             bookGetById.setImages(currentImages);
         }
 
-        Book bookUpdated = this.bookService.updateBookPartialById(id, bookGetById);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
     @ApiMessage("Import books from file")
@@ -212,9 +184,11 @@ public class BookController {
     public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(
             @Valid @RequestBody List<Book> bookList
     ) {
-        RestImportDTO<RestBookCreateDTO> restImportDTO =
-                this.bookService.importListBooksFromFile(bookList);
+        RestImportDTO<RestBookCreateDTO> restImportDTO
+                = bookService.importListBooksFromFile(bookList);
+
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
+
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);
