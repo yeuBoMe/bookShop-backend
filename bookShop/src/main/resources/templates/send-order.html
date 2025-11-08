@@ -157,6 +157,7 @@
                 <strong th:switch="${order.paymentMethod}">
                     <span th:case="'cod'">Thanh toán khi nhận hàng</span>
                     <span th:case="'banking'">Chuyển khoản</span>
+                    <span th:case="'vnpay'">Ví VNPay</span>
                 </strong>
             </p>
             <p>Địa chỉ giao hàng: <strong th:text="${order.address}"></strong></p>

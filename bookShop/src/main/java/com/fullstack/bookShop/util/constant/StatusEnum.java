@@ -4,5 +4,6 @@ public enum StatusEnum {
     SUCCESS,
     PENDING,
     CANCEL,
-    SHIPPING
+    SHIPPING,
+    PAID
 }

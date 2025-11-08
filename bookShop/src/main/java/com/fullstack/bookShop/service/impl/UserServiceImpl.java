@@ -274,7 +274,6 @@ public class UserServiceImpl implements UserService {
                             "User with email '" + restUserCreateDTO.getEmail() + "' already exists!"
                     );
                 }
-
                 if (checkPhoneExists(restUserCreateDTO.getPhone())) {
                     throw new IllegalArgumentException(
                             "User with phone '" + restUserCreateDTO.getPhone() + "' already exists!"

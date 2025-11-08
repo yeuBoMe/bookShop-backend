@@ -133,7 +133,6 @@ public class UserController {
         User userGetById = userService.getUserById(id);
         if (userGetById.getAvatar() != null && userGetById.getAvatar().equals(fileName)) {
             userGetById.setAvatar(null);
-
         }
 
         User userUpdated = userService.updateUserPartialById(id, userGetById);
