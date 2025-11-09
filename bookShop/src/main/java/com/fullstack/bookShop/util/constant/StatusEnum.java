@@ -5,5 +5,5 @@ public enum StatusEnum {
     PENDING,
     CANCEL,
     SHIPPING,
-    PAID
+    PAID,
 }
