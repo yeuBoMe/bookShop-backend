@@ -1,9 +1,10 @@
 package com.fullstack.bookShop.controller.vnpay;
 
 import com.fullstack.bookShop.config.VnPayConfig;
+import com.fullstack.bookShop.domain.dto.vnpay.RestVnPayDTO;
 import com.fullstack.bookShop.domain.entity.Order;
 import com.fullstack.bookShop.service.OrderService;
-import com.fullstack.bookShop.util.constant.StatusEnum;
+import com.fullstack.bookShop.util.annotation.ApiMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +20,13 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/vnpay")
-@RequiredArgsConstructor
 public class VnPayController {
 
-    private final OrderService orderService;
-
-    private final HttpServletRequest httpServletRequest;
-
-    @GetMapping("/create/{orderId}")
-    public String createVnPayUrl(@PathVariable Long orderId) throws UnsupportedEncodingException {
-        Order orderGetById = orderService.getOrderById(orderId);
-        Double amount = orderGetById.getTotalPrice();
-        String vnp_TxnRef = orderId.toString();
+    @PostMapping("/create-url")
+    @ApiMessage("Tạo link thanh toán VNPay thành công")
+    public ResponseEntity<RestVnPayDTO> createVnPayUrl(@RequestBody Double amount)
+            throws UnsupportedEncodingException {
+        String vnp_TxnRef = VnPayConfig.getRandomNumber(8);
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
@@ -86,7 +82,7 @@ public class VnPayController {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = VnPayConfig.vnp_PayUrl + "?" + queryUrl;
 
-        return paymentUrl;
+        return ResponseEntity.ok(new RestVnPayDTO(paymentUrl));
     }
 
 //    // -----------------------------
