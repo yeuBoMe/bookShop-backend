@@ -2,12 +2,9 @@ package com.fullstack.bookShop.controller.vnpay;
 
 import com.fullstack.bookShop.config.VnPayConfig;
 import com.fullstack.bookShop.domain.dto.vnpay.RestVnPayDTO;
-import com.fullstack.bookShop.domain.entity.Order;
-import com.fullstack.bookShop.service.OrderService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +21,9 @@ public class VnPayController {
 
     @PostMapping("/create-url")
     @ApiMessage("Tạo link thanh toán VNPay thành công")
-    public ResponseEntity<RestVnPayDTO> createVnPayUrl(@RequestBody Double amount)
+    public ResponseEntity<RestVnPayDTO> createVnPayUrl(@RequestBody Map<String, Double> body)
             throws UnsupportedEncodingException {
+        Double amount = body.get("amount");
         String vnp_TxnRef = VnPayConfig.getRandomNumber(8);
 
         Map<String, String> vnp_Params = new HashMap<>();
