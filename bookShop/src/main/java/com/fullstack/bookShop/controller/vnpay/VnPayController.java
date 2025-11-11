@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -21,9 +20,11 @@ public class VnPayController {
 
     @PostMapping("/create-url")
     @ApiMessage("Tạo link thanh toán VNPay thành công")
-    public ResponseEntity<RestVnPayDTO> createVnPayUrl(@RequestBody Map<String, Double> body)
+    public ResponseEntity<RestVnPayDTO> createVnPayUrl(@RequestBody Map<String, Object> body)
             throws UnsupportedEncodingException {
-        Double amount = body.get("amount");
+        Double amount = ((Number) body.get("amount")).doubleValue();
+        String orderInfo = (String) body.get("orderInfo");
+
         String vnp_TxnRef = VnPayConfig.getRandomNumber(8);
 
         Map<String, String> vnp_Params = new HashMap<>();
@@ -34,7 +35,7 @@ public class VnPayController {
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_BankCode", "NCB");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", orderInfo != null ? orderInfo : "Thanh toan don hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", VnPayConfig.vnp_ReturnUrl);
@@ -58,12 +59,10 @@ public class VnPayController {
             String fieldName = (String) itr.next();
             String fieldValue = (String) vnp_Params.get(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
-                //Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
 
-                //Build query
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -83,48 +82,32 @@ public class VnPayController {
         return ResponseEntity.ok(new RestVnPayDTO(paymentUrl));
     }
 
-//    // -----------------------------
-//    // 2️⃣ VNPAY GỌI VỀ - XÁC NHẬN GIAO DỊCH (IPN)
-//    // -----------------------------
-//    @PostMapping("/vnpay-ipn")
-//    public ResponseEntity<String> ipn(@RequestParam Map<String, String> params) {
-//        try {
-//            // ✅ Xác thực chữ ký
-//            String vnp_SecureHash = params.remove("vnp_SecureHash");
-//            String vnp_SecureHashType = params.remove("vnp_SecureHashType");
-//
-//            String signValue = VnPayConfig.hashAllFields(params);
-//            if (!signValue.equals(vnp_SecureHash)) {
-//                return ResponseEntity.badRequest().body("Invalid signature");
-//            }
-//
-//            // ✅ Kiểm tra mã phản hồi
-//            if ("00".equals(params.get("vnp_ResponseCode"))) {
-//                Long orderId = Long.parseLong(params.get("vnp_TxnRef"));
-//                Order order = new Order();
-//                order.setStatus(StatusEnum.valueOf("PAID"));
-//                orderService.updateOrderPartialById(orderId, order);
-//                return ResponseEntity.ok("Payment confirmed");
-//            } else {
-//                return ResponseEntity.ok("Payment failed");
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.internalServerError().body("Error processing IPN");
-//        }
-//    }
-
-    // -----------------------------
-    // 3️⃣ NGƯỜI DÙNG TRẢ VỀ SAU KHI THANH TOÁN (RETURN)
-    // -----------------------------
+    // SỬA: Endpoint này nhận callback từ VNPay và redirect về frontend
     @GetMapping("/vnpay-return")
-    public void returnFromVNPay(@RequestParam Map<String, String> params, HttpServletResponse response)
-            throws IOException {
-        if ("00".equals(params.get("vnp_ResponseCode"))) {
-            response.sendRedirect("http://localhost:5173/checkout");
+    public void returnFromVNPay(
+            @RequestParam Map<String, String> params,
+            HttpServletResponse response
+    ) throws Exception {
+        String vnpResponseCode = params.get("vnp_ResponseCode");
+
+        // Verify signature
+        String vnp_SecureHash = params.get("vnp_SecureHash");
+        params.remove("vnp_SecureHash");
+        params.remove("vnp_SecureHashType");
+
+        String signValue = VnPayConfig.hashAllFields(params);
+
+        if (signValue.equals(vnp_SecureHash)) {
+            if ("00".equals(vnpResponseCode)) {
+                // Thanh toán thành công - redirect về frontend với hash success
+                response.sendRedirect("http://localhost:5173/checkout#vnpay-success");
+            } else {
+                // SỬA: Thanh toán thất bại - redirect về /checkout/fail
+                response.sendRedirect("http://localhost:5173/checkout/fail?code=" + vnpResponseCode);
+            }
         } else {
-            response.sendRedirect("http://localhost:5173/checkout/fail");
+            // SỬA: Chữ ký không hợp lệ - redirect về /checkout/fail
+            response.sendRedirect("http://localhost:5173/checkout/fail?code=97");
         }
     }
 }
