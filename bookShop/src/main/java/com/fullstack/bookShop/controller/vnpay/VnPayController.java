@@ -3,7 +3,6 @@ package com.fullstack.bookShop.controller.vnpay;
 import com.fullstack.bookShop.config.VnPayConfig;
 import com.fullstack.bookShop.domain.dto.vnpay.RestVnPayDTO;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,6 @@ public class VnPayController {
             throws UnsupportedEncodingException {
         Double amount = ((Number) body.get("amount")).doubleValue();
         String orderInfo = (String) body.get("orderInfo");
-
         String vnp_TxnRef = VnPayConfig.getRandomNumber(8);
 
         Map<String, String> vnp_Params = new HashMap<>();
@@ -42,10 +40,10 @@ public class VnPayController {
         vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        cld.add(Calendar.MINUTE, 15);
+
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         vnp_Params.put("vnp_CreateDate", formatter.format(cld.getTime()));
-
-        cld.add(Calendar.MINUTE, 15);
         vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
@@ -99,14 +97,14 @@ public class VnPayController {
 
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(vnpResponseCode)) {
-                // Thanh toán thành công - redirect về frontend với hash success
+                // Case success
                 response.sendRedirect("http://localhost:5173/checkout#vnpay-success");
             } else {
-                // SỬA: Thanh toán thất bại - redirect về /checkout/fail
+                // Case fail
                 response.sendRedirect("http://localhost:5173/checkout/fail?code=" + vnpResponseCode);
             }
         } else {
-            // SỬA: Chữ ký không hợp lệ - redirect về /checkout/fail
+            // Invalid signature
             response.sendRedirect("http://localhost:5173/checkout/fail?code=97");
         }
     }

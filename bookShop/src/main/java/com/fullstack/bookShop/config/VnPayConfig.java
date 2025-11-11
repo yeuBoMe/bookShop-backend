@@ -20,8 +20,6 @@ public class VnPayConfig {
 
     public static String secretKey = "WACOIIRHTV32WVUFPK9XO7XKH1MOMR2A";
 
-//    public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
-
     public static String md5(String message) {
         String digest = null;
         try {

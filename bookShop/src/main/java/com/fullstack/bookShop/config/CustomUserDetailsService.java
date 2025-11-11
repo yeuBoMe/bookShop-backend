@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.config;
 
 import com.fullstack.bookShop.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,13 +12,10 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 
 @Component("userDetailsService")
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserService userService;
-
-    public CustomUserDetailsService(UserService userService) {
-        this.userService = userService;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
