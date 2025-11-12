@@ -168,6 +168,7 @@
                     order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).SUCCESS ? 'Thành công' :
                     order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).SHIPPING ? 'Đang vận chuyển' :
                     order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).PAID ? 'Đã thanh toán, chờ vận chuyển' :
+                    order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).UNPAID ? 'Chưa thanh toán' :
                     order.status == T(com.fullstack.bookShop.util.constant.StatusEnum).CANCEL ? 'Đã hủy' :
                     'Không xác định'
                 }"></strong>
