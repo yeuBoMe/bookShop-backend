@@ -9,6 +9,7 @@ import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     @Value("${bookshop.jwt.refresh-token-validity-in-seconds}")
@@ -37,16 +39,6 @@ public class AuthController {
     private final SecurityUtil securityUtil;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-
-    public AuthController(
-            UserService userService,
-            SecurityUtil securityUtil,
-            AuthenticationManagerBuilder authenticationManagerBuilder
-    ) {
-        this.userService = userService;
-        this.securityUtil = securityUtil;
-        this.authenticationManagerBuilder = authenticationManagerBuilder;
-    }
 
     @ApiMessage("Login successfully")
     @PostMapping("/login")
@@ -59,26 +51,26 @@ public class AuthController {
          * then AuthenticationManager will use func loadUserByUsername in CustomUserDetailsService to
          * compare duplicated data before validate right/wrong login request
          */
-        Authentication authentication = this.authenticationManagerBuilder.getObject()
+        Authentication authentication = authenticationManagerBuilder.getObject()
                 .authenticate(usernamePasswordAuthenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User userGetByEmail = this.userService.getUserByEmail(loginDTO.getUsername());
+        User userGetByEmail = userService.getUserByEmail(loginDTO.getUsername());
         RestLoginDTO restLoginDTO = new RestLoginDTO();
-        restLoginDTO.setUser(this.buildUserLogin(userGetByEmail));
+        restLoginDTO.setUser(buildUserLogin(userGetByEmail));
 
-        String accessToken = this.securityUtil.createAccessToken(loginDTO.getUsername(), restLoginDTO);
+        String accessToken = securityUtil.createAccessToken(loginDTO.getUsername(), restLoginDTO);
         restLoginDTO.setAccessToken(accessToken);
 
-        String refreshToken = this.securityUtil.createRefreshToken(loginDTO.getUsername(), restLoginDTO);
-        this.userService.handleSaveUserRefreshToken(loginDTO.getUsername(), refreshToken);
+        String refreshToken = securityUtil.createRefreshToken(loginDTO.getUsername(), restLoginDTO);
+        userService.handleSaveUserRefreshToken(loginDTO.getUsername(), refreshToken);
 
         ResponseCookie responseCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .path("/")
                 .secure(true)
-                .maxAge(this.refreshTokenExpiration)
+                .maxAge(refreshTokenExpiration)
                 .build();
 
         return ResponseEntity
@@ -90,24 +82,22 @@ public class AuthController {
     @ApiMessage("Register successfully")
     @PostMapping("/register")
     public ResponseEntity<RestUserCreateDTO> registerRequest(@Valid @RequestBody User userRequest) {
-        User userCreated = this.userService.createUser(userRequest);
+        User userCreated = userService.createUser(userRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(this.userService.convertUserToRestUserCreateDTO(userCreated));
+                .body(userService.convertUserToRestUserCreateDTO(userCreated));
     }
 
     @ApiMessage("Get account info")
     @GetMapping("/account")
     public ResponseEntity<RestLoginDTO.UserGetAccount> getAccountRequest() {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
-        User userGetByEmail = this.userService.getUserByEmail(email);
+        User userGetByEmail = userService.getUserByEmail(email);
 
         RestLoginDTO.UserGetAccount userGetAccount = new RestLoginDTO.UserGetAccount();
-        userGetAccount.setUser(this.buildUserLogin(userGetByEmail));
+        userGetAccount.setUser(buildUserLogin(userGetByEmail));
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(userGetAccount);
+        return ResponseEntity.ok(userGetAccount);
     }
 
     @ApiMessage("Get user by refresh token ")
@@ -115,26 +105,26 @@ public class AuthController {
     public ResponseEntity<RestLoginDTO> getRefreshTokenRequest(
             @CookieValue("refresh_token") String refreshTokenFromCookie
     ) {
-        Jwt jwtChecked = this.securityUtil.checkValidRefreshToken(refreshTokenFromCookie);
+        Jwt jwtChecked = securityUtil.checkValidRefreshToken(refreshTokenFromCookie);
         String emailGetFromJwt = jwtChecked.getSubject();
 
         User userGetByEmailAndRefreshToken =
-                this.userService.getUserByEmailAndRefreshToken(emailGetFromJwt, refreshTokenFromCookie);
+                userService.getUserByEmailAndRefreshToken(emailGetFromJwt, refreshTokenFromCookie);
 
         RestLoginDTO restLoginDTO = new RestLoginDTO();
-        restLoginDTO.setUser(this.buildUserLogin(userGetByEmailAndRefreshToken));
+        restLoginDTO.setUser(buildUserLogin(userGetByEmailAndRefreshToken));
 
-        String accessTokenNew = this.securityUtil.createAccessToken(emailGetFromJwt, restLoginDTO);
+        String accessTokenNew = securityUtil.createAccessToken(emailGetFromJwt, restLoginDTO);
         restLoginDTO.setAccessToken(accessTokenNew);
 
-        String refreshTokenNew = this.securityUtil.createRefreshToken(emailGetFromJwt, restLoginDTO);
-        this.userService.handleSaveUserRefreshToken(emailGetFromJwt, refreshTokenNew);
+        String refreshTokenNew = securityUtil.createRefreshToken(emailGetFromJwt, restLoginDTO);
+        userService.handleSaveUserRefreshToken(emailGetFromJwt, refreshTokenNew);
 
         ResponseCookie responseCookie = ResponseCookie.from("refresh_token", refreshTokenNew)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(this.refreshTokenExpiration)
+                .maxAge(refreshTokenExpiration)
                 .build();
 
         return ResponseEntity
@@ -147,7 +137,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logoutRequest() {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
-        this.userService.handleSaveUserRefreshToken(email, null);
+        userService.handleSaveUserRefreshToken(email, null);
 
         ResponseCookie responseCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)

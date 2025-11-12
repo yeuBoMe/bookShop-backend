@@ -151,13 +151,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository
+                .findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("User with email '" + email + "' not found!"));
     }
 
     @Override
     public User getUserByEmailAndRefreshToken(String email, String refreshToken) {
-        return userRepository.findByEmailAndRefreshToken(email, refreshToken)
+        return userRepository
+                .findByEmailAndRefreshToken(email, refreshToken)
                 .orElseThrow(() -> new NoSuchElementException("User not found!"));
     }
 

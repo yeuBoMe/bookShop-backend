@@ -59,13 +59,15 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public Rating getRatingById(Long id) {
-        return ratingRepository.findById(id)
+        return ratingRepository
+                .findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Rating with id '" + id + "' not found!"));
     }
 
     @Override
     public Rating getRatingByUserIdAndBookId(Long userId, Long bookId) {
-        return ratingRepository.findByUserIdAndBookId(userId, bookId)
+        return ratingRepository
+                .findByUserIdAndBookId(userId, bookId)
                 .orElseThrow(() -> new NoSuchElementException(
                         "No rating found with user id '" + userId + "' and book id '" + bookId + "'!")
                 );
