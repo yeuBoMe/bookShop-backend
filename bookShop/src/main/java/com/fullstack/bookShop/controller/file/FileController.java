@@ -1,13 +1,12 @@
 package com.fullstack.bookShop.controller.file;
 
-import com.fullstack.bookShop.domain.dto.file.RestUploadFileDTO;
+import com.fullstack.bookShop.dto.file.RestUploadFileDTO;
 import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
 import com.fullstack.bookShop.util.imports.FileValidUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

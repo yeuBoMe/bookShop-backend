@@ -1,11 +1,11 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.role.RestRoleCreateDTO;
-import com.fullstack.bookShop.domain.dto.role.RestRoleUpdateDTO;
-import com.fullstack.bookShop.domain.dto.role.RestRoleViewDTO;
-import com.fullstack.bookShop.domain.entity.Permission;
-import com.fullstack.bookShop.domain.entity.Role;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.role.RestRoleCreateDTO;
+import com.fullstack.bookShop.dto.role.RestRoleUpdateDTO;
+import com.fullstack.bookShop.dto.role.RestRoleViewDTO;
+import com.fullstack.bookShop.model.Permission;
+import com.fullstack.bookShop.model.Role;
 import com.fullstack.bookShop.repository.PermissionRepository;
 import com.fullstack.bookShop.repository.RoleRepository;
 import com.fullstack.bookShop.repository.UserRepository;

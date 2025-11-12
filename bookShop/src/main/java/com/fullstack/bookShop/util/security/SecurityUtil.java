@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.util.security;
 
-import com.fullstack.bookShop.domain.dto.auth.RestLoginDTO;
+import com.fullstack.bookShop.dto.auth.RestLoginDTO;
 import com.nimbusds.jose.util.Base64;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

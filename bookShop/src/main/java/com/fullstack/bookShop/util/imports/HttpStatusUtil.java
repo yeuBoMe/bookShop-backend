@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.util.imports;
 
-import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
+import com.fullstack.bookShop.dto.imports.RestImportDTO;
 import org.springframework.http.HttpStatus;
 
 public class HttpStatusUtil {

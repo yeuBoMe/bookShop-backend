@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.repository;
 
-import com.fullstack.bookShop.domain.entity.Rating;
+import com.fullstack.bookShop.model.Rating;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

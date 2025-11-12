@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.util.exception.global;
 
-import com.fullstack.bookShop.domain.response.RestResponse;
+import com.fullstack.bookShop.dto.response.RestResponse;
 import com.fullstack.bookShop.util.exception.custom.PermissionException;
 import com.fullstack.bookShop.util.exception.custom.StorageException;
 import jakarta.mail.MessagingException;

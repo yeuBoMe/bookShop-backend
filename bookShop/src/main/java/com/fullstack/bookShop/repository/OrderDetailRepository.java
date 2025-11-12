@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.repository;
 
-import com.fullstack.bookShop.domain.entity.OrderDetail;
+import com.fullstack.bookShop.model.OrderDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;

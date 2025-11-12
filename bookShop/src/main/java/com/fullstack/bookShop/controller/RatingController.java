@@ -1,9 +1,9 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.rating.RestRatingCreateDTO;
-import com.fullstack.bookShop.domain.dto.rating.RestRatingViewDTO;
-import com.fullstack.bookShop.domain.entity.Rating;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.rating.RestRatingCreateDTO;
+import com.fullstack.bookShop.dto.rating.RestRatingViewDTO;
+import com.fullstack.bookShop.model.Rating;
 import com.fullstack.bookShop.service.RatingService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.turkraft.springfilter.boot.Filter;

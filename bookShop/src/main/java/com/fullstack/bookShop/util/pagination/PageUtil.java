@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.util.pagination;
 
-import com.fullstack.bookShop.domain.dto.pagination.Meta;
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.pagination.Meta;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

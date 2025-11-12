@@ -1,11 +1,11 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.domain.dto.order.RestOrderCreateDTO;
-import com.fullstack.bookShop.domain.dto.order.RestOrderStatusDTO;
-import com.fullstack.bookShop.domain.dto.order.RestOrderUpdateDTO;
-import com.fullstack.bookShop.domain.dto.order.RestOrderViewDTO;
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.entity.Order;
+import com.fullstack.bookShop.dto.order.RestOrderCreateDTO;
+import com.fullstack.bookShop.dto.order.RestOrderStatusDTO;
+import com.fullstack.bookShop.dto.order.RestOrderUpdateDTO;
+import com.fullstack.bookShop.dto.order.RestOrderViewDTO;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.model.Order;
 import com.fullstack.bookShop.service.OrderService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.security.SecurityUtil;

@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fullstack.bookShop.domain.response.RestResponse;
+import com.fullstack.bookShop.dto.response.RestResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

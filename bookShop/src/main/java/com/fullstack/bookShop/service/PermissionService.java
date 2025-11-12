@@ -1,10 +1,10 @@
 package com.fullstack.bookShop.service;
 
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.permission.RestPermissionCreateDTO;
-import com.fullstack.bookShop.domain.dto.permission.RestPermissionUpdateDTO;
-import com.fullstack.bookShop.domain.dto.permission.RestPermissionViewDTO;
-import com.fullstack.bookShop.domain.entity.Permission;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.permission.RestPermissionCreateDTO;
+import com.fullstack.bookShop.dto.permission.RestPermissionUpdateDTO;
+import com.fullstack.bookShop.dto.permission.RestPermissionViewDTO;
+import com.fullstack.bookShop.model.Permission;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 

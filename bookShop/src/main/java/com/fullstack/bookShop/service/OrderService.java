@@ -1,10 +1,10 @@
 package com.fullstack.bookShop.service;
 
-import com.fullstack.bookShop.domain.dto.order.RestOrderCreateDTO;
-import com.fullstack.bookShop.domain.dto.order.RestOrderUpdateDTO;
-import com.fullstack.bookShop.domain.dto.order.RestOrderViewDTO;
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.entity.Order;
+import com.fullstack.bookShop.dto.order.RestOrderCreateDTO;
+import com.fullstack.bookShop.dto.order.RestOrderUpdateDTO;
+import com.fullstack.bookShop.dto.order.RestOrderViewDTO;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.model.Order;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 

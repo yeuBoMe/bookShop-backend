@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.domain.dto.dashboard.RestDashboardDTO;
+import com.fullstack.bookShop.dto.dashboard.RestDashboardDTO;
 import com.fullstack.bookShop.repository.*;
 import com.fullstack.bookShop.service.DashboardService;
 import lombok.RequiredArgsConstructor;

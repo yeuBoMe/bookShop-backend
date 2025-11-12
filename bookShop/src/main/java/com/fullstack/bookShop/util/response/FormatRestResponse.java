@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.util.response;
 
-import com.fullstack.bookShop.domain.response.RestResponse;
+import com.fullstack.bookShop.dto.response.RestResponse;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;

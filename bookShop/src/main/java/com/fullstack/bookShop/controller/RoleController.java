@@ -1,10 +1,10 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.role.RestRoleCreateDTO;
-import com.fullstack.bookShop.domain.dto.role.RestRoleUpdateDTO;
-import com.fullstack.bookShop.domain.dto.role.RestRoleViewDTO;
-import com.fullstack.bookShop.domain.entity.Role;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.role.RestRoleCreateDTO;
+import com.fullstack.bookShop.dto.role.RestRoleUpdateDTO;
+import com.fullstack.bookShop.dto.role.RestRoleViewDTO;
+import com.fullstack.bookShop.model.Role;
 import com.fullstack.bookShop.service.RoleService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.turkraft.springfilter.boot.Filter;

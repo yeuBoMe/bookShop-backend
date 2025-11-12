@@ -1,10 +1,9 @@
 package com.fullstack.bookShop.controller.dashboard;
 
-import com.fullstack.bookShop.domain.dto.dashboard.RestDashboardDTO;
+import com.fullstack.bookShop.dto.dashboard.RestDashboardDTO;
 import com.fullstack.bookShop.service.DashboardService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

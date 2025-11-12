@@ -1,12 +1,12 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.domain.dto.book.RestBookCreateDTO;
-import com.fullstack.bookShop.domain.dto.book.RestBookUpdateDTO;
-import com.fullstack.bookShop.domain.dto.book.RestBookViewDTO;
-import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.entity.Book;
-import com.fullstack.bookShop.domain.entity.Category;
+import com.fullstack.bookShop.dto.book.RestBookCreateDTO;
+import com.fullstack.bookShop.dto.book.RestBookUpdateDTO;
+import com.fullstack.bookShop.dto.book.RestBookViewDTO;
+import com.fullstack.bookShop.dto.imports.RestImportDTO;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.model.Book;
+import com.fullstack.bookShop.model.Category;
 import com.fullstack.bookShop.repository.BookRepository;
 import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.service.BookService;

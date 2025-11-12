@@ -1,12 +1,12 @@
 package com.fullstack.bookShop.service;
 
-import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
-import com.fullstack.bookShop.domain.dto.user.RestUserPassDTO;
-import com.fullstack.bookShop.domain.dto.user.RestUserUpdateDTO;
-import com.fullstack.bookShop.domain.dto.user.RestUserViewDTO;
-import com.fullstack.bookShop.domain.entity.User;
+import com.fullstack.bookShop.dto.imports.RestImportDTO;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.user.RestUserCreateDTO;
+import com.fullstack.bookShop.dto.user.RestUserPassDTO;
+import com.fullstack.bookShop.dto.user.RestUserUpdateDTO;
+import com.fullstack.bookShop.dto.user.RestUserViewDTO;
+import com.fullstack.bookShop.model.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 

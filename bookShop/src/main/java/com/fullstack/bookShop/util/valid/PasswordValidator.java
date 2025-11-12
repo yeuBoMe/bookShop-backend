@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.util.valid;
 
-import com.fullstack.bookShop.domain.dto.user.RestUserPassDTO;
+import com.fullstack.bookShop.dto.user.RestUserPassDTO;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.stereotype.Service;

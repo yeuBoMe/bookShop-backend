@@ -1,9 +1,9 @@
 package com.fullstack.bookShop.service;
 
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.dto.rating.RestRatingCreateDTO;
-import com.fullstack.bookShop.domain.dto.rating.RestRatingViewDTO;
-import com.fullstack.bookShop.domain.entity.Rating;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.rating.RestRatingCreateDTO;
+import com.fullstack.bookShop.dto.rating.RestRatingViewDTO;
+import com.fullstack.bookShop.model.Rating;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 

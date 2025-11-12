@@ -1,11 +1,11 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.domain.dto.category.RestCategoryCreateDTO;
-import com.fullstack.bookShop.domain.dto.category.RestCategoryUpdateDTO;
-import com.fullstack.bookShop.domain.dto.category.RestCategoryViewDTO;
-import com.fullstack.bookShop.domain.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.domain.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.domain.entity.Category;
+import com.fullstack.bookShop.dto.category.RestCategoryCreateDTO;
+import com.fullstack.bookShop.dto.category.RestCategoryUpdateDTO;
+import com.fullstack.bookShop.dto.category.RestCategoryViewDTO;
+import com.fullstack.bookShop.dto.imports.RestImportDTO;
+import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.model.Category;
 import com.fullstack.bookShop.service.CategoryService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.imports.HttpStatusUtil;

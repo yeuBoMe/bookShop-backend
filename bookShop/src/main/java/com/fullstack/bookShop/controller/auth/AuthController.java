@@ -1,10 +1,10 @@
 package com.fullstack.bookShop.controller.auth;
 
-import com.fullstack.bookShop.domain.dto.auth.LoginDTO;
-import com.fullstack.bookShop.domain.dto.auth.RestLoginDTO;
-import com.fullstack.bookShop.domain.dto.user.RestUserCreateDTO;
-import com.fullstack.bookShop.domain.entity.Permission;
-import com.fullstack.bookShop.domain.entity.User;
+import com.fullstack.bookShop.dto.auth.LoginDTO;
+import com.fullstack.bookShop.dto.auth.RestLoginDTO;
+import com.fullstack.bookShop.dto.user.RestUserCreateDTO;
+import com.fullstack.bookShop.model.Permission;
+import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.security.SecurityUtil;
