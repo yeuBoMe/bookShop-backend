@@ -11,6 +11,7 @@ import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.imports.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -21,21 +22,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/categories")
+@RequiredArgsConstructor
 public class CategoryController {
 
     private final CategoryService categoryService;
 
-    public CategoryController(CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
-
     @ApiMessage("Create category")
     @PostMapping
     public ResponseEntity<RestCategoryCreateDTO> createCategoryRequest(@Valid @RequestBody Category category) {
-        Category categoryCreated = this.categoryService.createCategory(category);
+        Category categoryCreated = categoryService.createCategory(category);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(this.categoryService.convertCategoryToRestCategoryCreateDTO(categoryCreated));
+                .body(categoryService.convertCategoryToRestCategoryCreateDTO(categoryCreated));
     }
 
     @ApiMessage("Fetch list categories")
@@ -44,18 +42,14 @@ public class CategoryController {
             @Filter Specification<Category> spec,
             Pageable pageable
     ) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.categoryService.fetchAllCategories(spec, pageable));
+        return ResponseEntity.ok(categoryService.fetchAllCategories(spec, pageable));
     }
 
     @ApiMessage("Get category by id")
     @GetMapping("/{id}")
     public ResponseEntity<RestCategoryViewDTO> getCategoryByIdRequest(@PathVariable Long id) {
-        Category categoryGetById = this.categoryService.getCategoryById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.categoryService.convertCategoryToRestCategoryViewDTO(categoryGetById));
+        Category categoryGetById = categoryService.getCategoryById(id);
+        return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryViewDTO(categoryGetById));
     }
 
     @ApiMessage("Update category by id")
@@ -64,10 +58,8 @@ public class CategoryController {
             @PathVariable Long id,
             @Valid @RequestBody Category category
     ) {
-        Category categoryUpdated = this.categoryService.updateCategoryById(id, category);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
+        Category categoryUpdated = categoryService.updateCategoryById(id, category);
+        return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
     }
 
     @ApiMessage("Update category partial by id")
@@ -76,19 +68,15 @@ public class CategoryController {
             @PathVariable Long id,
             @Valid @RequestBody Category category
     ) {
-        Category categoryUpdated = this.categoryService.updateCategoryPartialById(id, category);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
+        Category categoryUpdated = categoryService.updateCategoryPartialById(id, category);
+        return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
     }
 
     @ApiMessage("Delete category")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategoryByIdRequest(@PathVariable Long id) {
-        this.categoryService.deleteCategoryById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(null);
+        categoryService.deleteCategoryById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @ApiMessage("Import list categories from file")
@@ -97,7 +85,7 @@ public class CategoryController {
             @Valid @RequestBody List<RestCategoryCreateDTO> restCategoryCreateDTOList
     ) {
         RestImportDTO<RestCategoryCreateDTO> restImportDTO
-                = this.categoryService.importListCategoriesFromFile(restCategoryCreateDTOList);
+                = categoryService.importListCategoriesFromFile(restCategoryCreateDTOList);
 
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
 

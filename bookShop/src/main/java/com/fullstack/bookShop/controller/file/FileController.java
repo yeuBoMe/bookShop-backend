@@ -3,7 +3,7 @@ package com.fullstack.bookShop.controller.file;
 import com.fullstack.bookShop.dto.file.RestUploadFileDTO;
 import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.exception.custom.StorageException;
+import com.fullstack.bookShop.exception.custom.StorageException;
 import com.fullstack.bookShop.util.imports.FileValidUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,10 +42,10 @@ public class FileController {
         FileValidUtil.validateFile(file);
 
         // create dir if not exist
-        this.fileService.createUploadFolder(this.baseURI + folder);
+        fileService.createUploadFolder(baseURI + folder);
 
         // store file
-        String fileUploaded = this.fileService.storeSingleFile(file, folder);
+        String fileUploaded = fileService.storeSingleFile(file, folder);
         RestUploadFileDTO restUploadFileDTO = new RestUploadFileDTO(fileUploaded, Instant.now());
 
         return ResponseEntity.ok(restUploadFileDTO);
@@ -64,10 +64,10 @@ public class FileController {
         FileValidUtil.validateListFiles(files);
 
         // create dir if not exist
-        this.fileService.createUploadFolder(this.baseURI + folder);
+        fileService.createUploadFolder(baseURI + folder);
 
         // store file
-        List<String> fileListUploaded = this.fileService.storeMultipleFiles(files, folder);
+        List<String> fileListUploaded = fileService.storeMultipleFiles(files, folder);
         RestUploadFileDTO restUploadFileDTO = new RestUploadFileDTO(fileListUploaded, Instant.now());
 
         return ResponseEntity.ok(restUploadFileDTO);

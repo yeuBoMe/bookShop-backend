@@ -9,7 +9,7 @@ import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.exception.custom.StorageException;
+import com.fullstack.bookShop.exception.custom.StorageException;
 import com.fullstack.bookShop.util.imports.FileValidUtil;
 import com.fullstack.bookShop.util.imports.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;

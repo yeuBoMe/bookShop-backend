@@ -36,7 +36,7 @@ public class SecurityUtil {
     private final JwtEncoder jwtEncoder;
 
     public SecretKey getSecretKey() {
-        byte[] bytes = Base64.from(this.jwtKey).decode();
+        byte[] bytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(
                 bytes,
                 0,
@@ -66,7 +66,7 @@ public class SecurityUtil {
         );
 
         Instant now = Instant.now();
-        Instant expiration = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
+        Instant expiration = now.plus(accessTokenExpiration, ChronoUnit.SECONDS);
 
         // payload
         JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
@@ -79,20 +79,20 @@ public class SecurityUtil {
         // header
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
 
-        return this.jwtEncoder
+        return jwtEncoder
                 .encode(JwtEncoderParameters.from(jwsHeader, jwtClaimsSet))
                 .getTokenValue();
     }
 
     public String createRefreshToken(String email, RestLoginDTO restLoginDTO) {
+        Instant now = Instant.now();
+        Instant expiration = now.plus(refreshTokenExpiration, ChronoUnit.SECONDS);
+
         RestLoginDTO.UserInsideToken userInsideToken = new RestLoginDTO.UserInsideToken(
                 restLoginDTO.getUser().getId(),
                 restLoginDTO.getUser().getName(),
                 restLoginDTO.getUser().getEmail()
         );
-
-        Instant now = Instant.now();
-        Instant expiration = now.plus(this.refreshTokenExpiration, ChronoUnit.SECONDS);
 
         JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
                 .issuedAt(now)
@@ -103,7 +103,7 @@ public class SecurityUtil {
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
 
-        return this.jwtEncoder
+        return jwtEncoder
                 .encode(JwtEncoderParameters.from(jwsHeader, jwtClaimsSet))
                 .getTokenValue();
     }

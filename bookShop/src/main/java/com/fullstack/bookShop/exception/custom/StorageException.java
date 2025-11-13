@@ -1,4 +1,4 @@
-package com.fullstack.bookShop.util.exception.custom;
+package com.fullstack.bookShop.exception.custom;
 
 public class StorageException extends Exception {
 

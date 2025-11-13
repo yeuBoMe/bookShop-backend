@@ -1,8 +1,8 @@
-package com.fullstack.bookShop.util.exception.global;
+package com.fullstack.bookShop.exception.global;
 
 import com.fullstack.bookShop.dto.response.RestResponse;
-import com.fullstack.bookShop.util.exception.custom.PermissionException;
-import com.fullstack.bookShop.util.exception.custom.StorageException;
+import com.fullstack.bookShop.exception.custom.PermissionException;
+import com.fullstack.bookShop.exception.custom.StorageException;
 import jakarta.mail.MessagingException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;

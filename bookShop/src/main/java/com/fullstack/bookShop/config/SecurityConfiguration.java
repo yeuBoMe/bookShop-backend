@@ -36,7 +36,7 @@ public class SecurityConfiguration {
     // decode base 64 key to byte[] and wrap to secret key
     @Bean
     public SecretKey getSecretKey() {
-        byte[] bytes = Base64.from(this.jwtKey).decode();
+        byte[] bytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(
                 bytes,
                 0,
