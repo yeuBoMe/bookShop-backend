@@ -68,6 +68,18 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
+    public User createGoogleUser(String email, String name, String picture) {
+        return userRepository.findByEmail(email).orElseGet(() -> {
+            User user = new User();
+            user.setEmail(email);
+            user.setFullName(name != null ? name : email.split("@")[0]);
+            user.setAvatar(picture);
+            return userRepository.save(user);
+        });
+    }
+
+    @Transactional
+    @Override
     public User updateUserById(Long id, User userUpdated) {
         User userGetById = getUserById(id);
         validateAndSetRole(userUpdated, userGetById);

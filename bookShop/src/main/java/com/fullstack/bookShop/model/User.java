@@ -47,7 +47,6 @@ public class User {
     @Size(min = 6, message = "Password must be at least 6 characters long!")
     private String password;
 
-    @NotBlank(message = "Phone number is required")
     @Pattern(
             regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",
             message = "Phone number is invalid. Example: 0912345678 or +84912345678"

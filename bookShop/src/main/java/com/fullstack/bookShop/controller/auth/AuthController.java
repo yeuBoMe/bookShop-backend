@@ -2,7 +2,6 @@ package com.fullstack.bookShop.controller.auth;
 
 import com.fullstack.bookShop.dto.auth.LoginDTO;
 import com.fullstack.bookShop.dto.auth.RestLoginDTO;
-import com.fullstack.bookShop.dto.social.RestSocialDTO;
 import com.fullstack.bookShop.dto.user.RestUserCreateDTO;
 import com.fullstack.bookShop.model.Permission;
 import com.fullstack.bookShop.model.User;
@@ -21,7 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -83,16 +82,8 @@ public class AuthController {
                 .body(restLoginDTO);
     }
 
-//    @ApiMessage("Social login successfully")
-//    @GetMapping("/social-login")
-//    public ResponseEntity<RestSocialDTO> socialLoginRequest() {
-//
-//        return ResponseEntity.ok(new RestSocialDTO());
-//    }
-
-    // THÊM: Nút Google gọi endpoint này
-    @GetMapping("/google")
-    public void googleLogin(HttpServletResponse response) throws IOException {
+    @GetMapping("/login/google")
+    public void googleLoginRequest(HttpServletResponse response) throws IOException {
         response.sendRedirect("/oauth2/authorization/google");
     }
 
@@ -169,7 +160,7 @@ public class AuthController {
                 .body(null);
     }
 
-    private RestLoginDTO.UserLogin buildUserLogin(User user) {
+    public RestLoginDTO.UserLogin buildUserLogin(User user) {
         if (user == null) {
             return null;
         }

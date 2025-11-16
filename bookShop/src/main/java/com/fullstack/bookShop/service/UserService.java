@@ -14,6 +14,7 @@ import java.util.List;
 
 public interface UserService {
     User createUser(User user);
+    User createGoogleUser(String email, String name, String picture);
     User updateUserById(Long id, User user);
     User updateUserPartialById(Long id, User user);
     User updateUserPasswordById(Long id, RestUserPassDTO restUserPassDTO);

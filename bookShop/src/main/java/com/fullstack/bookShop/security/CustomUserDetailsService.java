@@ -1,4 +1,4 @@
-package com.fullstack.bookShop.config;
+package com.fullstack.bookShop.security;
 
 import com.fullstack.bookShop.service.UserService;
 import lombok.RequiredArgsConstructor;
