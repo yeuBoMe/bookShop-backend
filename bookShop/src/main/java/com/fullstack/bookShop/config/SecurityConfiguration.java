@@ -87,50 +87,6 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(
-//            HttpSecurity httpSecurity,
-//            CustomAuthenticationEntryPoint customAuthenticationEntryPoint
-//    ) throws Exception {
-//        String[] whiteList = {
-//                "/",
-//                "/upload/**",
-//                "/api/v1/auth/login",
-//                "/api/v1/auth/login/google",
-//                "/api/v1/auth/register",
-//                "/api/v1/auth/refresh",
-//                "/v3/api-docs/**",
-//                "/swagger-ui/**",
-//                "/swagger-ui.html",
-//        };
-//
-//        httpSecurity
-//                .cors(Customizer.withDefaults())
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-//                        .requestMatchers(whiteList).permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/ratings/book/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/vnpay/vnpay-return").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .formLogin(AbstractHttpConfigurer::disable)
-//                .oauth2Login(oauth2 -> oauth2
-//                        .defaultSuccessUrl("http://localhost:5173", true)
-//                )
-//                .oauth2ResourceServer(oauth2 -> oauth2
-//                        .jwt(Customizer.withDefaults())
-//                        .authenticationEntryPoint(customAuthenticationEntryPoint)
-//                )
-//                .sessionManagement(session -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                );
-//
-//        return httpSecurity.build();
-//    }
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity httpSecurity,
@@ -143,7 +99,6 @@ public class SecurityConfiguration {
                 "/upload/**",
                 "/api/v1/auth/login",
                 "/api/v1/auth/login/google",
-                "/api/v1/auth/google/callback",
                 "/api/v1/auth/register",
                 "/api/v1/auth/refresh",
                 "/oauth2/**",
@@ -166,7 +121,6 @@ public class SecurityConfiguration {
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/api/v1/auth/google/callback", true)
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOauth2UserService)
                         )

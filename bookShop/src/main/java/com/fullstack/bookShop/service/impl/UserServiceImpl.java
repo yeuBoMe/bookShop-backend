@@ -73,7 +73,9 @@ public class UserServiceImpl implements UserService {
             User user = new User();
             user.setEmail(email);
             user.setFullName(name != null ? name : email.split("@")[0]);
-            user.setAvatar(picture);
+            if (picture != null) {
+                user.setAvatar(picture);
+            }
             return userRepository.save(user);
         });
     }

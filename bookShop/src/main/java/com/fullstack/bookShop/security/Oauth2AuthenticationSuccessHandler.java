@@ -9,6 +9,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -23,6 +24,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class Oauth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
+    @Value("${bookshop.jwt.refresh-token-validity-in-seconds}")
+    private Long refreshTokenExpiration;
+
     private final SecurityUtil securityUtil;
 
     private final UserService userService;
@@ -35,30 +39,26 @@ public class Oauth2AuthenticationSuccessHandler implements AuthenticationSuccess
     ) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+        String picture = oAuth2User.getAttribute("picture");
 
-        User user = userService.createGoogleUser(
-                email,
-                oAuth2User.getAttribute("name"),
-                oAuth2User.getAttribute("picture")
-        );
+        User user = userService.createGoogleUser(email, name, picture);
 
         RestLoginDTO dto = new RestLoginDTO();
         dto.setUser(buildUserLogin(user));
 
         String accessToken = securityUtil.createAccessToken(email, dto);
         String refreshToken = securityUtil.createRefreshToken(email, dto);
-
         userService.handleSaveUserRefreshToken(email, refreshToken);
 
         // Lưu refresh_token vào cookie
         Cookie cookie = new Cookie("refresh_token", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(864000);
+        cookie.setMaxAge(refreshTokenExpiration.intValue());
         cookie.setSecure(false);
         response.addCookie(cookie);
 
-        // ✅ Redirect với cả 2 tham số
         String redirectUrl = String.format(
                 "http://localhost:5173?access_token=%s&google_login=success",
                 accessToken
