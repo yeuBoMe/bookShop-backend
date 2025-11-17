@@ -30,8 +30,8 @@ public class User {
     @NotBlank(message = "FullName is required")
     @Size(max = 100, message = "Name must be less than 100 characters")
     @Pattern(
-            regexp = "^[A-Za-zÀ-ỹà-ỹ'\\-\\.\\s]{1,100}$",
-            message = "Name must only contain letters, spaces, apostrophes, dashes or dots"
+            regexp = "^[A-Za-zÀ-ỹà-ỹ0-9'\\-\\.\\s()]+$",
+            message = "Name contains invalid characters"
     )
     private String fullName;
 
@@ -39,7 +39,7 @@ public class User {
     @Size(max = 150, message = "Email must not exceed 150 characters")
     @Column(unique = true)
     @Pattern(
-            regexp = "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z]{2,6}$",
+            regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$",
             message = "Email format is invalid"
     )
     private String email;

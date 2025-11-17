@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class Oauth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     @Value("${bookshop.jwt.refresh-token-validity-in-seconds}")
     private Long refreshTokenExpiration;
@@ -31,12 +31,14 @@ public class Oauth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     private final UserService userService;
 
+    // hàm Spring gọi khi Google login thành công.
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
+        // Lấy user vừa authenticate, set trong CustomDefaultOAuth2UserService.
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");

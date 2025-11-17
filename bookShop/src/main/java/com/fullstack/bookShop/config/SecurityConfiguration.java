@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.config;
 
-import com.fullstack.bookShop.security.CustomOauth2UserService;
-import com.fullstack.bookShop.security.Oauth2AuthenticationSuccessHandler;
+import com.fullstack.bookShop.security.CustomDefaultOauth2UserService;
+import com.fullstack.bookShop.security.CustomAuthenticationSuccessHandler;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
@@ -91,8 +91,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity httpSecurity,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-            CustomOauth2UserService customOauth2UserService,
-            Oauth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler
+            CustomDefaultOauth2UserService customDefaultOauth2UserService,
+            CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler
     ) throws Exception {
         String[] whiteList = {
                 "/",
@@ -122,9 +122,9 @@ public class SecurityConfiguration {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOauth2UserService)
+                                .userService(customDefaultOauth2UserService)
                         )
-                        .successHandler(oauth2AuthenticationSuccessHandler)
+                        .successHandler(customAuthenticationSuccessHandler)
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
