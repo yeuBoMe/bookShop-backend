@@ -8,6 +8,7 @@ import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Category;
 import com.fullstack.bookShop.repository.BookRepository;
+import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.service.BookService;
 import com.fullstack.bookShop.service.CategoryService;
@@ -33,6 +34,8 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
 
     private final RatingRepository ratingRepository;
+
+    private final OrderDetailRepository orderDetailRepository;
 
     private final CategoryService categoryService;
 
@@ -150,6 +153,7 @@ public class BookServiceImpl implements BookService {
             throw new NoSuchElementException("Book with id '" + id + "' not found!");
         }
         ratingRepository.deleteByBookId(id);
+        orderDetailRepository.deleteByBookId(id);
         bookRepository.deleteById(id);
     }
 

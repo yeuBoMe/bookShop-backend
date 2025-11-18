@@ -1,4 +1,4 @@
-package com.fullstack.bookShop.dto.vnpay;
+package com.fullstack.bookShop.dto.payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RestVnPayDTO {
+public class RestPaymentDTO {
     private String paymentUrl;
 }

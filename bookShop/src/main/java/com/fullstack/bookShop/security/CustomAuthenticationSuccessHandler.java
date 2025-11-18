@@ -58,7 +58,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(refreshTokenExpiration.intValue());
-        cookie.setSecure(false);
+        cookie.setSecure(true);
         response.addCookie(cookie);
 
         String redirectUrl = String.format(

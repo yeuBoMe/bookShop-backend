@@ -39,6 +39,10 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
     implementation("org.apache.commons:commons-lang3:3.18.0")
 
+    // lib for momo
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
+    implementation("net.minidev:json-smart:2.4.8")
+
     // fix library not fit
     implementation("net.bytebuddy:byte-buddy:1.14.16")
 
