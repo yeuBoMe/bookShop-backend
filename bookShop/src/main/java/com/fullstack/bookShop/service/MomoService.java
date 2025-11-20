@@ -1,5 +1,9 @@
 package com.fullstack.bookShop.service;
 
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.io.IOException;
 import java.util.Map;
 
 public interface MomoService {
@@ -13,4 +17,6 @@ public interface MomoService {
      * Xử lý callback IPN từ MoMo (gọi khi thanh toán xong)
      */
     boolean handleIpn(Map<String, String> params);
+
+    void handleMomoReturn(@RequestParam Map<String, String> params, HttpServletResponse response) throws IOException;
 }

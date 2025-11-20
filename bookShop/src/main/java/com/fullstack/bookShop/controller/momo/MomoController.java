@@ -32,13 +32,6 @@ public class MomoController {
     // Quan trọng: Xử lý return giống VNPay
     @GetMapping("/momo-return")
     public void momoReturn(@RequestParam Map<String, String> params, HttpServletResponse response) throws IOException {
-        String resultCode = params.get("resultCode");
-
-        if ("0".equals(resultCode)) {
-            response.sendRedirect("http://localhost:5173/checkout#momo-success");
-        } else {
-            String code = params.get("resultCode") != null ? params.get("resultCode") : "99";
-            response.sendRedirect("http://localhost:5173/checkout#momo-fail?code=" + code);
-        }
+        momoService.handleMomoReturn(params, response);
     }
 }

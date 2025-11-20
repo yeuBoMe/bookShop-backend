@@ -3,6 +3,7 @@ package com.fullstack.bookShop.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fullstack.bookShop.service.MomoService;
+import jakarta.servlet.http.HttpServletResponse;
 import net.minidev.json.JSONObject;
 
 import org.apache.http.client.methods.HttpPost;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -107,5 +109,17 @@ public class MomoServiceImpl implements MomoService {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public void handleMomoReturn(Map<String, String> params, HttpServletResponse response) throws IOException {
+        String resultCode = params.get("resultCode");
+
+        if ("0".equals(resultCode)) {
+            response.sendRedirect("http://localhost:5173/checkout#momo-success");
+        } else {
+            String code = params.get("resultCode") != null ? params.get("resultCode") : "99";
+            response.sendRedirect("http://localhost:5173/checkout#momo-fail?code=" + code);
+        }
     }
 }
