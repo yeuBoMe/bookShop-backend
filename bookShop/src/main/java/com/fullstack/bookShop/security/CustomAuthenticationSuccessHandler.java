@@ -69,7 +69,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         response.sendRedirect(redirectUrl);
     }
 
-    public RestLoginDTO.UserLogin buildUserLogin(User user) {
+    private RestLoginDTO.UserLogin buildUserLogin(User user) {
         if (user == null) {
             return null;
         }

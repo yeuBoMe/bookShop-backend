@@ -22,8 +22,8 @@ public class RatingController {
 
     private final RatingService ratingService;
 
-    @ApiMessage("Create rating")
     @PostMapping
+    @ApiMessage("Create rating")
     public ResponseEntity<RestRatingCreateDTO> createRatingRequest(@Valid @RequestBody Rating ratingRequest) {
         Rating ratingCreated = ratingService.createRating(ratingRequest);
         return ResponseEntity
@@ -31,8 +31,8 @@ public class RatingController {
                 .body(ratingService.convertRatingToRestRatingCreateDTO(ratingCreated));
     }
 
-    @ApiMessage("Fetch list ratings")
     @GetMapping
+    @ApiMessage("Fetch list ratings")
     public ResponseEntity<ResultPaginationDTO> fetchAllRatingsRequest(
             @Filter Specification<Rating> spec,
             Pageable pageable
@@ -40,8 +40,8 @@ public class RatingController {
         return ResponseEntity.ok(ratingService.fetchListRatings(spec, pageable));
     }
 
-    @ApiMessage("Fetch list ratings by book")
     @GetMapping("/book/{bookId}")
+    @ApiMessage("Fetch list ratings by book")
     public ResponseEntity<ResultPaginationDTO> fetchAllRatingsByBookId(
             @PathVariable Long bookId,
             Pageable pageable
@@ -49,8 +49,8 @@ public class RatingController {
         return ResponseEntity.ok(ratingService.fetchListRatingsByBookId(bookId, pageable));
     }
 
-    @ApiMessage("Get rating by user and book")
     @GetMapping("/book/{bookId}/user/{userId}")
+    @ApiMessage("Get rating by user and book")
     public ResponseEntity<RestRatingViewDTO> fetchRatingsByUserIdAndBookId(
             @PathVariable Long bookId,
             @PathVariable Long userId
@@ -59,15 +59,15 @@ public class RatingController {
         return ResponseEntity.ok(ratingService.convertRatingToRestRatingViewDTO(ratingGetByUserIdAndBookId));
     }
 
-    @ApiMessage("Get rating")
     @GetMapping("/{id}")
+    @ApiMessage("Get rating")
     public ResponseEntity<RestRatingViewDTO> getRatingByIdRequest(@PathVariable Long id) {
         Rating ratingGetById = ratingService.getRatingById(id);
         return ResponseEntity.ok(ratingService.convertRatingToRestRatingViewDTO(ratingGetById));
     }
 
-    @ApiMessage("Delete rating")
     @DeleteMapping("/{id}")
+    @ApiMessage("Delete rating")
     public ResponseEntity<Void> deleteRatingByIdRequest(@PathVariable Long id) {
         ratingService.deleteRatingById(id);
         return ResponseEntity.noContent().build();

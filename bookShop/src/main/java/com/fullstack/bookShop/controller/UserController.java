@@ -102,8 +102,8 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @ApiMessage("Update user avatar")
     @PatchMapping("/{id}/avatar")
+    @ApiMessage("Update user avatar")
     public ResponseEntity<RestUserUpdateDTO> uploadUserAvatarRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
@@ -122,8 +122,8 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @ApiMessage("Delete user avatar")
     @DeleteMapping("/{id}/avatar")
+    @ApiMessage("Delete user avatar")
     public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
@@ -139,8 +139,8 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @ApiMessage("Import users from file")
     @PostMapping("/import")
+    @ApiMessage("Import users from file")
     public ResponseEntity<RestImportDTO<RestUserCreateDTO>> importUsersFromFileRequest(
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {

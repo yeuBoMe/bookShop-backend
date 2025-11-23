@@ -42,8 +42,8 @@ public class AuthController {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-    @ApiMessage("Login successfully")
     @PostMapping("/login")
+    @ApiMessage("Login successfully")
     public ResponseEntity<RestLoginDTO> loginRequest(@Valid @RequestBody LoginDTO loginDTO) {
         // class contains login info not validate
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
@@ -86,8 +86,8 @@ public class AuthController {
         response.sendRedirect("/oauth2/authorization/google");
     }
 
-    @ApiMessage("Register successfully")
     @PostMapping("/register")
+    @ApiMessage("Register successfully")
     public ResponseEntity<RestUserCreateDTO> registerRequest(@Valid @RequestBody User userRequest) {
         User userCreated = userService.createUser(userRequest);
         return ResponseEntity
@@ -95,8 +95,8 @@ public class AuthController {
                 .body(userService.convertUserToRestUserCreateDTO(userCreated));
     }
 
-    @ApiMessage("Get account info")
     @GetMapping("/account")
+    @ApiMessage("Get account info")
     public ResponseEntity<RestLoginDTO.UserGetAccount> getAccountRequest() {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
         User userGetByEmail = userService.getUserByEmail(email);
@@ -107,8 +107,8 @@ public class AuthController {
         return ResponseEntity.ok(userGetAccount);
     }
 
-    @ApiMessage("Get user by refresh token ")
     @GetMapping("/refresh")
+    @ApiMessage("Get user by refresh token ")
     public ResponseEntity<RestLoginDTO> getRefreshTokenRequest(
             @CookieValue("refresh_token") String refreshTokenFromCookie
     ) {
@@ -140,8 +140,8 @@ public class AuthController {
                 .body(restLoginDTO);
     }
 
-    @ApiMessage("Logout successfully")
     @PostMapping("/logout")
+    @ApiMessage("Logout successfully")
     public ResponseEntity<Void> logoutRequest() {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
         userService.handleSaveUserRefreshToken(email, null);
@@ -159,7 +159,7 @@ public class AuthController {
                 .body(null);
     }
 
-    public RestLoginDTO.UserLogin buildUserLogin(User user) {
+    private RestLoginDTO.UserLogin buildUserLogin(User user) {
         if (user == null) {
             return null;
         }

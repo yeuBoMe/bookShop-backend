@@ -16,9 +16,9 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @ApiMessage("Get dashboard info")
     @GetMapping
-    public ResponseEntity<RestDashboardDTO> getDashboardInfoRequest(){
+    @ApiMessage("Get dashboard info")
+    public ResponseEntity<RestDashboardDTO> getDashboardInfoRequest() {
         return ResponseEntity.ok(dashboardService.getDashBoardInfo());
     }
 }

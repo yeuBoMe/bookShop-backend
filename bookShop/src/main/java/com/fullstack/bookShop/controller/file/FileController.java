@@ -29,8 +29,8 @@ public class FileController {
 
     private final FileService fileService;
 
-    @ApiMessage("Upload single file")
     @PostMapping("/single")
+    @ApiMessage("Upload single file")
     public ResponseEntity<RestUploadFileDTO> uploadSingleFileRequest(
             @RequestParam(name = "file", required = false) MultipartFile file,
             @RequestParam(name = "folder", required = false) String folder
@@ -51,8 +51,8 @@ public class FileController {
         return ResponseEntity.ok(restUploadFileDTO);
     }
 
-    @ApiMessage("Upload multiple files")
     @PostMapping("/multiple")
+    @ApiMessage("Upload multiple files")
     public ResponseEntity<RestUploadFileDTO> uploadMultipleFileRequest(
             @RequestParam(name = "files", required = false) List<MultipartFile> files,
             @RequestParam(name = "folder", required = false) String folder

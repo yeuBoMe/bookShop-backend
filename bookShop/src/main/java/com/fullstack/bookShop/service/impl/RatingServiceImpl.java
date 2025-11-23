@@ -77,7 +77,8 @@ public class RatingServiceImpl implements RatingService {
     public ResultPaginationDTO fetchListRatingsByBookId(Long bookId, Pageable pageable) {
         Page<Rating> ratingPage = ratingRepository.findAllByBookId(bookId, pageable);
 
-        List<RestRatingViewDTO> ratingViewDTOList = ratingPage.getContent().stream()
+        List<RestRatingViewDTO> ratingViewDTOList = ratingPage.getContent()
+                .stream()
                 .map(this::convertRatingToRestRatingViewDTO)
                 .toList();
 
@@ -91,7 +92,8 @@ public class RatingServiceImpl implements RatingService {
     public ResultPaginationDTO fetchListRatings(Specification<Rating> spec, Pageable pageable) {
         Page<Rating> ratingPage = ratingRepository.findAll(spec, pageable);
 
-        List<RestRatingViewDTO> ratingViewDTOList = ratingPage.getContent().stream()
+        List<RestRatingViewDTO> ratingViewDTOList = ratingPage.getContent()
+                .stream()
                 .map(this::convertRatingToRestRatingViewDTO)
                 .toList();
 

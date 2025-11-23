@@ -25,8 +25,8 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @ApiMessage("Create an order")
     @PostMapping
+    @ApiMessage("Create an order")
     public ResponseEntity<RestOrderCreateDTO> createOrderRequest(@Valid @RequestBody Order order) {
         Order orderCreated = orderService.createOrder(order);
         return ResponseEntity
@@ -34,8 +34,8 @@ public class OrderController {
                 .body(orderService.convertOrderToRestOrderCreateDTO(orderCreated));
     }
 
-    @ApiMessage("Fetch list orders")
     @GetMapping
+    @ApiMessage("Fetch list orders")
     public ResponseEntity<ResultPaginationDTO> fetchListOrdersRequest(
             @Filter Specification<Order> spec,
             Pageable pageable
@@ -43,15 +43,15 @@ public class OrderController {
         return ResponseEntity.ok(orderService.fetchListOrders(spec, pageable));
     }
 
-    @ApiMessage("Get an order")
     @GetMapping("/{id}")
+    @ApiMessage("Get an order")
     public ResponseEntity<RestOrderViewDTO> getOrderByIdRequest(@PathVariable Long id) {
         Order orderGetById = orderService.getOrderById(id);
         return ResponseEntity.ok(orderService.convertOrderToRestOrderViewDTO(orderGetById));
     }
 
-    @ApiMessage("Update an order")
     @PatchMapping("/{id}")
+    @ApiMessage("Update an order")
     public ResponseEntity<RestOrderUpdateDTO> updateOrderPartialRequest(
             @PathVariable Long id,
             @Valid @RequestBody RestOrderStatusDTO restOrderStatusDTO
@@ -63,15 +63,15 @@ public class OrderController {
         return ResponseEntity.ok(orderService.convertOrderToRestOrderUpdateDTO(orderUpdated));
     }
 
-    @ApiMessage("Delete an order")
     @DeleteMapping("/{id}")
+    @ApiMessage("Delete an order")
     public ResponseEntity<Void> deleteOrderRequest(@PathVariable Long id) {
         orderService.deleteOrderById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @ApiMessage("Get order history")
     @GetMapping("/history")
+    @ApiMessage("Get order history")
     public ResponseEntity<ResultPaginationDTO> getOrderHistoryRequest(Pageable pageable) {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
         return ResponseEntity.ok(orderService.fetchListOrdersHistory(email, pageable));

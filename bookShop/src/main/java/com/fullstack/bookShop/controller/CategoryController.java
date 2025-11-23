@@ -27,8 +27,8 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @ApiMessage("Create category")
     @PostMapping
+    @ApiMessage("Create category")
     public ResponseEntity<RestCategoryCreateDTO> createCategoryRequest(@Valid @RequestBody Category category) {
         Category categoryCreated = categoryService.createCategory(category);
         return ResponseEntity
@@ -36,8 +36,8 @@ public class CategoryController {
                 .body(categoryService.convertCategoryToRestCategoryCreateDTO(categoryCreated));
     }
 
-    @ApiMessage("Fetch list categories")
     @GetMapping
+    @ApiMessage("Fetch list categories")
     public ResponseEntity<ResultPaginationDTO> fetchAllCategoriesRequest(
             @Filter Specification<Category> spec,
             Pageable pageable
@@ -45,15 +45,15 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.fetchAllCategories(spec, pageable));
     }
 
-    @ApiMessage("Get category by id")
     @GetMapping("/{id}")
+    @ApiMessage("Get category by id")
     public ResponseEntity<RestCategoryViewDTO> getCategoryByIdRequest(@PathVariable Long id) {
         Category categoryGetById = categoryService.getCategoryById(id);
         return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryViewDTO(categoryGetById));
     }
 
-    @ApiMessage("Update category by id")
     @PutMapping("/{id}")
+    @ApiMessage("Update category by id")
     public ResponseEntity<RestCategoryUpdateDTO> updateCategoryByIdRequest(
             @PathVariable Long id,
             @Valid @RequestBody Category category
@@ -62,8 +62,8 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
     }
 
-    @ApiMessage("Update category partial by id")
     @PatchMapping("/{id}")
+    @ApiMessage("Update category partial by id")
     public ResponseEntity<RestCategoryUpdateDTO> updateCategoryPartialByIdRequest(
             @PathVariable Long id,
             @Valid @RequestBody Category category
@@ -72,23 +72,21 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
     }
 
-    @ApiMessage("Delete category")
     @DeleteMapping("/{id}")
+    @ApiMessage("Delete category")
     public ResponseEntity<Void> deleteCategoryByIdRequest(@PathVariable Long id) {
         categoryService.deleteCategoryById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @ApiMessage("Import list categories from file")
     @PostMapping("/import")
+    @ApiMessage("Import list categories from file")
     public ResponseEntity<RestImportDTO<RestCategoryCreateDTO>> importCategoriesFormFileRequest(
             @Valid @RequestBody List<RestCategoryCreateDTO> restCategoryCreateDTOList
     ) {
         RestImportDTO<RestCategoryCreateDTO> restImportDTO
                 = categoryService.importListCategoriesFromFile(restCategoryCreateDTOList);
-
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
-
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);

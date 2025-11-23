@@ -58,7 +58,6 @@ public class RoleController {
         return ResponseEntity.ok(roleService.convertRoleToRestRoleUpdateDTO(roleUpdated));
     }
 
-
     @DeleteMapping("/{id}")
     @ApiMessage("Delete role")
     public ResponseEntity<Void> deleteRoleByIdRequest(@PathVariable Long id) {

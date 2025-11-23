@@ -39,8 +39,8 @@ public class BookController {
 
     private final FileService fileService;
 
-    @ApiMessage("Create book")
     @PostMapping
+    @ApiMessage("Create book")
     public ResponseEntity<RestBookCreateDTO> createBookRequest(@Valid @RequestBody Book book) {
         Book bookCreated = bookService.createBook(book);
         return ResponseEntity
@@ -48,8 +48,8 @@ public class BookController {
                 .body(bookService.convertBookToRestBookCreateDTO(bookCreated));
     }
 
-    @ApiMessage("Fetch list books")
     @GetMapping
+    @ApiMessage("Fetch list books")
     public ResponseEntity<ResultPaginationDTO> fetchListBooksRequest(
             @Filter Specification<Book> spec,
             Pageable pageable
@@ -57,8 +57,8 @@ public class BookController {
         return ResponseEntity.ok(bookService.fetchListBooks(spec, pageable));
     }
 
-    @ApiMessage("Fetch list books by average rating")
     @GetMapping("/average-rating")
+    @ApiMessage("Fetch list books by average rating")
     public ResponseEntity<ResultPaginationDTO> fetchListBooksByMinRatingGreaterThaneEqualRequest(
             @RequestParam(defaultValue = "0") Double minRating,
             Pageable pageable
@@ -66,15 +66,15 @@ public class BookController {
         return ResponseEntity.ok(bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
     }
 
-    @ApiMessage("Get book")
     @GetMapping("/{id}")
+    @ApiMessage("Get book")
     public ResponseEntity<RestBookViewDTO> getBookByIdRequest(@PathVariable Long id) {
         Book bookGetById = bookService.getBookById(id);
         return ResponseEntity.ok(bookService.convertBookToRestBookViewDTO(bookGetById));
     }
 
-    @ApiMessage("Update book")
     @PutMapping("/{id}")
+    @ApiMessage("Update book")
     public ResponseEntity<RestBookUpdateDTO> updateBookByIdRequest(
             @Valid @RequestBody Book book,
             @PathVariable Long id
@@ -85,6 +85,7 @@ public class BookController {
 
     @ApiMessage("Update book partial")
     @PatchMapping("/{id}")
+
     public ResponseEntity<RestBookUpdateDTO> partialUpdateBookByIdRequest(
             @Valid @RequestBody Book book,
             @PathVariable Long id
@@ -93,15 +94,15 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
-    @ApiMessage("Delete book")
     @DeleteMapping("/{id}")
+    @ApiMessage("Delete book")
     public ResponseEntity<Void> deleteBookByIdRequest(@PathVariable Long id) {
         bookService.deleteBookById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @ApiMessage("Update book image")
     @PatchMapping("/{id}/image")
+    @ApiMessage("Update book image")
     public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageRequest(
             @PathVariable Long id,
             @RequestParam(name = "file", required = false) MultipartFile file
@@ -120,8 +121,8 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
-    @ApiMessage("Update book multiple images")
     @PatchMapping("/{id}/multiple-images")
+    @ApiMessage("Update book multiple images")
     public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesRequest(
             @PathVariable Long id,
             @RequestParam(name = "files", required = false) List<MultipartFile> files
@@ -129,7 +130,6 @@ public class BookController {
             StorageException,
             URISyntaxException,
             IOException {
-
         FileValidUtil.validateListFiles(files);
         fileService.createUploadFolder(baseUri + "book");
         List<String> fileNames = fileService.storeMultipleFiles(files, "book");
@@ -141,8 +141,8 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
-    @ApiMessage("Delete book single image")
     @DeleteMapping("/{id}/image")
+    @ApiMessage("Delete book single image")
     public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageRequest(
             @PathVariable Long id,
             @RequestParam(name = "imageName", required = false) String fileName
@@ -160,8 +160,8 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
-    @ApiMessage("Delete book multiple image")
     @DeleteMapping("/{id}/multiple-images")
+    @ApiMessage("Delete book multiple image")
     public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageRequest(
             @PathVariable Long id,
             @RequestBody List<String> fileNames
@@ -179,16 +179,14 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
-    @ApiMessage("Import books from file")
     @PostMapping("/import")
+    @ApiMessage("Import books from file")
     public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(
             @Valid @RequestBody List<Book> bookList
     ) {
         RestImportDTO<RestBookCreateDTO> restImportDTO
                 = bookService.importListBooksFromFile(bookList);
-
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
-
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);
