@@ -72,7 +72,7 @@ public class SecurityConfiguration {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         // Tạo converter mặc định của Spring để trích xuất quyền (authorities) từ JWT
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("scope");
         // Xóa prefix mặc định "SCOPE_" của quyền
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
 

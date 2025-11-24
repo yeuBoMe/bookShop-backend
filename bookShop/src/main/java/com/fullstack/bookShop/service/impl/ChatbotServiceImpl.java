@@ -26,7 +26,6 @@ public class ChatbotServiceImpl implements ChatbotService {
         """);
 
         UserMessage userMessage = new UserMessage(restChatbotDTO.getMessage());
-
         Prompt prompt = new Prompt(systemMessage, userMessage);
 
         String messageResponse = chatClient.prompt(prompt)

@@ -65,6 +65,12 @@ public class SecurityUtil {
                 restLoginDTO.getUser().getEmail()
         );
 
+        String roleOfUser = Optional.ofNullable(restLoginDTO.getUser().getRole())
+                .map(RestLoginDTO.UserLogin.RoleOfUserLogin::getName)
+                .orElse("USER");
+
+        String scope = "ROLE_" + roleOfUser;
+
         Instant now = Instant.now();
         Instant expiration = now.plus(accessTokenExpiration, ChronoUnit.SECONDS);
 
@@ -74,6 +80,7 @@ public class SecurityUtil {
                 .expiresAt(expiration)
                 .subject(email)
                 .claim("user", userInsideToken)
+                .claim("scope", scope)
                 .build();
 
         // header
@@ -94,11 +101,18 @@ public class SecurityUtil {
                 restLoginDTO.getUser().getEmail()
         );
 
+        String roleOfUser = Optional.ofNullable(restLoginDTO.getUser().getRole())
+                .map(RestLoginDTO.UserLogin.RoleOfUserLogin::getName)
+                .orElse("USER");
+
+        String scope = "ROLE_" + roleOfUser;
+
         JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(expiration)
                 .subject(email)
                 .claim("user", userInsideToken)
+                .claim("scope", scope)
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();

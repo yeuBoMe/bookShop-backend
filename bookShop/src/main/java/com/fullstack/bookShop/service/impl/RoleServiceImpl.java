@@ -34,7 +34,7 @@ public class RoleServiceImpl implements RoleService {
     private final PermissionRepository permissionRepository;
 
     private void checkNullAndSetListPermissions(Role roleRequest, Role currentRole) {
-        if (!roleRequest.getPermissions().isEmpty()) {
+        if (roleRequest.getPermissions() != null && !roleRequest.getPermissions().isEmpty()) {
             for (Permission permission : roleRequest.getPermissions()) {
                 if (!permissionRepository.existsById(permission.getId())) {
                     throw new NoSuchElementException("Permission with id " + permission.getId() + " not found!");
