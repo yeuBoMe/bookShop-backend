@@ -1,4 +1,4 @@
-package com.fullstack.bookShop.config;
+package com.fullstack.bookShop.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fullstack.bookShop.dto.response.RestResponse;

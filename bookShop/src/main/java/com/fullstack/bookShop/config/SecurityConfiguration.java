@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.config;
 
+import com.fullstack.bookShop.security.CustomAuthenticationEntryPoint;
 import com.fullstack.bookShop.security.CustomDefaultOauth2UserService;
 import com.fullstack.bookShop.security.CustomAuthenticationSuccessHandler;
 import com.fullstack.bookShop.util.security.SecurityUtil;
