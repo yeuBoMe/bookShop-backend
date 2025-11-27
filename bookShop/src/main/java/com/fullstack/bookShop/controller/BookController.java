@@ -85,7 +85,6 @@ public class BookController {
 
     @ApiMessage("Update book partial")
     @PatchMapping("/{id}")
-
     public ResponseEntity<RestBookUpdateDTO> partialUpdateBookByIdRequest(
             @Valid @RequestBody Book book,
             @PathVariable Long id

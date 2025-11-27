@@ -60,7 +60,6 @@ public class PermissionController {
         return ResponseEntity.ok(permissionService.convertPermissionToRestPermissionUpdateDTO(permissionUpdated));
     }
 
-
     @DeleteMapping("/{id}")
     @ApiMessage("Delete permission")
     public ResponseEntity<Void> deletePermissionByIdRequest(@PathVariable Long id) {

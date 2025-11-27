@@ -44,13 +44,12 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         String name = oAuth2User.getAttribute("name");
         String picture = oAuth2User.getAttribute("picture");
 
-        User user = userService.createGoogleUser(email, name, picture);
+        User userCreatedFromGoogle = userService.createGoogleUser(email, name, picture);
+        RestLoginDTO restLoginDTO = new RestLoginDTO();
+        restLoginDTO.setUser(buildUserLogin(userCreatedFromGoogle));
 
-        RestLoginDTO dto = new RestLoginDTO();
-        dto.setUser(buildUserLogin(user));
-
-        String accessToken = securityUtil.createAccessToken(email, dto);
-        String refreshToken = securityUtil.createRefreshToken(email, dto);
+        String accessToken = securityUtil.createAccessToken(email, restLoginDTO);
+        String refreshToken = securityUtil.createRefreshToken(email, restLoginDTO);
         userService.handleSaveUserRefreshToken(email, refreshToken);
 
         // Lưu refresh_token vào cookie

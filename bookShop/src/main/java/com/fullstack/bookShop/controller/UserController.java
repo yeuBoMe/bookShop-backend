@@ -146,9 +146,7 @@ public class UserController {
     ) {
         RestImportDTO<RestUserCreateDTO> restImportDTO
                 = userService.importListUsersFromFile(restUserCreateDTOList);
-
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
-
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);
