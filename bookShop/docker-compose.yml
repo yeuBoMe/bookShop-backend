@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: book_shop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sunhouse1
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./book_shop.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  bookshop:
+    build: .
+    image: bookshop
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./upload:/upload
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
