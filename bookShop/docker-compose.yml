@@ -10,6 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./book_shop.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./upload:/upload
     ports:
       - "5432:5432"
 
