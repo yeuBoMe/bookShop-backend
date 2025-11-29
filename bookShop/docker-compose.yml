@@ -12,34 +12,35 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./book_shop.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
+      test: pg_isready -U postgres -d book_shop
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 10s
 
   bookshop:
     build: .
-    restart: always
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - 8080:8080
     environment:
-      - DATASOURCE_URL=jdbc:postgresql://postgres:5432/book_shop
-      - DATASOURCE_USERNAME=postgres
-      - DATASOURCE_PASSWORD=sunhouse1
-      - SECRET_KEY=o74XvXRFsyJ2SaBfF/v63IJa88B+Lv5GvxUnrxzVDb5q8f3NsKg0jmyVDT8R3KUNFpSNZNCZ7ufGWrgu94nq7g==
-      - JWT_EXPIRATION=864000
-      - BOOKSHOP_FRONTEND_URL=https://your-frontend.onrender.com
-      - BOOKSHOP_UPLOAD_FILE_BASE_URI=file:///upload/
-      - SPRING_MAIL_HOST=smtp.gmail.com
-      - SPRING_MAIL_PORT=587
-      - SPRING_MAIL_USERNAME=vaogame2023@gmail.com
-      - SPRING_MAIL_PASSWORD=dldrponmcelxpvcs
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=482184911298-2cr9nbcpdtv05cepac4v7s5f6n5m6q7u.apps.googleusercontent.com
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=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
-      - SPRING_AI_OPENAI_API_KEY=AIzaSyAHaITlB8asG55mIboA71DxYD6IxVlX42E
-      - SPRING_AI_OPENAI_CHAT_BASE_URL=https://generativelanguage.googleapis.com
-      - SPRING_AI_OPENAI_CHAT_COMPLETIONS_PATH=/v1beta/openai/chat/completions
-      - SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL=gemini-2.0-flash
+      DATASOURCE_URL: jdbc:postgresql://postgres:5432/book_shop
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: sunhouse1
+      SECRET_KEY: o74XvXRFsyJ2SaBfF/v63IJa88B+Lv5GvxUnrxzVDb5q8f3NsKg0jmyVDT8R3KUNFpSNZNCZ7ufGWrgu94nq7g==
+      JWT_EXPIRATION: "864000"
+      BOOKSHOP_FRONTEND_URL: https://your-frontend.onrender.com
+      BOOKSHOP_UPLOAD_FILE_BASE_URI: file:///upload/
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: "587"
+      SPRING_MAIL_USERNAME: vaogame2023@gmail.com
+      SPRING_MAIL_PASSWORD: dldrponmcelxpvcs
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: 482184911298-2cr9nbcpdtv05cepac4v7s5f6n5m6q7u.apps.googleusercontent.com
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: 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
+      SPRING_AI_OPENAI_API_KEY: AIzaSyAHaITlB8asG55mIboA71DxYD6IxVlX42E
+      SPRING_AI_OPENAI_CHAT_BASE_URL: https://generativelanguage.googleapis.com
+      SPRING_AI_OPENAI_CHAT_COMPLETIONS_PATH: /v1beta/openai/chat/completions
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: gemini-2.0-flash
     volumes:
       - ./upload:/upload
     depends_on:
