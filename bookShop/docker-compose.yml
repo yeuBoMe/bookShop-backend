@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -10,8 +11,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./book_shop.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   bookshop:
     build: .
@@ -24,7 +28,7 @@ services:
       - DATASOURCE_PASSWORD=sunhouse1
       - SECRET_KEY=o74XvXRFsyJ2SaBfF/v63IJa88B+Lv5GvxUnrxzVDb5q8f3NsKg0jmyVDT8R3KUNFpSNZNCZ7ufGWrgu94nq7g==
       - JWT_EXPIRATION=864000
-      - BOOKSHOP_FRONTEND_URL=http://localhost:5173
+      - BOOKSHOP_FRONTEND_URL=https://your-frontend.onrender.com
       - BOOKSHOP_UPLOAD_FILE_BASE_URI=file:///upload/
       - SPRING_MAIL_HOST=smtp.gmail.com
       - SPRING_MAIL_PORT=587
@@ -39,7 +43,8 @@ services:
     volumes:
       - ./upload:/upload
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
