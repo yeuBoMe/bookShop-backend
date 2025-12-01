@@ -72,7 +72,7 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserViewDTO(userGetById));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.claims['user']['id']")
     @PutMapping("/{id}")
     @ApiMessage("Update user")
     public ResponseEntity<RestUserUpdateDTO> updateUserByIdRequest(
@@ -83,7 +83,7 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.claims['user']['id']")
     @PatchMapping("/{id}")
     @ApiMessage("Update user partial")
     public ResponseEntity<RestUserUpdateDTO> updateUserPartialByIdRequest(
@@ -94,7 +94,7 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
     @PatchMapping("/{id}/password")
     @ApiMessage("Update user password")
     public ResponseEntity<RestUserUpdateDTO> updateUserPasswordByIdRequest(
@@ -113,7 +113,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
     @PatchMapping("/{id}/avatar")
     @ApiMessage("Update user avatar")
     public ResponseEntity<RestUserUpdateDTO> updateUserAvatarRequest(
@@ -134,7 +134,7 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
     @PatchMapping("/{id}/cloud-avatar")
     @ApiMessage("Update user avatar to cloud")
     public ResponseEntity<RestUserUpdateDTO> updateUserAvatarToCloudinaryRequest(
@@ -152,7 +152,7 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
     @DeleteMapping("/{id}/avatar")
     @ApiMessage("Delete user avatar")
     public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarRequest(
@@ -170,7 +170,7 @@ public class UserController {
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
     @DeleteMapping("/{id}/cloud-avatar")
     @ApiMessage("Delete user avatar in cloud")
     public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarInCloudRequest(

@@ -139,8 +139,8 @@ public class BookController {
             @RequestParam(name = "file", required = false) MultipartFile file
     ) throws StorageException, IOException {
         FileValidUtil.validateFile(file);
-        Map<String, Object> imageUploadedInCloudinary = cloudinaryService.uploadImageToCloudinary(file);
-        String fileUploaded = imageUploadedInCloudinary.get("public_id") + "." + imageUploadedInCloudinary.get("format");
+        Map<String, Object> imageUploadedInCloud = cloudinaryService.uploadImageToCloudinary(file);
+        String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
 
         Book book = new Book();
         book.setImages(List.of(fileUploaded));
@@ -180,9 +180,9 @@ public class BookController {
         FileValidUtil.validateListFiles(files);
         List<String> fileNames = new ArrayList<>();
 
-        List<Map<String, Object>> listImagesInCloudinary = cloudinaryService.uploadListImagesToCloudinary(files);
-        for (Map<String, Object> imageUploadedInCloudinary : listImagesInCloudinary) {
-            String fileUploaded = imageUploadedInCloudinary.get("public_id") + "." + imageUploadedInCloudinary.get("format");
+        List<Map<String, Object>> listImagesInCloud = cloudinaryService.uploadListImagesToCloudinary(files);
+        for (Map<String, Object> imageUploadedInCloud : listImagesInCloud) {
+            String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
             fileNames.add(fileUploaded);
         }
 

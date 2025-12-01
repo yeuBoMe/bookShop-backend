@@ -23,7 +23,6 @@ public class RatingController {
 
     private final RatingService ratingService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ApiMessage("Create rating")
     public ResponseEntity<RestRatingCreateDTO> createRatingRequest(@Valid @RequestBody Rating ratingRequest) {
