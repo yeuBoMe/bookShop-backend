@@ -7,6 +7,7 @@ import com.fullstack.bookShop.dto.user.RestUserPassDTO;
 import com.fullstack.bookShop.dto.user.RestUserUpdateDTO;
 import com.fullstack.bookShop.dto.user.RestUserViewDTO;
 import com.fullstack.bookShop.model.User;
+import com.fullstack.bookShop.service.CloudinaryService;
 import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.service.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
@@ -27,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -39,6 +41,8 @@ public class UserController {
     private final UserService userService;
 
     private final FileService fileService;
+
+    private final CloudinaryService cloudinaryService;
 
     @PostMapping
     @ApiMessage("Create user")
@@ -104,7 +108,7 @@ public class UserController {
 
     @PatchMapping("/{id}/avatar")
     @ApiMessage("Update user avatar")
-    public ResponseEntity<RestUserUpdateDTO> uploadUserAvatarRequest(
+    public ResponseEntity<RestUserUpdateDTO> updateUserAvatarRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
     ) throws
@@ -114,6 +118,23 @@ public class UserController {
         FileValidUtil.validateFile(file);
         fileService.createUploadFolder(baseUri + "avatar");
         String fileUploaded = fileService.storeSingleFile(file, "avatar");
+
+        User user = new User();
+        user.setAvatar(fileUploaded);
+        User userUpdated = userService.updateUserPartialById(id, user);
+
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+    }
+
+    @PatchMapping("/{id}/cloud-avatar")
+    @ApiMessage("Update user avatar to cloud")
+    public ResponseEntity<RestUserUpdateDTO> updateUserAvatarToCloudinaryRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "fileName", required = false) MultipartFile file
+    ) throws StorageException, IOException {
+        FileValidUtil.validateFile(file);
+        Map<String, Object> imageUploadedInCloud = cloudinaryService.uploadImageToCloudinary(file);
+        String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
 
         User user = new User();
         user.setAvatar(fileUploaded);
@@ -136,6 +157,25 @@ public class UserController {
         }
 
         User userUpdated = userService.updateUserPartialById(id, userGetById);
+        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+    }
+
+    @DeleteMapping("/{id}/cloud-avatar")
+    @ApiMessage("Delete user avatar in cloud")
+    public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarInCloudRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "fileName", required = false) String fileName
+    ) throws IOException {
+        String publicId = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf(".")) : fileName;
+        cloudinaryService.deleteImageFromCloudinary(publicId);
+
+        if (userService.getUserById(id).getAvatar() != null
+                && userService.getUserById(id).getAvatar().equals(fileName)
+        ) {
+            userService.getUserById(id).setAvatar(null);
+        }
+
+        User userUpdated = userService.updateUserPartialById(id, userService.getUserById(id));
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 

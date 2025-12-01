@@ -111,7 +111,6 @@ public class SecurityConfiguration {
         };
 
         String[] adminList = {
-                "/api/v1/users/**",
                 "/api/v1/books/**",
                 "/api/v1/ratings/**",
                 "/api/v1/categories/**",
@@ -129,6 +128,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ratings/book/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/history").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/vnpay/vnpay-return").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/momo/momo-return").permitAll()
 

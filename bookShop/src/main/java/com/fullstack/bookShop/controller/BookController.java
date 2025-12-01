@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ public class BookController {
 
     private final FileService fileService;
 
-    private CloudinaryService cloudinaryService;
+    private final CloudinaryService cloudinaryService;
 
     @PostMapping
     @ApiMessage("Create book")
@@ -129,9 +130,7 @@ public class BookController {
     public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageToCloudinaryRequest(
             @PathVariable Long id,
             @RequestParam(name = "file", required = false) MultipartFile file
-    ) throws
-            StorageException,
-            IOException {
+    ) throws StorageException, IOException {
         FileValidUtil.validateFile(file);
         Map<String, Object> imageUploadedInCloudinary = cloudinaryService.uploadImageToCloudinary(file);
         String fileUploaded = imageUploadedInCloudinary.get("public_id") + "." + imageUploadedInCloudinary.get("format");
@@ -163,6 +162,28 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PatchMapping("/{id}/cloud-multiple-images")
+    @ApiMessage("Update book multiple images to cloudinary")
+    public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesToCloudinaryRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "files", required = false) List<MultipartFile> files
+    ) throws StorageException, IOException {
+        FileValidUtil.validateListFiles(files);
+        List<String> fileNames = new ArrayList<>();
+
+        List<Map<String, Object>> listImagesInCloudinary = cloudinaryService.uploadListImagesToCloudinary(files);
+        for (Map<String, Object> imageUploadedInCloudinary : listImagesInCloudinary) {
+            String fileUploaded = imageUploadedInCloudinary.get("public_id") + "." + imageUploadedInCloudinary.get("format");
+            fileNames.add(fileUploaded);
+        }
+
+        Book book = new Book();
+        book.setImages(fileNames);
+        Book bookUpdated = bookService.updateBookPartialById(id, book);
+
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+    }
+
     @DeleteMapping("/{id}/image")
     @ApiMessage("Delete book single image")
     public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageRequest(
@@ -182,6 +203,22 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @DeleteMapping("/{id}/cloud-image")
+    @ApiMessage("Delete book single image in cloud")
+    public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageInCloudRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "imageName", required = false) String fileName
+    ) throws IOException {
+        String publicId = fileName.contains(".") ? fileName.substring(0, fileName.indexOf(".")) : fileName;
+        cloudinaryService.deleteImageFromCloudinary(publicId);
+
+        Book bookGetById = bookService.getBookById(id);
+        bookGetById.getImages().remove(fileName);
+        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
+
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+    }
+
     @DeleteMapping("/{id}/multiple-images")
     @ApiMessage("Delete book multiple image")
     public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageRequest(
@@ -198,6 +235,28 @@ public class BookController {
         }
 
         Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+    }
+
+    @DeleteMapping("/{id}/cloud-multiple-images")
+    @ApiMessage("Delete book multiple image in cloud")
+    public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageInCloudRequest(
+            @PathVariable Long id,
+            @RequestBody List<String> fileNames
+    ) throws Exception {
+        List<String> publicIds = fileNames.stream()
+                .map(name -> name.contains(".")
+                        ? name.substring(0, name.lastIndexOf("."))
+                        : name
+                )
+                .toList();
+
+        cloudinaryService.deleteMultipleImagesFromCloudinary(publicIds);
+
+        Book bookGetById = bookService.getBookById(id);
+        bookGetById.getImages().removeAll(fileNames);
+        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
+
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
