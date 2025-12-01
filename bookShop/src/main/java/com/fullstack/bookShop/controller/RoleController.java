@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class RoleController {
 
     private final RoleService roleService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ApiMessage("Create role")
     public ResponseEntity<RestRoleCreateDTO> createRoleRequest(@Valid @RequestBody Role roleRequest) {
@@ -32,6 +34,7 @@ public class RoleController {
                 .body(roleService.convertRoleToRestRoleCreateDTO(roleCreated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     @ApiMessage("Fetch list roles")
     public ResponseEntity<ResultPaginationDTO> fetchAllRolesRequest(
@@ -41,6 +44,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.fetchAllRoles(spec, pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     @ApiMessage("Get role")
     public ResponseEntity<RestRoleViewDTO> getRoleByIdRequest(@PathVariable Long id) {
@@ -48,6 +52,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.convertRoleToRestRoleViewDTO(roleGetById));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     @ApiMessage("Update role")
     public ResponseEntity<RestRoleUpdateDTO> updateRoleByIdRequest(
@@ -58,6 +63,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.convertRoleToRestRoleUpdateDTO(roleUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ApiMessage("Delete role")
     public ResponseEntity<Void> deleteRoleByIdRequest(@PathVariable Long id) {

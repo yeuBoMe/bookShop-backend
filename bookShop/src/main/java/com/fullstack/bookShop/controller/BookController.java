@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +45,7 @@ public class BookController {
 
     private final CloudinaryService cloudinaryService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ApiMessage("Create book")
     public ResponseEntity<RestBookCreateDTO> createBookRequest(@Valid @RequestBody Book book) {
@@ -78,6 +80,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookViewDTO(bookGetById));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     @ApiMessage("Update book")
     public ResponseEntity<RestBookUpdateDTO> updateBookByIdRequest(
@@ -88,6 +91,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     @ApiMessage("Update book partial")
     public ResponseEntity<RestBookUpdateDTO> partialUpdateBookByIdRequest(
@@ -98,6 +102,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ApiMessage("Delete book")
     public ResponseEntity<Void> deleteBookByIdRequest(@PathVariable Long id) {
@@ -105,6 +110,7 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/image")
     @ApiMessage("Update book image")
     public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageRequest(
@@ -125,6 +131,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/cloud-image")
     @ApiMessage("Update book image to cloudinary")
     public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageToCloudinaryRequest(
@@ -142,6 +149,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/multiple-images")
     @ApiMessage("Update book multiple images")
     public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesRequest(
@@ -162,6 +170,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/cloud-multiple-images")
     @ApiMessage("Update book multiple images to cloudinary")
     public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesToCloudinaryRequest(
@@ -184,6 +193,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/image")
     @ApiMessage("Delete book single image")
     public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageRequest(
@@ -203,6 +213,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/cloud-image")
     @ApiMessage("Delete book single image in cloud")
     public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageInCloudRequest(
@@ -219,6 +230,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/multiple-images")
     @ApiMessage("Delete book multiple image")
     public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageRequest(
@@ -238,6 +250,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/cloud-multiple-images")
     @ApiMessage("Delete book multiple image in cloud")
     public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageInCloudRequest(
@@ -260,6 +273,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/import")
     @ApiMessage("Import books from file")
     public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(

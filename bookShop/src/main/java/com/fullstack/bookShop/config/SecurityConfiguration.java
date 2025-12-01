@@ -110,15 +110,6 @@ public class SecurityConfiguration {
                 "/swagger-ui.html",
         };
 
-        String[] adminList = {
-                "/api/v1/books/**",
-                "/api/v1/ratings/**",
-                "/api/v1/categories/**",
-                "/api/v1/orders/**",
-                "/api/v1/roles/**",
-                "/api/v1/permissions/**",
-        };
-
         httpSecurity
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -126,15 +117,10 @@ public class SecurityConfiguration {
                         // Permit all endpoints
                         .requestMatchers(whiteList).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ratings/book/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/history").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/vnpay/vnpay-return").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/momo/momo-return").permitAll()
-
-                        // Admin endpoints
-                        .requestMatchers(adminList).hasRole("ADMIN")
 
                         // Authenticate endpoints
                         .anyRequest().authenticated()

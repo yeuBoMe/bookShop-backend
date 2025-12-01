@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class PermissionController {
 
     private final PermissionService permissionService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ApiMessage("Create permission")
     public ResponseEntity<RestPermissionCreateDTO> createPermissionRequest(
@@ -34,6 +36,7 @@ public class PermissionController {
                 .body(permissionService.convertPermissionToRestPermissionCreateDTO(permissionCreated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     @ApiMessage("Fetch list permissions")
     public ResponseEntity<ResultPaginationDTO> fetchAllPermissionsRequest(
@@ -43,6 +46,7 @@ public class PermissionController {
         return ResponseEntity.ok(permissionService.fetchAllPermissions(spec, pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     @ApiMessage("Get permission")
     public ResponseEntity<RestPermissionViewDTO> getPermissionByIdRequest(@PathVariable Long id) {
@@ -50,6 +54,7 @@ public class PermissionController {
         return ResponseEntity.ok(permissionService.convertPermissionToRestPermissionViewDTO(permissionGetById));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     @ApiMessage("Update permission")
     public ResponseEntity<RestPermissionUpdateDTO> updatePermissionByIdRequest(
@@ -60,6 +65,7 @@ public class PermissionController {
         return ResponseEntity.ok(permissionService.convertPermissionToRestPermissionUpdateDTO(permissionUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ApiMessage("Delete permission")
     public ResponseEntity<Void> deletePermissionByIdRequest(@PathVariable Long id) {

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -34,6 +35,7 @@ public class OrderController {
                 .body(orderService.convertOrderToRestOrderCreateDTO(orderCreated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     @ApiMessage("Fetch list orders")
     public ResponseEntity<ResultPaginationDTO> fetchListOrdersRequest(
@@ -43,6 +45,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.fetchListOrders(spec, pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     @ApiMessage("Get an order")
     public ResponseEntity<RestOrderViewDTO> getOrderByIdRequest(@PathVariable Long id) {
@@ -63,6 +66,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.convertOrderToRestOrderUpdateDTO(orderUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ApiMessage("Delete an order")
     public ResponseEntity<Void> deleteOrderRequest(@PathVariable Long id) {

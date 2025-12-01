@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class RatingController {
 
     private final RatingService ratingService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ApiMessage("Create rating")
     public ResponseEntity<RestRatingCreateDTO> createRatingRequest(@Valid @RequestBody Rating ratingRequest) {
@@ -31,6 +33,7 @@ public class RatingController {
                 .body(ratingService.convertRatingToRestRatingCreateDTO(ratingCreated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     @ApiMessage("Fetch list ratings")
     public ResponseEntity<ResultPaginationDTO> fetchAllRatingsRequest(
@@ -59,6 +62,7 @@ public class RatingController {
         return ResponseEntity.ok(ratingService.convertRatingToRestRatingViewDTO(ratingGetByUserIdAndBookId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     @ApiMessage("Get rating")
     public ResponseEntity<RestRatingViewDTO> getRatingByIdRequest(@PathVariable Long id) {
@@ -66,6 +70,7 @@ public class RatingController {
         return ResponseEntity.ok(ratingService.convertRatingToRestRatingViewDTO(ratingGetById));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ApiMessage("Delete rating")
     public ResponseEntity<Void> deleteRatingByIdRequest(@PathVariable Long id) {

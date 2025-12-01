@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ApiMessage("Create category")
     public ResponseEntity<RestCategoryCreateDTO> createCategoryRequest(@Valid @RequestBody Category category) {
@@ -45,6 +47,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.fetchAllCategories(spec, pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     @ApiMessage("Get category by id")
     public ResponseEntity<RestCategoryViewDTO> getCategoryByIdRequest(@PathVariable Long id) {
@@ -52,6 +55,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryViewDTO(categoryGetById));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     @ApiMessage("Update category by id")
     public ResponseEntity<RestCategoryUpdateDTO> updateCategoryByIdRequest(
@@ -62,6 +66,7 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     @ApiMessage("Update category partial by id")
     public ResponseEntity<RestCategoryUpdateDTO> updateCategoryPartialByIdRequest(
@@ -79,6 +84,7 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/import")
     @ApiMessage("Import list categories from file")
     public ResponseEntity<RestImportDTO<RestCategoryCreateDTO>> importCategoriesFormFileRequest(
