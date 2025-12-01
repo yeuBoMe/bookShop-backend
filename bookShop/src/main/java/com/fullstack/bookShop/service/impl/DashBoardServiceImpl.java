@@ -30,8 +30,8 @@ public class DashBoardServiceImpl implements DashboardService {
 
         return new RestDashboardDTO(
                 countOrders,
-                countBooks,
                 countUsers,
+                countBooks,
                 countCategories,
                 countRatings
         );
