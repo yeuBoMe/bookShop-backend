@@ -7,6 +7,7 @@ import com.fullstack.bookShop.dto.imports.RestImportDTO;
 import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.service.BookService;
+import com.fullstack.bookShop.service.CloudinaryService;
 import com.fullstack.bookShop.service.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.exception.custom.StorageException;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/books")
@@ -38,6 +40,8 @@ public class BookController {
     private final BookService bookService;
 
     private final FileService fileService;
+
+    private CloudinaryService cloudinaryService;
 
     @PostMapping
     @ApiMessage("Create book")
@@ -83,8 +87,8 @@ public class BookController {
         return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
     }
 
-    @ApiMessage("Update book partial")
     @PatchMapping("/{id}")
+    @ApiMessage("Update book partial")
     public ResponseEntity<RestBookUpdateDTO> partialUpdateBookByIdRequest(
             @Valid @RequestBody Book book,
             @PathVariable Long id
@@ -112,6 +116,25 @@ public class BookController {
         FileValidUtil.validateFile(file);
         fileService.createUploadFolder(baseUri + "book");
         String fileUploaded = fileService.storeSingleFile(file, "book");
+
+        Book book = new Book();
+        book.setImages(List.of(fileUploaded));
+        Book bookUpdated = bookService.updateBookPartialById(id, book);
+
+        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+    }
+
+    @PatchMapping("/{id}/cloud-image")
+    @ApiMessage("Update book image to cloudinary")
+    public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageToCloudinaryRequest(
+            @PathVariable Long id,
+            @RequestParam(name = "file", required = false) MultipartFile file
+    ) throws
+            StorageException,
+            IOException {
+        FileValidUtil.validateFile(file);
+        Map<String, Object> imageUploadedInCloudinary = cloudinaryService.uploadImageToCloudinary(file);
+        String fileUploaded = imageUploadedInCloudinary.get("public_id") + "." + imageUploadedInCloudinary.get("format");
 
         Book book = new Book();
         book.setImages(List.of(fileUploaded));

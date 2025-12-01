@@ -18,6 +18,17 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Override
     @SuppressWarnings("unchecked")
     public Map<String, Object> uploadImageToCloudinary(MultipartFile multipartFile) throws IOException {
-        return cloudinary.uploader().upload(multipartFile.getBytes(), Map.of());
+        String originalFileName = System.currentTimeMillis() + "_" + multipartFile.getOriginalFilename();
+
+        String fileNameRemoveDot = originalFileName.contains(".")
+                ? originalFileName.substring(0, originalFileName.lastIndexOf("."))
+                : originalFileName;
+
+        Map<String, Object> fileNameInCloudinary = Map.of(
+                "public_id", fileNameRemoveDot,
+                "overwrite", false
+        );
+
+        return cloudinary.uploader().upload(multipartFile.getBytes(), fileNameInCloudinary);
     }
 }
