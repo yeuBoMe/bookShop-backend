@@ -24,6 +24,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
+    @Value("${bookshop.frontend.url}")
+    private String frontendUrl;
+
     @Value("${bookshop.jwt.refresh-token-validity-in-seconds}")
     private Long refreshTokenExpiration;
 
@@ -61,7 +64,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         response.addCookie(cookie);
 
         String redirectUrl = String.format(
-                "http://localhost:5173?access_token=%s&google_login=success",
+                frontendUrl + "?access_token=%s&google_login=success",
                 accessToken
         );
 
