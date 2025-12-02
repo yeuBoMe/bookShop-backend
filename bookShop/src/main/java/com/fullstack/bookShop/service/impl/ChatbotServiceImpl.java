@@ -62,7 +62,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         }
 
         SystemMessage systemMessage = new SystemMessage(
-                """
+                        """
                         You are BookShop AI
                         You should response with a funny voice
                         All books database
