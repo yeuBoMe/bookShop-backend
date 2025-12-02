@@ -96,15 +96,17 @@ public class VnPayServiceImpl implements VnPayService {
 
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(vnpResponseCode)) {
-                // Case success
-                response.sendRedirect(frontendUrl + "/checkout#vnpay-success");
+                // Success - redirect về /checkout thôi
+                response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=success");
             } else {
-                // Case fail
-                response.sendRedirect(frontendUrl + "/checkout/fail?code=" + vnpResponseCode);
+                // Fail với mã lỗi
+                response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code="
+                        + vnpResponseCode
+                );
             }
         } else {
             // Invalid signature
-            response.sendRedirect(frontendUrl + "/checkout/fail?code=97");
+            response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code=97");
         }
     }
 }
