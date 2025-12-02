@@ -3,6 +3,7 @@ package com.fullstack.bookShop.service.impl;
 import com.fullstack.bookShop.config.VnPayConfig;
 import com.fullstack.bookShop.service.VnPayService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -14,11 +15,18 @@ import java.util.*;
 @Service
 public class VnPayServiceImpl implements VnPayService {
 
+    @Value("${bookshop.frontend.url}")
+    private String frontendUrl;
+
+    @Value("${bookshop.backend.url}")
+    private String backendUrl;
+
     @Override
     public String createPaymentUrl(Map<String, Object> body) throws UnsupportedEncodingException {
         Double amount = ((Number) body.get("amount")).doubleValue();
         String orderInfo = (String) body.get("orderInfo");
         String vnp_TxnRef = VnPayConfig.getRandomNumber(8);
+        String vnp_ReturnUrl = backendUrl + "/api/v1/vnpay/vnpay-return";
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
@@ -31,7 +39,7 @@ public class VnPayServiceImpl implements VnPayService {
         vnp_Params.put("vnp_OrderInfo", orderInfo != null ? orderInfo : "Thanh toan don hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VnPayConfig.vnp_ReturnUrl);
+        vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
@@ -89,14 +97,14 @@ public class VnPayServiceImpl implements VnPayService {
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(vnpResponseCode)) {
                 // Case success
-                response.sendRedirect("http://localhost:5173/checkout#vnpay-success");
+                response.sendRedirect(frontendUrl + "/checkout#vnpay-success");
             } else {
                 // Case fail
-                response.sendRedirect("http://localhost:5173/checkout/fail?code=" + vnpResponseCode);
+                response.sendRedirect(frontendUrl + "/checkout/fail?code=" + vnpResponseCode);
             }
         } else {
             // Invalid signature
-            response.sendRedirect("http://localhost:5173/checkout/fail?code=97");
+            response.sendRedirect(frontendUrl + "/checkout/fail?code=97");
         }
     }
 }

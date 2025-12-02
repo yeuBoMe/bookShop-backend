@@ -10,6 +10,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
@@ -24,10 +25,16 @@ import java.util.stream.Collectors;
 @Service
 public class MomoServiceImpl implements MomoService {
 
+    @Value("${bookshop.frontend.url}")
+    private String frontendUrl;
+
+    @Value("${bookshop.backend.url}")
+    private String backendUrl;
+
     private static final String PARTNER_CODE = "MOMO";
     private static final String ACCESS_KEY = "F8BBA842ECF85";
     private static final String SECRET_KEY = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
-    private static final String REDIRECT_URL = "http://localhost:8080/api/v1/momo/momo-return";
+//    private static final String REDIRECT_URL = "http://localhost:8080/api/v1/momo/momo-return";
     private static final String IPN_URL = "https://callback.url/notify"; // thay bằng URL thật khi deploy
 
     @Override
@@ -35,6 +42,7 @@ public class MomoServiceImpl implements MomoService {
         Long amount = ((Number) body.get("amount")).longValue();
         String orderId = "MOMO" + System.currentTimeMillis();
         String requestId = orderId;
+        String REDIRECT_URL = backendUrl + "/api/v1/momo/momo-return";
 
         String rawSignature = "accessKey=" + ACCESS_KEY +
                 "&amount=" + amount +
@@ -116,10 +124,10 @@ public class MomoServiceImpl implements MomoService {
         String resultCode = params.get("resultCode");
 
         if ("0".equals(resultCode)) {
-            response.sendRedirect("http://localhost:5173/checkout#momo-success");
+            response.sendRedirect(frontendUrl + "/checkout#momo-success");
         } else {
             String code = params.get("resultCode") != null ? params.get("resultCode") : "99";
-            response.sendRedirect("http://localhost:5173/checkout#momo-fail?code=" + code);
+            response.sendRedirect(frontendUrl + "/checkout#momo-fail?code=" + code);
         }
     }
 }
