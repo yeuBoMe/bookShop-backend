@@ -26,6 +26,7 @@ public interface BookService {
     RestBookUpdateDTO convertBookToRestBookUpdateDTO(Book book);
     RestBookViewDTO convertBookToRestBookViewDTO(Book book);
 
+    List<RestBookViewDTO> fetchAllRestBookViewDTOsFromBooks();
     ResultPaginationDTO fetchListBooks(Specification<Book> spec, Pageable pageable);
     ResultPaginationDTO fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable);
 

@@ -239,6 +239,14 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public List<RestBookViewDTO> fetchAllRestBookViewDTOsFromBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(this::convertBookToRestBookViewDTO)
+                .toList();
+    }
+
+    @Override
     public ResultPaginationDTO fetchListBooks(Specification<Book> spec, Pageable pageable) {
         Page<Book> bookPage = bookRepository.findAll(spec, pageable);
 
