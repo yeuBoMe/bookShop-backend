@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.controller.momo;
 
 import com.fullstack.bookShop.dto.payment.RestPaymentDTO;
-import com.fullstack.bookShop.service.impl.MomoServiceImpl;
+import com.fullstack.bookShop.service.MomoService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MomoController {
 
-    private final MomoServiceImpl momoService;
+    private final MomoService momoService;
 
     @PostMapping("/create-url")
     public ResponseEntity<RestPaymentDTO> testPayment(@RequestBody Map<String, Object> body) throws Exception {
