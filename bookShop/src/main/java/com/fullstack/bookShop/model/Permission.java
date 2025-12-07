@@ -21,6 +21,18 @@ import java.util.List;
 @NoArgsConstructor
 public class Permission {
 
+    public Permission(
+            String name,
+            String apiPath,
+            String method,
+            String module
+    ) {
+        this.name = name;
+        this.apiPath = apiPath;
+        this.method = method;
+        this.module = module;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

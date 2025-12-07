@@ -3,6 +3,7 @@ package com.fullstack.bookShop.controller.chatbot;
 import com.fullstack.bookShop.dto.chatbot.RestChatbotDTO;
 import com.fullstack.bookShop.service.ChatbotService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ public class ChatbotController {
 
     @PostMapping
     @ApiMessage("Chatbot response successfully")
-    public ResponseEntity<RestChatbotDTO> chatBotRequest(@RequestBody RestChatbotDTO restChatbotDTO) {
+    public ResponseEntity<RestChatbotDTO> chatBotRequest(@Valid @RequestBody RestChatbotDTO restChatbotDTO) {
         return ResponseEntity.ok(chatbotService.handleChatbot(restChatbotDTO));
     }
 }
