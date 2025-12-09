@@ -29,6 +29,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException, ServletException {
+
         delegate.commence(request, response, authException);
         response.setContentType("application/json;charset=UTF-8");
 
