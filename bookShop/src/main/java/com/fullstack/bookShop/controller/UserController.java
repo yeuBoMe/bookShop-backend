@@ -119,10 +119,10 @@ public class UserController {
     public ResponseEntity<RestUserUpdateDTO> updateUserAvatarRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
-    ) throws
-            StorageException,
-            URISyntaxException,
-            IOException {
+    ) throws StorageException,
+             URISyntaxException,
+             IOException {
+
         FileValidUtil.validateFile(file);
         fileService.createUploadFolder(baseUri + "avatar");
         String fileUploaded = fileService.storeSingleFile(file, "avatar");
@@ -141,6 +141,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
     ) throws StorageException, IOException {
+
         FileValidUtil.validateFile(file);
         Map<String, Object> imageUploadedInCloud = cloudinaryService.uploadImageToCloudinary(file);
         String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
@@ -159,6 +160,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws URISyntaxException, IOException {
+
         fileService.deleteSingleFile(fileName, "avatar");
 
         User userGetById = userService.getUserById(id);
@@ -177,16 +179,19 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws IOException {
-        String publicId = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf(".")) : fileName;
+
+        String publicId = fileName.contains(".")
+                ? fileName.substring(0, fileName.lastIndexOf("."))
+                : fileName;
+
         cloudinaryService.deleteImageFromCloudinary(publicId);
 
-        if (userService.getUserById(id).getAvatar() != null
-                && userService.getUserById(id).getAvatar().equals(fileName)
-        ) {
-            userService.getUserById(id).setAvatar(null);
+        User userGetById = userService.getUserById(id);
+        if (userGetById.getAvatar() != null && userGetById.getAvatar().equals(fileName)) {
+            userGetById.setAvatar(null);
         }
 
-        User userUpdated = userService.updateUserPartialById(id, userService.getUserById(id));
+        User userUpdated = userService.updateUserPartialById(id, userGetById);
         return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
     }
 
@@ -196,8 +201,7 @@ public class UserController {
     public ResponseEntity<RestImportDTO<RestUserCreateDTO>> importUsersFromFileRequest(
             @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
     ) {
-        RestImportDTO<RestUserCreateDTO> restImportDTO
-                = userService.importListUsersFromFile(restUserCreateDTOList);
+        RestImportDTO<RestUserCreateDTO> restImportDTO = userService.importListUsersFromFile(restUserCreateDTOList);
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
         return ResponseEntity
                 .status(httpStatus)

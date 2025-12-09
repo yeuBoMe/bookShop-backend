@@ -116,10 +116,10 @@ public class BookController {
     public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageRequest(
             @PathVariable Long id,
             @RequestParam(name = "file", required = false) MultipartFile file
-    ) throws
-            StorageException,
-            URISyntaxException,
-            IOException {
+    ) throws StorageException,
+             URISyntaxException,
+             IOException {
+
         FileValidUtil.validateFile(file);
         fileService.createUploadFolder(baseUri + "book");
         String fileUploaded = fileService.storeSingleFile(file, "book");
@@ -138,6 +138,7 @@ public class BookController {
             @PathVariable Long id,
             @RequestParam(name = "file", required = false) MultipartFile file
     ) throws StorageException, IOException {
+
         FileValidUtil.validateFile(file);
         Map<String, Object> imageUploadedInCloud = cloudinaryService.uploadImageToCloudinary(file);
         String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
@@ -155,10 +156,10 @@ public class BookController {
     public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesRequest(
             @PathVariable Long id,
             @RequestParam(name = "files", required = false) List<MultipartFile> files
-    ) throws
-            StorageException,
-            URISyntaxException,
-            IOException {
+    ) throws StorageException,
+             URISyntaxException,
+             IOException {
+
         FileValidUtil.validateListFiles(files);
         fileService.createUploadFolder(baseUri + "book");
         List<String> fileNames = fileService.storeMultipleFiles(files, "book");
@@ -177,6 +178,7 @@ public class BookController {
             @PathVariable Long id,
             @RequestParam(name = "files", required = false) List<MultipartFile> files
     ) throws StorageException, IOException {
+
         FileValidUtil.validateListFiles(files);
         List<String> fileNames = new ArrayList<>();
 
@@ -200,6 +202,7 @@ public class BookController {
             @PathVariable Long id,
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws URISyntaxException, IOException {
+
         fileService.deleteSingleFile(fileName, "book");
 
         Book bookGetById = bookService.getBookById(id);
@@ -220,7 +223,11 @@ public class BookController {
             @PathVariable Long id,
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws IOException {
-        String publicId = fileName.contains(".") ? fileName.substring(0, fileName.indexOf(".")) : fileName;
+
+        String publicId = fileName.contains(".")
+                ? fileName.substring(0, fileName.indexOf("."))
+                : fileName;
+
         cloudinaryService.deleteImageFromCloudinary(publicId);
 
         Book bookGetById = bookService.getBookById(id);
@@ -237,6 +244,7 @@ public class BookController {
             @PathVariable Long id,
             @RequestBody List<String> fileNames
     ) throws URISyntaxException, IOException {
+
         fileService.deleteMultipleFiles(fileNames, "book");
 
         Book bookGetById = bookService.getBookById(id);
@@ -257,6 +265,7 @@ public class BookController {
             @PathVariable Long id,
             @RequestBody List<String> fileNames
     ) throws Exception {
+
         List<String> publicIds = fileNames.stream()
                 .map(name -> name.contains(".")
                         ? name.substring(0, name.lastIndexOf("."))
@@ -279,8 +288,7 @@ public class BookController {
     public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(
             @Valid @RequestBody List<Book> bookList
     ) {
-        RestImportDTO<RestBookCreateDTO> restImportDTO
-                = bookService.importListBooksFromFile(bookList);
+        RestImportDTO<RestBookCreateDTO> restImportDTO = bookService.importListBooksFromFile(bookList);
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
         return ResponseEntity
                 .status(httpStatus)
