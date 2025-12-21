@@ -91,14 +91,6 @@ public class VnPayServiceImpl implements VnPayService {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = VnPayConfig.vnp_PayUrl + "?" + queryUrl;
 
-        // Debug log (có thể bỏ sau khi test xong)
-        System.out.println("=== VNPay Payment Debug ===");
-        System.out.println("Create Date: " + vnp_CreateDate);
-        System.out.println("Expire Date: " + vnp_ExpireDate);
-        System.out.println("TxnRef: " + vnp_TxnRef);
-        System.out.println("Amount: " + vnp_Params.get("vnp_Amount"));
-        System.out.println("==========================");
-
         return paymentUrl;
     }
 
