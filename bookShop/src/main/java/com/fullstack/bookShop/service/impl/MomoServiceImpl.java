@@ -32,9 +32,11 @@ public class MomoServiceImpl implements MomoService {
     private String backendUrl;
 
     private static final String PARTNER_CODE = "MOMO";
+
     private static final String ACCESS_KEY = "F8BBA842ECF85";
+
     private static final String SECRET_KEY = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
-//    private static final String REDIRECT_URL = "http://localhost:8080/api/v1/momo/momo-return";
+
     private static final String IPN_URL = "https://callback.url/notify"; // thay bằng URL thật khi deploy
 
     @Override
@@ -91,9 +93,11 @@ public class MomoServiceImpl implements MomoService {
         Mac sha256 = Mac.getInstance("HmacSHA256");
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         sha256.init(secretKey);
+
         byte[] hash = sha256.doFinal(data.getBytes(StandardCharsets.UTF_8));
         StringBuilder sb = new StringBuilder();
         for (byte b : hash) sb.append(String.format("%02x", b & 0xff));
+
         return sb.toString();
     }
 
@@ -102,15 +106,12 @@ public class MomoServiceImpl implements MomoService {
         try {
             String receivedSig = params.get("signature");
             params.remove("signature");
-            String raw = "accessKey=" + ACCESS_KEY +
-                    "&orderId=" + params.get("orderId") +
-                    "&partnerCode=" + PARTNER_CODE +
-                    "&requestId=" + params.get("requestId");
+
+            String raw = "accessKey=" + ACCESS_KEY + "&orderId=" + params.get("orderId") +
+                    "&partnerCode=" + PARTNER_CODE + "&requestId=" + params.get("requestId");
             String mySig = hmacSHA256(raw, SECRET_KEY);
 
             if (mySig.equals(receivedSig) && "0".equals(params.get("resultCode"))) {
-                // TODO: cập nhật đơn hàng thành PAID theo orderId
-                System.out.println("MoMo IPN success: " + params.get("orderId"));
                 return true;
             }
         } catch (Exception e) {

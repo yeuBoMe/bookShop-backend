@@ -107,12 +107,6 @@ public class VnPayServiceImpl implements VnPayService {
         String vnpResponseCode = params.get("vnp_ResponseCode");
         String vnpTxnRef = params.get("vnp_TxnRef");
 
-        // Log return parameters
-        System.out.println("=== VNPay Return Debug ===");
-        System.out.println("Response Code: " + vnpResponseCode);
-        System.out.println("TxnRef: " + vnpTxnRef);
-        System.out.println("=========================");
-
         // Verify signature
         String vnp_SecureHash = params.get("vnp_SecureHash");
         params.remove("vnp_SecureHash");
@@ -129,8 +123,6 @@ public class VnPayServiceImpl implements VnPayService {
                 response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code=" + vnpResponseCode);
             }
         } else {
-            // Invalid signature
-            System.err.println("Invalid VNPay signature!");
             response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code=97");
         }
     }
