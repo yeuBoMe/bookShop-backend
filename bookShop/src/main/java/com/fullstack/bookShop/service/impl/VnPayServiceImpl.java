@@ -28,6 +28,19 @@ public class VnPayServiceImpl implements VnPayService {
         String vnp_TxnRef = VnPayConfig.getRandomNumber(8);
         String vnp_ReturnUrl = backendUrl + "/api/v1/vnpay/vnpay-return";
 
+        // FIX: Sử dụng múi giờ Việt Nam
+        TimeZone timeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        Calendar calendar = Calendar.getInstance(timeZone);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(timeZone);
+
+        // Thời gian tạo giao dịch (hiện tại)
+        String vnp_CreateDate = formatter.format(calendar.getTime());
+
+        // Thời gian hết hạn (thêm 15 phút)
+        calendar.add(Calendar.MINUTE, 15);
+        String vnp_ExpireDate = formatter.format(calendar.getTime());
+
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
@@ -41,14 +54,10 @@ public class VnPayServiceImpl implements VnPayService {
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        cld.add(Calendar.MINUTE, 15);
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        vnp_Params.put("vnp_CreateDate", formatter.format(cld.getTime()));
-        vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
-
+        // Sort parameters
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
 
@@ -57,13 +66,15 @@ public class VnPayServiceImpl implements VnPayService {
 
         Iterator<String> itr = fieldNames.iterator();
         while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) vnp_Params.get(fieldName);
+            String fieldName = itr.next();
+            String fieldValue = vnp_Params.get(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
+                // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
 
+                // Build query string
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -80,12 +91,27 @@ public class VnPayServiceImpl implements VnPayService {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = VnPayConfig.vnp_PayUrl + "?" + queryUrl;
 
+        // Debug log (có thể bỏ sau khi test xong)
+        System.out.println("=== VNPay Payment Debug ===");
+        System.out.println("Create Date: " + vnp_CreateDate);
+        System.out.println("Expire Date: " + vnp_ExpireDate);
+        System.out.println("TxnRef: " + vnp_TxnRef);
+        System.out.println("Amount: " + vnp_Params.get("vnp_Amount"));
+        System.out.println("==========================");
+
         return paymentUrl;
     }
 
     @Override
     public void handleVnPayReturn(Map<String, String> params, HttpServletResponse response) throws Exception {
         String vnpResponseCode = params.get("vnp_ResponseCode");
+        String vnpTxnRef = params.get("vnp_TxnRef");
+
+        // Log return parameters
+        System.out.println("=== VNPay Return Debug ===");
+        System.out.println("Response Code: " + vnpResponseCode);
+        System.out.println("TxnRef: " + vnpTxnRef);
+        System.out.println("=========================");
 
         // Verify signature
         String vnp_SecureHash = params.get("vnp_SecureHash");
@@ -96,16 +122,15 @@ public class VnPayServiceImpl implements VnPayService {
 
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(vnpResponseCode)) {
-                // Success - redirect về /checkout thôi
-                response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=success");
+                // Payment success
+                response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=success&txnRef=" + vnpTxnRef);
             } else {
-                // Fail với mã lỗi
-                response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code="
-                        + vnpResponseCode
-                );
+                // Payment failed
+                response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code=" + vnpResponseCode);
             }
         } else {
             // Invalid signature
+            System.err.println("Invalid VNPay signature!");
             response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=fail&code=97");
         }
     }

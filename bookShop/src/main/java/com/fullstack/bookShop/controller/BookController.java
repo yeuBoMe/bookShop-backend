@@ -66,7 +66,7 @@ public class BookController {
 
     @GetMapping("/average-rating")
     @ApiMessage("Fetch list books by average rating")
-    public ResponseEntity<ResultPaginationDTO> fetchListBooksByMinRatingGreaterThaneEqualRequest(
+    public ResponseEntity<ResultPaginationDTO> fetchListBooksByMinRatingGreaterThanEqualRequest(
             @RequestParam(defaultValue = "0") Double minRating,
             Pageable pageable
     ) {

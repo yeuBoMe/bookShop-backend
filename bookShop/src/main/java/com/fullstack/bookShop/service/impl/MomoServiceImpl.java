@@ -126,7 +126,9 @@ public class MomoServiceImpl implements MomoService {
         if ("0".equals(resultCode)) {
             response.sendRedirect(frontendUrl + "/checkout?payment=momo&status=success");
         } else {
-            String code = params.get("resultCode") != null ? params.get("resultCode") : "99";
+            String code = params.get("resultCode") != null
+                    ? params.get("resultCode")
+                    : "99";
             response.sendRedirect(frontendUrl + "/checkout?payment=momo&status=fail&code=" + code);
         }
     }
