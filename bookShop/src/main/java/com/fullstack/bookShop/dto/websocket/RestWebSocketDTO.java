@@ -11,5 +11,6 @@ public class RestWebSocketDTO {
     private String receiver;
     private String content;
     private String from;
+    private String userAvatar;
     private String timestamp;
 }

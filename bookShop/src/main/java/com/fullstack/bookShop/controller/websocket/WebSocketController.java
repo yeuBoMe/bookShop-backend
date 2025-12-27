@@ -4,7 +4,6 @@ import com.fullstack.bookShop.dto.websocket.RestWebSocketDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
@@ -15,9 +14,8 @@ public class WebSocketController {
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @MessageMapping("/chat.toAdmin")
-    public void sendMessageToAdmin(@Payload RestWebSocketDTO dto, SimpMessageHeaderAccessor headerAccessor) {
+    public void sendMessageToAdmin(@Payload RestWebSocketDTO dto) {
         if (dto.getSender() == null || dto.getSender().isBlank()) {
-            System.out.println("⚠️ Sender email is missing!");
             return;
         }
 
@@ -29,17 +27,18 @@ public class WebSocketController {
         System.out.println("========================================");
         System.out.println("📨 USER → ADMIN");
         System.out.println("From: " + dto.getSender());
-        System.out.println("Principal: " + headerAccessor.getUser());
+        System.out.println("User Avatar: " + dto.getUserAvatar());
         System.out.println("Content: " + dto.getContent());
         System.out.println("========================================");
 
+        // Broadcast đến admin
         simpMessagingTemplate.convertAndSend("/topic/admin.messages", dto);
     }
 
     @MessageMapping("/chat.toUser")
     public void sendMessageToUser(@Payload RestWebSocketDTO dto) {
         if (dto.getSender() == null || dto.getSender().isBlank()) {
-            System.out.println("⚠️ Target user email missing!");
+            System.out.println("⚠️ Target user email (sender field) is missing!");
             return;
         }
 
@@ -54,7 +53,7 @@ public class WebSocketController {
         System.out.println("Content: " + dto.getContent());
         System.out.println("========================================");
 
-        // ✅ Broadcast vào topic riêng của user
+        // ✅ Gửi đến topic riêng của user
         String userTopic = "/topic/user." + dto.getSender()
                 .replace("@", ".")
                 .replace(".", "_");
