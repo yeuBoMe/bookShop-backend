@@ -20,7 +20,7 @@ public class MomoController {
 
     @PostMapping("/create-url")
     @ApiMessage("Tạo link thanh toán MomoPay thành công")
-    public ResponseEntity<RestPaymentDTO> testPayment(@RequestBody Map<String, Object> body) throws Exception {
+    public ResponseEntity<RestPaymentDTO> createMomoPayUrl(@RequestBody Map<String, Object> body) throws Exception {
         String response = momoService.createPaymentRequest(body);
         return ResponseEntity.ok(new RestPaymentDTO(response));
     }

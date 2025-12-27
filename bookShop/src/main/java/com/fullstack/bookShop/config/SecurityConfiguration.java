@@ -105,6 +105,7 @@ public class SecurityConfiguration {
 //                "/api/v1/chatbot",
                 "/oauth2/**",
                 "/login/oauth2/**",
+                "/chat-websocket/**",
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html",

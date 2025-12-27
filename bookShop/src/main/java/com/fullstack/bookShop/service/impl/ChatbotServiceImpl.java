@@ -19,7 +19,10 @@ public class ChatbotServiceImpl implements ChatbotService {
 
     private final BookService bookService;
 
-    public ChatbotServiceImpl(ChatClient.Builder chatClientBuilder, BookService bookService) {
+    public ChatbotServiceImpl(
+            ChatClient.Builder chatClientBuilder,
+            BookService bookService
+    ) {
         this.chatClient = chatClientBuilder.build();
         this.bookService = bookService;
     }

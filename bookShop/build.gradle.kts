@@ -51,6 +51,9 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("net.minidev:json-smart:2.4.8")
 
+	// lib for websocket
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+
     // fix library not fit
     implementation("net.bytebuddy:byte-buddy:1.14.16")
 
