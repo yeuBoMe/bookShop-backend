@@ -1,7 +1,10 @@
 package com.fullstack.bookShop.controller.websocket;
 
 import com.fullstack.bookShop.dto.websocket.RestWebSocketDTO;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Controller;
 @Controller
 @RequiredArgsConstructor
 public class WebSocketController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketController.class);    
 
     private final SimpMessagingTemplate simpMessagingTemplate;
 
@@ -22,14 +27,14 @@ public class WebSocketController {
         if (dto.getTimestamp() == null || dto.getTimestamp().isBlank()) {
             dto.setTimestamp(java.time.Instant.now().toString());
         }
-        dto.setFrom("USER");
+        dto.setFrom(AuthorityConstant.USER);
 
-        System.out.println("========================================");
-        System.out.println("📨 USER → ADMIN");
-        System.out.println("From: " + dto.getSender());
-        System.out.println("User Avatar: " + dto.getUserAvatar());
-        System.out.println("Content: " + dto.getContent());
-        System.out.println("========================================");
+        LOGGER.info("========================================");
+        LOGGER.info("📨 USER → ADMIN");
+        LOGGER.info("From: {}", dto.getSender());
+        LOGGER.info("User Avatar: {}", dto.getUserAvatar());
+        LOGGER.info("Content: {}", dto.getContent());
+        LOGGER.info("========================================");
 
         // Broadcast đến admin
         simpMessagingTemplate.convertAndSend("/topic/admin.messages", dto);
@@ -38,20 +43,20 @@ public class WebSocketController {
     @MessageMapping("/chat.toUser")
     public void sendMessageToUser(@Payload RestWebSocketDTO dto) {
         if (dto.getSender() == null || dto.getSender().isBlank()) {
-            System.out.println("⚠️ Target user email (sender field) is missing!");
+            LOGGER.info("⚠️ Target user email (sender field) is missing!");
             return;
         }
 
         if (dto.getTimestamp() == null || dto.getTimestamp().isBlank()) {
             dto.setTimestamp(java.time.Instant.now().toString());
         }
-        dto.setFrom("ADMIN");
+        dto.setFrom(AuthorityConstant.ADMIN);
 
-        System.out.println("========================================");
-        System.out.println("📨 ADMIN → USER");
-        System.out.println("To: " + dto.getSender());
-        System.out.println("Content: " + dto.getContent());
-        System.out.println("========================================");
+        LOGGER.info("========================================");
+        LOGGER.info("📨 ADMIN → USER");
+        LOGGER.info("To: {}", dto.getSender());
+        LOGGER.info("Content: {}", dto.getContent());
+        LOGGER.info("========================================");
 
         // ✅ Gửi đến topic riêng của user
         String userTopic = "/topic/user." + dto.getSender()
@@ -60,6 +65,6 @@ public class WebSocketController {
 
         simpMessagingTemplate.convertAndSend(userTopic, dto);
 
-        System.out.println("✅ Sent to topic: " + userTopic);
+        LOGGER.info("✅ Sent to topic: {}", userTopic);
     }
 }

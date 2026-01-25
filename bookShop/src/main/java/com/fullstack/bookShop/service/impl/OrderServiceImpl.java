@@ -1,27 +1,29 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.dto.order.RestOrderCreateDTO;
-import com.fullstack.bookShop.dto.order.RestOrderDetailViewDTO;
-import com.fullstack.bookShop.dto.order.RestOrderUpdateDTO;
-import com.fullstack.bookShop.dto.order.RestOrderViewDTO;
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.request.OrderStatusRequest;
+import com.fullstack.bookShop.dto.response.OrderResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.OrderMapper;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Order;
 import com.fullstack.bookShop.model.OrderDetail;
 import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.OrderRepository;
-import com.fullstack.bookShop.service.BookService;
-import com.fullstack.bookShop.service.EmailService;
-import com.fullstack.bookShop.service.OrderService;
-import com.fullstack.bookShop.util.pagination.PageUtil;
+import com.fullstack.bookShop.service.interfaces.BookService;
+import com.fullstack.bookShop.service.interfaces.EmailService;
+import com.fullstack.bookShop.service.interfaces.OrderService;
+import com.fullstack.bookShop.util.enums.BookEnum;
+import com.fullstack.bookShop.util.enums.OrderEnum;
+import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -30,70 +32,84 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    private final OrderRepository orderRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderServiceImpl.class);
 
-    private final OrderDetailRepository orderDetailRepository;
+    private final OrderMapper orderMapper;
 
     private final BookService bookService;
 
     private final EmailService emailService;
 
-    @Transactional
+    private final OrderRepository orderRepository;
+
+    private final OrderDetailRepository orderDetailRepository;
+
     @Override
-    public Order createOrder(Order order) {
-        Order orderSaved = orderRepository.save(order);
+    public PaginationResponse fetchAllOrders(Specification<Order> spec, Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findAll(spec, pageable);
 
-        List<OrderDetail> orderDetailList = Optional.ofNullable(order.getDetail())
-                .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> {
-                            OrderDetail orderDetailNeedToSave = new OrderDetail();
+        List<OrderResponse> orderResponseList = orderPage.getContent()
+                .stream()
+                .map(orderMapper::convertOrderToViewResponse)
+                .toList();
 
-                            if (orderDetail.getBook() != null) {
-                                if (!bookService.checkIdExists(orderDetail.getBook().getId())) {
-                                    throw new NoSuchElementException(
-                                            "Book with id " + orderDetail.getBook().getId() + " not found!"
-                                    );
-                                }
-                                Book bookGetById = bookService.getBookById(orderDetail.getBook().getId());
-                                orderDetailNeedToSave.setBook(bookGetById);
-                            }
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(orderPage, pageable);
+        paginationResponse.setResult(orderResponseList);
+        return paginationResponse;
+    }
 
-                            orderDetailNeedToSave.setBookName(orderDetail.getBookName());
-                            orderDetailNeedToSave.setOrder(orderSaved);
-                            orderDetailNeedToSave.setQuantity(orderDetail.getQuantity());
+    @Override
+    public PaginationResponse fetchListOrdersHistory(String email, Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findAllByEmail(email, pageable);
 
-                            return orderDetailNeedToSave;
-                        })
-                        .toList())
-                .orElse(new ArrayList<>());
+        List<OrderResponse> orderResponseList = orderPage.getContent()
+                .stream()
+                .map(orderMapper::convertOrderToViewResponse)
+                .toList();
 
-        orderDetailRepository.saveAll(orderDetailList);
-        orderSaved.setDetail(orderDetailList);
-
-        // send order to email
-        RestOrderCreateDTO restOrderCreateDTO = convertOrderToRestOrderCreateDTO(orderSaved);
-        try {
-            emailService.sendEmailWithTemplateSync(
-                    orderSaved.getEmail(),
-                    "Xác nhận đơn hàng #" + orderSaved.getId(),
-                    "send-order",
-                    orderSaved.getName(),
-                    restOrderCreateDTO
-            );
-        } catch (Exception e) {
-            System.out.println("Gửi email thất bại >>> " + e.getMessage());
-        }
-
-        return orderSaved;
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(orderPage, pageable);
+        paginationResponse.setResult(orderResponseList);
+        return paginationResponse;
     }
 
     @Transactional
     @Override
-    public Order updateOrderPartialById(Long id, Order orderRequest) {
-        Order orderGetById = getOrderById(id);
-        if (orderRequest.getStatus() != null) {
-            orderGetById.setStatus(orderRequest.getStatus());
+    public Order createOrder(Order orderRequest) {
+        LOGGER.info("Creating new order: {}", orderRequest);
+
+        Order orderCreated = orderRepository.save(orderRequest);
+        List<OrderDetail> orderDetailList = buildListOrderDetail(orderRequest);
+
+        orderDetailRepository.saveAll(orderDetailList);
+        orderCreated.setDetail(orderDetailList);
+
+        // send order to email
+        OrderResponse orderResponse = orderMapper.convertOrderToCreateResponse(orderCreated);
+        try {
+            emailService.sendEmailWithTemplateSync(
+                    orderCreated.getEmail(),
+                    "Xác nhận đơn hàng #" + orderCreated.getId(),
+                    "send-order",
+                    orderCreated.getName(),
+                    orderResponse
+            );
+        } catch (Exception e) {
+            LOGGER.error("Gửi email thất bại >>> {}", e.getMessage(), e);
         }
+
+        LOGGER.info("Create order successfully with id: {}", orderCreated.getId());
+        return orderCreated;
+    }
+
+    @Transactional
+    @Override
+    public Order partialUpdateOrderById(Long id, OrderStatusRequest orderStatusRequest) {
+        LOGGER.info("Updating order partial id: {}", id);
+
+        Order orderGetById = getOrderById(id);
+        orderGetById.setStatus(orderStatusRequest.getStatus());
+
+        LOGGER.info("Update order partial successfully with id: {}", id);
         return orderRepository.save(orderGetById);
     }
 
@@ -101,7 +117,9 @@ public class OrderServiceImpl implements OrderService {
     public Order getOrderById(Long id) {
         return orderRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Order with id '" + id + "' not found!"));
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format(OrderEnum.ID_NOT_FOUND.getMessage(), id)
+                ));
     }
 
     @Override
@@ -112,129 +130,43 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void deleteOrderById(Long id) {
+        LOGGER.info("Deleting order with id: {}", id);
         if (!checkIdExists(id)) {
-            throw new NoSuchElementException("Order with id '" + id + "' does not exist!");
+            throw new NoSuchElementException(
+                    String.format(OrderEnum.ID_NOT_FOUND.getMessage(), id)
+            );
         }
         orderDetailRepository.deleteByOrderId(id);
         orderRepository.deleteById(id);
+        LOGGER.info("Delete order successfully with id: {}", id);
     }
 
-    @Override
-    public RestOrderCreateDTO convertOrderToRestOrderCreateDTO(Order order) {
-        List<RestOrderDetailViewDTO> orderDetailViewDTOList = Optional.ofNullable(order.getDetail())
-                .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> new RestOrderDetailViewDTO(
-                                orderDetail.getId(),
-                                orderDetail.getQuantity(),
-                                orderDetail.getBookName(),
-                                orderDetail.getBook().getPrice()
-                        ))
-                        .toList()
-                )
-                .orElse(new ArrayList<>());
-
-        return new RestOrderCreateDTO(
-                order.getId(),
-                order.getName(),
-                order.getEmail(),
-                order.getPhone(),
-                order.getAddress(),
-                order.getPaymentMethod(),
-                order.getTotalPrice(),
-                order.getStatus(),
-                orderDetailViewDTOList,
-                order.getCreatedAt(),
-                order.getCreatedBy()
-        );
-    }
-
-    @Override
-    public RestOrderUpdateDTO convertOrderToRestOrderUpdateDTO(Order order) {
-        List<RestOrderDetailViewDTO> orderDetailViewDTOList = Optional.ofNullable(order.getDetail())
-                .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> new RestOrderDetailViewDTO(
-                                orderDetail.getId(),
-                                orderDetail.getQuantity(),
-                                orderDetail.getBookName(),
-                                orderDetail.getBook().getPrice()
-                        ))
-                        .toList()
-                )
-                .orElse(new ArrayList<>());
-
-        return new RestOrderUpdateDTO(
-                order.getId(),
-                order.getName(),
-                order.getEmail(),
-                order.getPhone(),
-                order.getAddress(),
-                order.getPaymentMethod(),
-                order.getTotalPrice(),
-                order.getStatus(),
-                orderDetailViewDTOList,
-                order.getUpdatedAt(),
-                order.getUpdatedBy()
-        );
-    }
-
-    @Override
-    public RestOrderViewDTO convertOrderToRestOrderViewDTO(Order order) {
-        List<RestOrderDetailViewDTO> orderDetailViewDTOList = Optional.ofNullable(order.getDetail())
-                .map(orderDetails -> orderDetails.stream()
-                        .map(orderDetail -> new RestOrderDetailViewDTO(
-                                orderDetail.getId(),
-                                orderDetail.getQuantity(),
-                                orderDetail.getBookName(),
-                                orderDetail.getBook().getPrice()
-                        ))
-                        .toList()
-                )
-                .orElse(new ArrayList<>());
-
-        return new RestOrderViewDTO(
-                order.getId(),
-                order.getName(),
-                order.getEmail(),
-                order.getPhone(),
-                order.getAddress(),
-                order.getPaymentMethod(),
-                order.getTotalPrice(),
-                order.getStatus(),
-                orderDetailViewDTOList,
-                order.getCreatedAt(),
-                order.getUpdatedAt(),
-                order.getCreatedBy(),
-                order.getUpdatedBy()
-        );
-    }
-
-    @Override
-    public ResultPaginationDTO fetchListOrders(Specification<Order> spec, Pageable pageable) {
-        Page<Order> orderPage = orderRepository.findAll(spec, pageable);
-
-        List<RestOrderViewDTO> restOrderViewDTOList = orderPage.getContent()
+    private List<OrderDetail> buildListOrderDetail(Order orderRequest) {
+        return Optional.ofNullable(orderRequest.getDetail())
+                .orElse(List.of())
                 .stream()
-                .map(this::convertOrderToRestOrderViewDTO)
+                .map(orderDetail -> saveOrderDetail(orderRequest, orderDetail))
                 .toList();
-
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(orderPage, pageable);
-        resultPaginationDTO.setResult(restOrderViewDTOList);
-
-        return resultPaginationDTO;
     }
 
-    @Override
-    public ResultPaginationDTO fetchListOrdersHistory(String email, Pageable pageable) {
-        Page<Order> orderPage = orderRepository.findAllByEmail(email, pageable);
+    private OrderDetail saveOrderDetail(Order orderRequest, OrderDetail orderDetail) {
+        OrderDetail orderDetailNeedToSave = new OrderDetail();
 
-        List<RestOrderViewDTO> restOrderDetailViewDTOList = orderPage.getContent()
-                .stream()
-                .map(this::convertOrderToRestOrderViewDTO)
-                .toList();
+        if (orderDetail.getBook() != null) {
+            Long bookId = orderDetail.getBook().getId();
+            if (!bookService.checkIdExists(bookId)) {
+                throw new NoSuchElementException(
+                        String.format(BookEnum.ID_NOT_FOUND.getMessage(), bookId)
+                );
+            }
+            Book bookGetById = bookService.getBookById(bookId);
+            orderDetailNeedToSave.setBook(bookGetById);
+        }
 
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(orderPage, pageable);
-        resultPaginationDTO.setResult(restOrderDetailViewDTOList);
+        orderDetailNeedToSave.setOrder(orderRequest);
+        orderDetailNeedToSave.setBookName(orderDetail.getBookName());
+        orderDetailNeedToSave.setQuantity(orderDetail.getQuantity());
 
-        return resultPaginationDTO;
+        return orderDetailNeedToSave;
     }
 }

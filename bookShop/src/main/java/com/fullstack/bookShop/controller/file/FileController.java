@@ -1,10 +1,10 @@
 package com.fullstack.bookShop.controller.file;
 
 import com.fullstack.bookShop.dto.file.RestUploadFileDTO;
-import com.fullstack.bookShop.service.FileService;
+import com.fullstack.bookShop.service.interfaces.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.exception.custom.StorageException;
-import com.fullstack.bookShop.util.imports.FileValidUtil;
+import com.fullstack.bookShop.exception.custom.FileException;
+import com.fullstack.bookShop.util.file.FileValidUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -34,12 +34,12 @@ public class FileController {
     public ResponseEntity<RestUploadFileDTO> uploadSingleFileRequest(
             @RequestParam(name = "file", required = false) MultipartFile file,
             @RequestParam(name = "folder", required = false) String folder
-    ) throws
-            URISyntaxException,
-            IOException,
-            StorageException {
+    ) throws URISyntaxException,
+             IOException,
+             FileException
+    {
         // validate file
-        FileValidUtil.validateFile(file);
+        FileValidUtil.validateSingleFile(file);
 
         // create dir if not exist
         fileService.createUploadFolder(baseURI + folder);
@@ -56,12 +56,12 @@ public class FileController {
     public ResponseEntity<RestUploadFileDTO> uploadMultipleFileRequest(
             @RequestParam(name = "files", required = false) List<MultipartFile> files,
             @RequestParam(name = "folder", required = false) String folder
-    ) throws
-            URISyntaxException,
-            IOException,
-            StorageException {
+    ) throws URISyntaxException,
+             IOException,
+             FileException
+    {
         // validate files
-        FileValidUtil.validateListFiles(files);
+        FileValidUtil.validateMultipleFiles(files);
 
         // create dir if not exist
         fileService.createUploadFolder(baseURI + folder);

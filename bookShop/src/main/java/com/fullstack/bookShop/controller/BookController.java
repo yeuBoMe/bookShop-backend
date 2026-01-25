@@ -1,18 +1,21 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.dto.book.RestBookCreateDTO;
-import com.fullstack.bookShop.dto.book.RestBookUpdateDTO;
-import com.fullstack.bookShop.dto.book.RestBookViewDTO;
-import com.fullstack.bookShop.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.response.BookResponse;
+import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.BookMapper;
 import com.fullstack.bookShop.model.Book;
-import com.fullstack.bookShop.service.BookService;
-import com.fullstack.bookShop.service.CloudinaryService;
-import com.fullstack.bookShop.service.FileService;
+import com.fullstack.bookShop.service.interfaces.BookService;
+import com.fullstack.bookShop.service.interfaces.CloudinaryService;
+import com.fullstack.bookShop.service.interfaces.FileService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.exception.custom.StorageException;
-import com.fullstack.bookShop.util.imports.FileValidUtil;
-import com.fullstack.bookShop.util.imports.HttpStatusUtil;
+import com.fullstack.bookShop.exception.custom.FileException;
+import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.FolderConstant;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
+import com.fullstack.bookShop.util.file.FileValidUtil;
+import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +40,9 @@ import java.util.Map;
 public class BookController {
 
     @Value("${bookshop.upload-file.base-uri}")
-    private String baseUri;
+    private String baseURI;
+
+    private final BookMapper bookMapper;
 
     private final BookService bookService;
 
@@ -45,250 +50,212 @@ public class BookController {
 
     private final CloudinaryService cloudinaryService;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    @ApiMessage("Create book")
-    public ResponseEntity<RestBookCreateDTO> createBookRequest(@Valid @RequestBody Book book) {
-        Book bookCreated = bookService.createBook(book);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(bookService.convertBookToRestBookCreateDTO(bookCreated));
-    }
-
     @GetMapping
-    @ApiMessage("Fetch list books")
-    public ResponseEntity<ResultPaginationDTO> fetchListBooksRequest(
+    @ApiMessage(ActionConstant.BOOK_FETCH_ALL)
+    public ResponseEntity<PaginationResponse> fetchAllBooksRequest(
             @Filter Specification<Book> spec,
             Pageable pageable
     ) {
-        return ResponseEntity.ok(bookService.fetchListBooks(spec, pageable));
+        return ResponseEntity.ok(bookService.fetchAllBooks(spec, pageable));
     }
 
     @GetMapping("/average-rating")
-    @ApiMessage("Fetch list books by average rating")
-    public ResponseEntity<ResultPaginationDTO> fetchListBooksByMinRatingGreaterThanEqualRequest(
+    @ApiMessage(ActionConstant.BOOK_FETCH_AVERAGE_RATE)
+    public ResponseEntity<PaginationResponse> fetchListBooksByMinRatingGreaterThanEqualRequest(
             @RequestParam(defaultValue = "0") Double minRating,
             Pageable pageable
     ) {
         return ResponseEntity.ok(bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
     }
 
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @PostMapping
+    @ApiMessage(ActionConstant.BOOK_CREATE)
+    public ResponseEntity<BookResponse> createBookRequest(@Valid @RequestBody Book bookRequest) {
+        Book bookCreated = bookService.createBook(bookRequest);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(bookMapper.convertBookToCreateResponse(bookCreated));
+    }
+
     @GetMapping("/{id}")
-    @ApiMessage("Get book")
-    public ResponseEntity<RestBookViewDTO> getBookByIdRequest(@PathVariable Long id) {
+    @ApiMessage(ActionConstant.BOOK_GET)
+    public ResponseEntity<BookResponse> getBookByIdRequest(@PathVariable Long id) {
         Book bookGetById = bookService.getBookById(id);
-        return ResponseEntity.ok(bookService.convertBookToRestBookViewDTO(bookGetById));
+        return ResponseEntity.ok(bookMapper.convertBookToViewResponse(bookGetById));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PutMapping("/{id}")
-    @ApiMessage("Update book")
-    public ResponseEntity<RestBookUpdateDTO> updateBookByIdRequest(
-            @Valid @RequestBody Book book,
-            @PathVariable Long id
+    @ApiMessage(ActionConstant.BOOK_UPDATE)
+    public ResponseEntity<BookResponse> updateBookByIdRequest(
+            @PathVariable Long id,
+            @Valid @RequestBody Book bookRequest
     ) {
-        Book bookUpdated = bookService.updateBookById(id, book);
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.updateBookById(id, bookRequest);
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PatchMapping("/{id}")
-    @ApiMessage("Update book partial")
-    public ResponseEntity<RestBookUpdateDTO> partialUpdateBookByIdRequest(
-            @Valid @RequestBody Book book,
-            @PathVariable Long id
+    @ApiMessage(ActionConstant.BOOK_UPDATE_PARTIAL)
+    public ResponseEntity<BookResponse> partialUpdateBookByIdRequest(
+            @PathVariable Long id,
+            @Valid @RequestBody Book bookRequest
     ) {
-        Book bookUpdated = bookService.updateBookPartialById(id, book);
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookPartialUpdated = bookService.partialUpdateBookById(id, bookRequest);
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookPartialUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete book")
+    @ApiMessage(ActionConstant.BOOK_DELETE)
     public ResponseEntity<Void> deleteBookByIdRequest(@PathVariable Long id) {
         bookService.deleteBookById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PatchMapping("/{id}/image")
-    @ApiMessage("Update book image")
-    public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageRequest(
+    @ApiMessage(ActionConstant.BOOK_UPLOAD_SINGLE_IMAGE)
+    public ResponseEntity<BookResponse> updateBookSingleImageRequest(
             @PathVariable Long id,
             @RequestParam(name = "file", required = false) MultipartFile file
-    ) throws StorageException,
+    ) throws FileException,
              URISyntaxException,
-             IOException {
+             IOException
+    {
+        FileValidUtil.validateSingleFile(file);
+        fileService.createUploadFolder(baseURI + FolderConstant.BOOK);
 
-        FileValidUtil.validateFile(file);
-        fileService.createUploadFolder(baseUri + "book");
-        String fileUploaded = fileService.storeSingleFile(file, "book");
+        String fileUploaded = fileService.storeSingleFile(file, FolderConstant.BOOK);
+        Book bookUpdated = bookService.uploadBookSingleImage(id, fileUploaded);
 
-        Book book = new Book();
-        book.setImages(List.of(fileUploaded));
-        Book bookUpdated = bookService.updateBookPartialById(id, book);
-
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}/cloud-image")
-    @ApiMessage("Update book image to cloudinary")
-    public ResponseEntity<RestBookUpdateDTO> updateBookSingleImageToCloudinaryRequest(
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @PatchMapping("/{id}/image/cloud")
+    @ApiMessage(ActionConstant.BOOK_UPLOAD_IMAGE_CLOUDINARY)
+    public ResponseEntity<BookResponse> updateBookSingleImageToCloudinaryRequest(
             @PathVariable Long id,
             @RequestParam(name = "file", required = false) MultipartFile file
-    ) throws StorageException, IOException {
+    ) throws FileException, IOException {
 
-        FileValidUtil.validateFile(file);
+        FileValidUtil.validateSingleFile(file);
         Map<String, Object> imageUploadedInCloud = cloudinaryService.uploadImageToCloudinary(file);
-        String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
 
-        Book book = new Book();
-        book.setImages(List.of(fileUploaded));
-        Book bookUpdated = bookService.updateBookPartialById(id, book);
+        String fileUploaded = cloudinaryService.getFilePushedFromCloudinary(imageUploadedInCloud);
+        Book bookUpdated = bookService.uploadBookSingleImage(id, fileUploaded);
 
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PatchMapping("/{id}/multiple-images")
-    @ApiMessage("Update book multiple images")
-    public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesRequest(
+    @ApiMessage(ActionConstant.BOOK_UPDATE_MULTIPLE_IMAGES)
+    public ResponseEntity<BookResponse> updateBookMultipleImagesRequest(
             @PathVariable Long id,
             @RequestParam(name = "files", required = false) List<MultipartFile> files
-    ) throws StorageException,
+    ) throws FileException,
              URISyntaxException,
-             IOException {
+             IOException
+    {
+        FileValidUtil.validateMultipleFiles(files);
+        fileService.createUploadFolder(baseURI + FolderConstant.BOOK);
 
-        FileValidUtil.validateListFiles(files);
-        fileService.createUploadFolder(baseUri + "book");
-        List<String> fileNames = fileService.storeMultipleFiles(files, "book");
+        List<String> fileNames = fileService.storeMultipleFiles(files, FolderConstant.BOOK);
+        Book bookUpdated = bookService.uploadBookMultipleImages(id, fileNames);
 
-        Book book = new Book();
-        book.setImages(fileNames);
-        Book bookUpdated = bookService.updateBookPartialById(id, book);
-
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}/cloud-multiple-images")
-    @ApiMessage("Update book multiple images to cloudinary")
-    public ResponseEntity<RestBookUpdateDTO> updateBookMultipleImagesToCloudinaryRequest(
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @PatchMapping("/{id}/multiple-images/cloud")
+    @ApiMessage(ActionConstant.BOOK_UPLOAD_MULTIPLE_IMAGES_CLOUDINARY)
+    public ResponseEntity<BookResponse> updateBookMultipleImagesToCloudinaryRequest(
             @PathVariable Long id,
             @RequestParam(name = "files", required = false) List<MultipartFile> files
-    ) throws StorageException, IOException {
+    ) throws FileException, IOException {
 
-        FileValidUtil.validateListFiles(files);
+        FileValidUtil.validateMultipleFiles(files);
         List<String> fileNames = new ArrayList<>();
 
-        List<Map<String, Object>> listImagesInCloud = cloudinaryService.uploadListImagesToCloudinary(files);
+        List<Map<String, Object>> listImagesInCloud = cloudinaryService.uploadMultipleImagesToCloudinary(files);
         for (Map<String, Object> imageUploadedInCloud : listImagesInCloud) {
-            String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
+            String fileUploaded = cloudinaryService.getFilePushedFromCloudinary(imageUploadedInCloud);
             fileNames.add(fileUploaded);
         }
 
-        Book book = new Book();
-        book.setImages(fileNames);
-        Book bookUpdated = bookService.updateBookPartialById(id, book);
-
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.uploadBookMultipleImages(id, fileNames);
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @DeleteMapping("/{id}/image")
-    @ApiMessage("Delete book single image")
-    public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageRequest(
+    @ApiMessage(ActionConstant.BOOK_DELETE_IMAGE)
+    public ResponseEntity<BookResponse> deleteBookSingleImageRequest(
             @PathVariable Long id,
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws URISyntaxException, IOException {
 
-        fileService.deleteSingleFile(fileName, "book");
+        fileService.deleteSingleFile(fileName, FolderConstant.BOOK);
+        Book bookUpdated = bookService.removeBookSingleImage(id, fileName);
 
-        Book bookGetById = bookService.getBookById(id);
-        List<String> currentImages = bookGetById.getImages();
-        if (currentImages != null && !currentImages.isEmpty()) {
-            currentImages.remove(fileName);
-            bookGetById.setImages(currentImages);
-        }
-
-        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}/cloud-image")
-    @ApiMessage("Delete book single image in cloud")
-    public ResponseEntity<RestBookUpdateDTO> deleteBookSingleImageInCloudRequest(
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @DeleteMapping("/{id}/image/cloud")
+    @ApiMessage(ActionConstant.BOOK_DELETE_IMAGE_CLOUDINARY)
+    public ResponseEntity<BookResponse> deleteBookSingleImageInCloudRequest(
             @PathVariable Long id,
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws IOException {
 
-        String publicId = fileName.contains(".")
-                ? fileName.substring(0, fileName.indexOf("."))
-                : fileName;
-
+        String publicId = CloudinaryUtil.generatePublicId(fileName);
         cloudinaryService.deleteImageFromCloudinary(publicId);
 
-        Book bookGetById = bookService.getBookById(id);
-        bookGetById.getImages().remove(fileName);
-        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
-
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.removeBookSingleImage(id, fileName);
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @DeleteMapping("/{id}/multiple-images")
-    @ApiMessage("Delete book multiple image")
-    public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageRequest(
+    @ApiMessage(ActionConstant.BOOK_DELETE_MULTIPLE_IMAGES)
+    public ResponseEntity<BookResponse> deleteBookMultipleImageRequest(
             @PathVariable Long id,
             @RequestBody List<String> fileNames
     ) throws URISyntaxException, IOException {
 
-        fileService.deleteMultipleFiles(fileNames, "book");
+        fileService.deleteMultipleFiles(fileNames, FolderConstant.BOOK);
+        Book bookUpdated = bookService.removeBookMultipleImages(id, fileNames);
 
-        Book bookGetById = bookService.getBookById(id);
-        List<String> currentImages = bookGetById.getImages();
-        if (currentImages != null && !currentImages.isEmpty()) {
-            currentImages.removeAll(fileNames);
-            bookGetById.setImages(currentImages);
-        }
-
-        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}/cloud-multiple-images")
-    @ApiMessage("Delete book multiple image in cloud")
-    public ResponseEntity<RestBookUpdateDTO> deleteBookMultipleImageInCloudRequest(
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @DeleteMapping("/{id}/multiple-images/cloud")
+    @ApiMessage(ActionConstant.BOOK_DELETE_MULTIPLE_IMAGES_CLOUDINARY)
+    public ResponseEntity<BookResponse> deleteBookMultipleImageInCloudRequest(
             @PathVariable Long id,
             @RequestBody List<String> fileNames
     ) throws Exception {
 
-        List<String> publicIds = fileNames.stream()
-                .map(name -> name.contains(".")
-                        ? name.substring(0, name.lastIndexOf("."))
-                        : name
-                )
-                .toList();
-
+        List<String> publicIds = CloudinaryUtil.generateListPublicIds(fileNames);
         cloudinaryService.deleteMultipleImagesFromCloudinary(publicIds);
 
-        Book bookGetById = bookService.getBookById(id);
-        bookGetById.getImages().removeAll(fileNames);
-        Book bookUpdated = bookService.updateBookPartialById(id, bookGetById);
-
-        return ResponseEntity.ok(bookService.convertBookToRestBookUpdateDTO(bookUpdated));
+        Book bookUpdated = bookService.removeBookMultipleImages(id, fileNames);
+        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PostMapping("/import")
-    @ApiMessage("Import books from file")
-    public ResponseEntity<RestImportDTO<RestBookCreateDTO>> importBooksFromFileRequest(
+    @ApiMessage(ActionConstant.BOOK_IMPORT)
+    public ResponseEntity<ImportFileResponse<BookResponse>> importBooksFromFileRequest(
             @Valid @RequestBody List<Book> bookList
     ) {
-        RestImportDTO<RestBookCreateDTO> restImportDTO = bookService.importListBooksFromFile(bookList);
+        ImportFileResponse<BookResponse> restImportDTO = bookService.importBooksFromFile(bookList);
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
         return ResponseEntity
                 .status(httpStatus)

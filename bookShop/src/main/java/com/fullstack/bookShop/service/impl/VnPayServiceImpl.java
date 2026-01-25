@@ -1,7 +1,7 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.config.VnPayConfig;
-import com.fullstack.bookShop.service.VnPayService;
+import com.fullstack.bookShop.service.interfaces.VnPayService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

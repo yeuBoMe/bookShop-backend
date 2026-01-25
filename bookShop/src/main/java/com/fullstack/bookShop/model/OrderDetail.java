@@ -10,8 +10,8 @@ import lombok.Setter;
 @Table(name = "order_details")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class OrderDetail {
 
     @Id

@@ -1,6 +1,8 @@
 package com.fullstack.bookShop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.CategoryConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -18,19 +20,19 @@ import java.util.List;
 @Table(name = "categories")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Book's name is required")
-    @Size(max = 100, message = "Name must be less than 100 characters")
+    @NotBlank(message = CategoryConstant.NAME_REQUIRED)
+    @Size(max = 100, message = CategoryConstant.NAME_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹà-ỹ0-9'\\-\\.\\:\\s]{1,100}$",
-            message = "Name must only contain letters, numbers, spaces, apostrophes, dashes, dots or colons"
+            message = CategoryConstant.NAME_INVALID
     )
     private String name;
 
@@ -49,12 +51,16 @@ public class Category {
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

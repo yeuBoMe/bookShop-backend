@@ -1,9 +1,11 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.service.EmailService;
+import com.fullstack.bookShop.service.interfaces.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -17,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     private final JavaMailSender javaMailSender;
 
@@ -32,14 +36,20 @@ public class EmailServiceImpl implements EmailService {
     ) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
-            MimeMessageHelper mimeMessageHelper =
-                    new MimeMessageHelper(mimeMessage, isMultipart, StandardCharsets.UTF_8.name());
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(
+                    mimeMessage,
+                    isMultipart,
+                    StandardCharsets.UTF_8.name()
+            );
+
             mimeMessageHelper.setTo(to);
             mimeMessageHelper.setSubject(subject);
             mimeMessageHelper.setText(content, isHtml);
+
             javaMailSender.send(mimeMessage);
+
         } catch (MailException | MessagingException ex) {
-            System.out.println("ERROR SEND EMAIL >>> " + ex.getMessage());
+            LOGGER.error("ERROR SEND EMAIL >>> {} ", ex.getMessage(), ex);
         }
     }
 

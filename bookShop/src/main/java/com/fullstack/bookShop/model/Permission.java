@@ -1,6 +1,8 @@
 package com.fullstack.bookShop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.PermissionConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -17,9 +19,38 @@ import java.util.List;
 @Table(name = "permissions")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Permission {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = PermissionConstant.NAME_REQUIRED)
+    @Size(max = 100, message = PermissionConstant.NAME_MAX_LENGTH)
+    private String name;
+
+    @NotBlank(message = PermissionConstant.API_PATH_REQUIRED)
+    private String apiPath;
+
+    @NotBlank(message = PermissionConstant.METHOD_REQUIRED)
+    private String method;
+
+    @NotBlank(message = PermissionConstant.MODULE_REQUIRED)
+    private String module;
+
+    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Role> roles;
+
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private String createdBy;
+
+    private String updatedBy;
 
     public Permission(
             String name,
@@ -33,44 +64,19 @@ public class Permission {
         this.module = module;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must be less than 100 characters")
-    private String name;
-
-    @NotBlank(message = "Api path is required")
-    private String apiPath;
-
-    @NotBlank(message = "Method is required")
-    private String method;
-
-    @NotBlank(message = "Module is required")
-    private String module;
-
-    private Instant createdAt;
-
-    private Instant updatedAt;
-
-    private String createdBy;
-
-    private String updatedBy;
-
-    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<Role> roles;
-
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

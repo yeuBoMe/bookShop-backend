@@ -1,8 +1,9 @@
 package com.fullstack.bookShop.controller.vnpay;
 
 import com.fullstack.bookShop.dto.payment.RestPaymentDTO;
-import com.fullstack.bookShop.service.VnPayService;
+import com.fullstack.bookShop.service.interfaces.VnPayService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class VnPayController {
     private final VnPayService vnPayService;
 
     @PostMapping("/create-url")
-    @ApiMessage("Tạo link thanh toán VNPay thành công")
+    @ApiMessage(ActionConstant.VN_PAY)
     public ResponseEntity<RestPaymentDTO> createVnPayUrl(@RequestBody Map<String, Object> body)
             throws UnsupportedEncodingException {
         String paymentUrl = vnPayService.createPaymentUrl(body);

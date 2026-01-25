@@ -1,8 +1,9 @@
 package com.fullstack.bookShop.controller.momo;
 
 import com.fullstack.bookShop.dto.payment.RestPaymentDTO;
-import com.fullstack.bookShop.service.MomoService;
+import com.fullstack.bookShop.service.interfaces.MomoService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class MomoController {
     private final MomoService momoService;
 
     @PostMapping("/create-url")
-    @ApiMessage("Tạo link thanh toán MomoPay thành công")
+    @ApiMessage(ActionConstant.MOMO)
     public ResponseEntity<RestPaymentDTO> createMomoPayUrl(@RequestBody Map<String, Object> body) throws Exception {
         String response = momoService.createPaymentRequest(body);
         return ResponseEntity.ok(new RestPaymentDTO(response));

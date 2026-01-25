@@ -1,19 +1,24 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.dto.user.RestUserCreateDTO;
-import com.fullstack.bookShop.dto.user.RestUserPassDTO;
-import com.fullstack.bookShop.dto.user.RestUserUpdateDTO;
-import com.fullstack.bookShop.dto.user.RestUserViewDTO;
+import com.fullstack.bookShop.dto.request.user.UserCreateRequest;
+import com.fullstack.bookShop.dto.request.user.UserPasswordRequest;
+import com.fullstack.bookShop.dto.response.UserResponse;
+import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.UserMapper;
 import com.fullstack.bookShop.model.User;
-import com.fullstack.bookShop.service.CloudinaryService;
-import com.fullstack.bookShop.service.FileService;
-import com.fullstack.bookShop.service.UserService;
+import com.fullstack.bookShop.service.interfaces.CloudinaryService;
+import com.fullstack.bookShop.service.interfaces.FileService;
+import com.fullstack.bookShop.service.interfaces.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.exception.custom.StorageException;
-import com.fullstack.bookShop.util.imports.FileValidUtil;
-import com.fullstack.bookShop.util.imports.HttpStatusUtil;
+import com.fullstack.bookShop.exception.custom.FileException;
+import com.fullstack.bookShop.util.annotation.HasAdminOrSelf;
+import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.FolderConstant;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
+import com.fullstack.bookShop.util.file.FileValidUtil;
+import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +41,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    @Value("${bookshop.upload-file.base-uri}")
-    private String baseUri;
+    @Value("${bookshop.upload-file.base-uri")
+    private String baseURI;
+
+    private final UserMapper userMapper;
 
     private final UserService userService;
 
@@ -45,166 +52,150 @@ public class UserController {
 
     private final CloudinaryService cloudinaryService;
 
-    @PostMapping
-    @ApiMessage("Create user")
-    public ResponseEntity<RestUserCreateDTO> createUserRequest(@Valid @RequestBody User userRequest) {
-        User userCreated = userService.createUser(userRequest);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(userService.convertUserToRestUserCreateDTO(userCreated));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
+    @HasAdminOrSelf
     @GetMapping
-    @ApiMessage("Fetch list users")
-    public ResponseEntity<ResultPaginationDTO> fetchAllUsersRequest(
+    @ApiMessage(ActionConstant.USER_FETCH_ALL)
+    public ResponseEntity<PaginationResponse> fetchAllUsersRequest(
             @Filter Specification<User> spec,
             Pageable pageable
     ) {
         return ResponseEntity.ok(userService.fetchAllUsers(spec, pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
-    @ApiMessage("Get user")
-    public ResponseEntity<RestUserViewDTO> getUserByIdRequest(@PathVariable Long id) {
-        User userGetById = userService.getUserById(id);
-        return ResponseEntity.ok(userService.convertUserToRestUserViewDTO(userGetById));
+    @HasAdminOrSelf
+    @PostMapping
+    @ApiMessage(ActionConstant.USER_CREATE)
+    public ResponseEntity<UserResponse> createUserRequest(@Valid @RequestBody User userRequest) {
+        User userCreated = userService.createUser(userRequest);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userMapper.convertUserToCreateResponse(userCreated));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.claims['user']['id']")
+    @HasAdminOrSelf
+    @GetMapping("/{id}")
+    @ApiMessage(ActionConstant.USER_GET)
+    public ResponseEntity<UserResponse> fetchUserById(@PathVariable Long id) {
+        User userGetById = userService.getUserById(id);
+        return ResponseEntity.ok(userMapper.convertUserToViewResponse(userGetById));
+    }
+
+    @HasAdminOrSelf
     @PutMapping("/{id}")
-    @ApiMessage("Update user")
-    public ResponseEntity<RestUserUpdateDTO> updateUserByIdRequest(
+    @ApiMessage(ActionConstant.USER_UPDATE)
+    public ResponseEntity<UserResponse> updateUserRequest(
             @PathVariable Long id,
             @Valid @RequestBody User userRequest
     ) {
         User userUpdated = userService.updateUserById(id, userRequest);
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.claims['user']['id']")
+    @HasAdminOrSelf
     @PatchMapping("/{id}")
-    @ApiMessage("Update user partial")
-    public ResponseEntity<RestUserUpdateDTO> updateUserPartialByIdRequest(
+    @ApiMessage(ActionConstant.USER_UPDATE_PARTIAL)
+    public ResponseEntity<UserResponse> partialUpdateUserRequest(
             @PathVariable Long id,
             @Valid @RequestBody User userRequest
     ) {
-        User userUpdated = userService.updateUserPartialById(id, userRequest);
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        User userPartialUpdated = userService.partialUpdateUserById(id, userRequest);
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userPartialUpdated));
     }
 
     @PreAuthorize("#id == authentication.principal.claims['user']['id']")
     @PatchMapping("/{id}/password")
-    @ApiMessage("Update user password")
-    public ResponseEntity<RestUserUpdateDTO> updateUserPasswordByIdRequest(
+    @ApiMessage(ActionConstant.USER_UPDATE_PASSWORD)
+    public ResponseEntity<UserResponse> updateUserPasswordRequest(
             @PathVariable Long id,
-            @Valid @RequestBody RestUserPassDTO restUserPassDTO
+            @Valid @RequestBody UserPasswordRequest userPasswordRequest
     ) {
-        User userUpdated = userService.updateUserPasswordById(id, restUserPassDTO);
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        User userPasswordUpdated = userService.updateUserPasswordById(id, userPasswordRequest);
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userPasswordUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    @ApiMessage("Delete user")
-    public ResponseEntity<Void> deleteUserByIdRequest(@PathVariable Long id) {
-        userService.deleteUserById(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
+    @HasAdminOrSelf
     @PatchMapping("/{id}/avatar")
-    @ApiMessage("Update user avatar")
-    public ResponseEntity<RestUserUpdateDTO> updateUserAvatarRequest(
+    @ApiMessage(ActionConstant.USER_UPLOAD_AVATAR)
+    public ResponseEntity<UserResponse> uploadUserAvatarRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
-    ) throws StorageException,
+    ) throws FileException,
              URISyntaxException,
-             IOException {
+             IOException
+    {
+        FileValidUtil.validateSingleFile(file);
+        fileService.createUploadFolder(baseURI + FolderConstant.AVATAR);
 
-        FileValidUtil.validateFile(file);
-        fileService.createUploadFolder(baseUri + "avatar");
-        String fileUploaded = fileService.storeSingleFile(file, "avatar");
+        String fileUploaded = fileService.storeSingleFile(file, FolderConstant.AVATAR);
+        User userUpdated = userService.uploadUserAvatar(id, fileUploaded);
 
-        User user = new User();
-        user.setAvatar(fileUploaded);
-        User userUpdated = userService.updateUserPartialById(id, user);
-
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
     }
 
-    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
-    @PatchMapping("/{id}/cloud-avatar")
-    @ApiMessage("Update user avatar to cloud")
-    public ResponseEntity<RestUserUpdateDTO> updateUserAvatarToCloudinaryRequest(
+    @HasAdminOrSelf
+    @PatchMapping("/{id}/avatar/cloud")
+    @ApiMessage(ActionConstant.USER_UPLOAD_AVATAR_CLOUDINARY)
+    public ResponseEntity<UserResponse> uploadUserAvatarToCloudinaryRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
-    ) throws StorageException, IOException {
+    ) throws FileException, IOException {
 
-        FileValidUtil.validateFile(file);
-        Map<String, Object> imageUploadedInCloud = cloudinaryService.uploadImageToCloudinary(file);
-        String fileUploaded = imageUploadedInCloud.get("public_id") + "." + imageUploadedInCloud.get("format");
+        FileValidUtil.validateSingleFile(file);
+        Map<String, Object> filePushToCloudinary = cloudinaryService.uploadImageToCloudinary(file);
 
-        User user = new User();
-        user.setAvatar(fileUploaded);
-        User userUpdated = userService.updateUserPartialById(id, user);
+        String fileUploaded = cloudinaryService.getFilePushedFromCloudinary(filePushToCloudinary);
+        User userUpdated = userService.uploadUserAvatar(id, fileUploaded);
 
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
     }
 
-    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
+    @HasAdminOrSelf
     @DeleteMapping("/{id}/avatar")
-    @ApiMessage("Delete user avatar")
-    public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarRequest(
+    @ApiMessage(ActionConstant.USER_DELETE_AVATAR)
+    public ResponseEntity<UserResponse> deleteUserAvatarRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws URISyntaxException, IOException {
 
-        fileService.deleteSingleFile(fileName, "avatar");
+        fileService.deleteSingleFile(fileName, FolderConstant.AVATAR);
+        User userRemoveAvatar = userService.removeUserAvatar(id, fileName);
 
-        User userGetById = userService.getUserById(id);
-        if (userGetById.getAvatar() != null && userGetById.getAvatar().equals(fileName)) {
-            userGetById.setAvatar(null);
-        }
-
-        User userUpdated = userService.updateUserPartialById(id, userGetById);
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userRemoveAvatar));
     }
 
-    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
-    @DeleteMapping("/{id}/cloud-avatar")
-    @ApiMessage("Delete user avatar in cloud")
-    public ResponseEntity<RestUserUpdateDTO> deleteUserAvatarInCloudRequest(
+    @HasAdminOrSelf
+    @DeleteMapping("/{id}/avatar/cloud")
+    @ApiMessage(ActionConstant.USER_DELETE_AVATAR_CLOUDINARY)
+    public ResponseEntity<UserResponse> deleteUserAvatarFromCloudinaryRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws IOException {
 
-        String publicId = fileName.contains(".")
-                ? fileName.substring(0, fileName.lastIndexOf("."))
-                : fileName;
-
+        String publicId = CloudinaryUtil.generatePublicId(fileName);
         cloudinaryService.deleteImageFromCloudinary(publicId);
+        User userRemoveAvatar = userService.removeUserAvatar(id, fileName);
 
-        User userGetById = userService.getUserById(id);
-        if (userGetById.getAvatar() != null && userGetById.getAvatar().equals(fileName)) {
-            userGetById.setAvatar(null);
-        }
-
-        User userUpdated = userService.updateUserPartialById(id, userGetById);
-        return ResponseEntity.ok(userService.convertUserToRestUserUpdateDTO(userUpdated));
+        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userRemoveAvatar));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @HasAdminOrSelf
+    @DeleteMapping("/{id}")
+    @ApiMessage(ActionConstant.USER_DELETE)
+    public ResponseEntity<UserResponse> deleteUserRequest(@PathVariable Long id) {
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PostMapping("/import")
-    @ApiMessage("Import users from file")
-    public ResponseEntity<RestImportDTO<RestUserCreateDTO>> importUsersFromFileRequest(
-            @Valid @RequestBody List<RestUserCreateDTO> restUserCreateDTOList
+    @ApiMessage(ActionConstant.USER_IMPORT)
+    public ResponseEntity<ImportFileResponse<UserResponse>> importUsersFromFileRequest(
+            @Valid List<UserCreateRequest> userCreateRequestList
     ) {
-        RestImportDTO<RestUserCreateDTO> restImportDTO = userService.importListUsersFromFile(restUserCreateDTOList);
-        HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
+        ImportFileResponse<UserResponse> importFileResponse = userService.importUsersFromFiles(userCreateRequestList);
+        HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
-                .status(httpStatus)
-                .body(restImportDTO);
+                .status(status)
+                .body(importFileResponse);
     }
 }

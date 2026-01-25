@@ -1,6 +1,9 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.service.FileService;
+import com.fullstack.bookShop.service.interfaces.FileService;
+import com.fullstack.bookShop.util.constant.SymbolConstant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +23,8 @@ import java.util.List;
 @Service
 public class FileServiceImpl implements FileService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileServiceImpl.class);
+
     @Value("${bookshop.upload-file.base-uri}")
     private String baseURI;
 
@@ -28,34 +33,38 @@ public class FileServiceImpl implements FileService {
         URI uri = new URI(folder);
         Path path = Paths.get(uri);
 
-        File tmpDir = new File(path.toString());
-        if (!tmpDir.isDirectory()) {
+        File tempDir = new File(path.toString());
+        if (!tempDir.isDirectory()) {
             try {
-                Files.createDirectories(tmpDir.toPath());
-                System.out.println("CREATE DIRECTORY SUCCESSFULLY, PATH = " + tmpDir.toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
+                Files.createDirectories(tempDir.toPath());
+                LOGGER.info("Create directory successfully, path={}", tempDir.toPath());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                LOGGER.error("Upload folder failed: {}", ex.getMessage(), ex);
             }
         } else {
-            System.out.println("SKIPPING CREATE DIRECTORY, ALREADY EXISTS");
+            LOGGER.info("Skipping create directory, already exists");
         }
     }
 
     @Override
     public String storeSingleFile(MultipartFile file, String folder) throws URISyntaxException, IOException {
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        URI uri = new URI(baseURI + folder + "/" + fileName);
+        String fileName = System.currentTimeMillis() + SymbolConstant.UNDERSCORE + file.getOriginalFilename();
+        URI uri = new URI(baseURI + folder + SymbolConstant.FORWARD_SLASH + fileName);
         Path path = Paths.get(uri);
 
         try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+            LOGGER.info("Store file successfully with name: {}", fileName);
         }
         return fileName;
     }
 
     @Override
-    public List<String> storeMultipleFiles(List<MultipartFile> files, String folder)
-            throws URISyntaxException, IOException {
+    public List<String> storeMultipleFiles(
+            List<MultipartFile> files, String folder
+    ) throws URISyntaxException, IOException {
+
         List<String> fileList = new ArrayList<>();
         for (MultipartFile file : files) {
             String fileName = storeSingleFile(file, folder);
@@ -66,14 +75,14 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void deleteSingleFile(String fileName, String folder) throws URISyntaxException, IOException {
-        URI uri = new URI(baseURI + folder + "/" + fileName);
+        URI uri = new URI(baseURI + folder + SymbolConstant.FORWARD_SLASH + fileName);
         Path path = Paths.get(uri);
 
         if (Files.exists(path)) {
             Files.delete(path);
-            System.out.println("DELETED FILE SUCCESSFULLY: " + path);
+            LOGGER.info("Delete file successfully with name: {}", fileName);
         } else {
-            System.out.println("FILE NOT FOUND, SKIPPING DELETE: " + path);
+            LOGGER.info("File not found, skipping delete with path: {}", path);
         }
     }
 

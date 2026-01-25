@@ -1,6 +1,8 @@
 package com.fullstack.bookShop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.BookConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -16,65 +18,57 @@ import java.util.List;
 @Table(name = "books")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Book's name is required")
-    @Size(max = 100, message = "Name must be less than 100 characters")
+    @NotBlank(message = BookConstant.NAME_REQUIRED)
+    @Size(max = 100, message = BookConstant.NAME_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹà-ỹ0-9'\\-\\.\\:\\s]{1,100}$",
-            message = "Name must only contain letters, numbers, spaces, apostrophes, dashes, dots or colons"
+            message = BookConstant.NAME_INVALID
     )
     private String name;
 
-    @NotBlank(message = "Introduce text must not be blank")
-    @Size(max = 200, message = "Introduce text must not exceed 200 characters")
+    @NotBlank(message = BookConstant.INTRODUCE_TEXT_REQUIRED)
+    @Size(max = 200, message = BookConstant.INTRODUCE_TEXT_MAX_LENGTH)
     @Column(columnDefinition = "TEXT")
     private String introduceText;
 
-    @NotBlank(message = "Description must not be blank")
-    @Size(max = 5000, message = "Description must not exceed 5000 characters")
+    @NotBlank(message = BookConstant.DESCRIPTION_REQUIRED)
+    @Size(max = 5000, message = BookConstant.DESCRIPTION_MAX_LENGTH)
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @NotBlank(message = "Reader must not be blank")
-    @Size(max = 200, message = "Reader must not exceed 200 characters")
+    @NotBlank(message = BookConstant.READER_REQUIRED)
+    @Size(max = 200, message = BookConstant.READER_MAX_LENGTH)
     @Column(columnDefinition = "TEXT")
     private String reader;
 
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", message = "Price must be a positive number")
+    @NotNull(message = BookConstant.PRICE_REQUIRED)
+    @DecimalMin(value = "0.0", message = BookConstant.PRICE_POSITIVE)
     private Double price;
 
-    @NotNull(message = "Quantity is required")
-    @Min(value = 1, message = "Quantity must be at least 1")
-    @Max(value = 1000, message = "Quantity must not exceed 1000")
+    @NotNull(message = BookConstant.QUANTITY_REQUIRED)
+    @Min(value = 1, message = BookConstant.QUANTITY_MIN)
+    @Max(value = 1000, message = BookConstant.QUANTITY_MAX)
     private Integer quantity;
 
     private List<String> images;
 
-    @NotBlank(message = "Author is required")
-    @Size(max = 100, message = "Author must be less than 100 characters")
+    @NotBlank(message = BookConstant.AUTHOR_REQUIRED)
+    @Size(max = 100, message = BookConstant.AUTHOR_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹà-ỹ'\\-\\.\\s]{1,100}$",
-            message = "Author must only contain letters, spaces, apostrophes, dashes or dots"
+            message = BookConstant.AUTHOR_INVALID
     )
     private String author;
 
     private String sold;
-
-    private Instant createdAt;
-
-    private Instant updatedAt;
-
-    private String createdBy;
-
-    private String updatedBy;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -84,15 +78,27 @@ public class Book {
     @JsonIgnore
     private List<Rating> ratings;
 
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private String createdBy;
+
+    private String updatedBy;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

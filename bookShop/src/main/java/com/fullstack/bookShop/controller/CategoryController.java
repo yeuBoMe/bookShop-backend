@@ -1,14 +1,16 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.dto.category.RestCategoryCreateDTO;
-import com.fullstack.bookShop.dto.category.RestCategoryUpdateDTO;
-import com.fullstack.bookShop.dto.category.RestCategoryViewDTO;
-import com.fullstack.bookShop.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.request.CategoryCreateRequest;
+import com.fullstack.bookShop.dto.response.CategoryResponse;
+import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.CategoryMapper;
 import com.fullstack.bookShop.model.Category;
-import com.fullstack.bookShop.service.CategoryService;
+import com.fullstack.bookShop.service.interfaces.CategoryService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.imports.HttpStatusUtil;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
+import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,79 +24,82 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/api/v1/categories" )
 @RequiredArgsConstructor
 public class CategoryController {
 
+    private final CategoryMapper categoryMapper;
+
     private final CategoryService categoryService;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    @ApiMessage("Create category")
-    public ResponseEntity<RestCategoryCreateDTO> createCategoryRequest(@Valid @RequestBody Category category) {
-        Category categoryCreated = categoryService.createCategory(category);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(categoryService.convertCategoryToRestCategoryCreateDTO(categoryCreated));
-    }
-
     @GetMapping
-    @ApiMessage("Fetch list categories")
-    public ResponseEntity<ResultPaginationDTO> fetchAllCategoriesRequest(
+    @ApiMessage(ActionConstant.CATEGORY_FETCH_ALL)
+    public ResponseEntity<PaginationResponse> fetchAllCategoriesRequest(
             @Filter Specification<Category> spec,
             Pageable pageable
     ) {
         return ResponseEntity.ok(categoryService.fetchAllCategories(spec, pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
-    @ApiMessage("Get category by id")
-    public ResponseEntity<RestCategoryViewDTO> getCategoryByIdRequest(@PathVariable Long id) {
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @PostMapping
+    @ApiMessage(ActionConstant.CATEGORY_CREATE)
+    public ResponseEntity<CategoryResponse> createCategoryRequest(@Valid @RequestBody Category categoryRequest) {
+        Category categoryCreated = categoryService.createCategory(categoryRequest);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(categoryMapper.convertCategoryToCreateResponse(categoryCreated));
+    }
+
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @GetMapping("/{id}" )
+    @ApiMessage(ActionConstant.CATEGORY_GET)
+    public ResponseEntity<CategoryResponse> getCategoryByIdRequest(@PathVariable Long id) {
         Category categoryGetById = categoryService.getCategoryById(id);
-        return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryViewDTO(categoryGetById));
+        return ResponseEntity.ok(categoryMapper.convertCategoryToViewResponse(categoryGetById));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    @ApiMessage("Update category by id")
-    public ResponseEntity<RestCategoryUpdateDTO> updateCategoryByIdRequest(
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @PutMapping("/{id}" )
+    @ApiMessage(ActionConstant.CATEGORY_UPDATE)
+    public ResponseEntity<CategoryResponse> updateCategoryByIdRequest(
             @PathVariable Long id,
-            @Valid @RequestBody Category category
+            @Valid @RequestBody Category categoryRequest
     ) {
-        Category categoryUpdated = categoryService.updateCategoryById(id, category);
-        return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
+        Category categoryUpdated = categoryService.updateCategoryById(id, categoryRequest);
+        return ResponseEntity.ok(categoryMapper.convertCategoryToUpdateResponse(categoryUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}")
-    @ApiMessage("Update category partial by id")
-    public ResponseEntity<RestCategoryUpdateDTO> updateCategoryPartialByIdRequest(
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @PatchMapping("/{id}" )
+    @ApiMessage(ActionConstant.CATEGORY_UPDATE_PARTIAL)
+    public ResponseEntity<CategoryResponse> partialUpdateCategoryByIdRequest(
             @PathVariable Long id,
-            @Valid @RequestBody Category category
+            @Valid @RequestBody Category categoryRequest
     ) {
-        Category categoryUpdated = categoryService.updateCategoryPartialById(id, category);
-        return ResponseEntity.ok(categoryService.convertCategoryToRestCategoryUpdateDTO(categoryUpdated));
+        Category categoryUpdated = categoryService.partialUpdateCategoryPartialById(id, categoryRequest);
+        return ResponseEntity.ok(categoryMapper.convertCategoryToUpdateResponse(categoryUpdated));
     }
 
-    @DeleteMapping("/{id}")
-    @ApiMessage("Delete category")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @DeleteMapping("/{id}" )
+    @ApiMessage(ActionConstant.CATEGORY_DELETE)
     public ResponseEntity<Void> deleteCategoryByIdRequest(@PathVariable Long id) {
         categoryService.deleteCategoryById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/import")
-    @ApiMessage("Import list categories from file")
-    public ResponseEntity<RestImportDTO<RestCategoryCreateDTO>> importCategoriesFormFileRequest(
-            @Valid @RequestBody List<RestCategoryCreateDTO> restCategoryCreateDTOList
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @PostMapping("/import" )
+    @ApiMessage(ActionConstant.CATEGORY_IMPORT)
+    public ResponseEntity<ImportFileResponse<CategoryResponse>> importCategoriesFromFileRequest(
+            @Valid @RequestBody List<CategoryCreateRequest> categoryCreateRequestList
     ) {
-        RestImportDTO<RestCategoryCreateDTO> restImportDTO
-                = categoryService.importListCategoriesFromFile(restCategoryCreateDTOList);
-        HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
+        ImportFileResponse<CategoryResponse> importFileResponse
+                = categoryService.importCategoriesFromFile(categoryCreateRequestList);
+        HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
                 .status(httpStatus)
-                .body(restImportDTO);
+                .body(importFileResponse);
     }
 }

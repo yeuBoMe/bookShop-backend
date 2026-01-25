@@ -1,9 +1,10 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.dto.book.RestBookViewDTO;
-import com.fullstack.bookShop.dto.chatbot.RestChatbotDTO;
-import com.fullstack.bookShop.service.BookService;
-import com.fullstack.bookShop.service.ChatbotService;
+import com.fullstack.bookShop.dto.request.ChatbotRequest;
+import com.fullstack.bookShop.dto.response.BookResponse;
+import com.fullstack.bookShop.dto.response.chatbot.ChatbotResponse;
+import com.fullstack.bookShop.service.interfaces.BookService;
+import com.fullstack.bookShop.service.interfaces.ChatbotService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -28,57 +29,57 @@ public class ChatbotServiceImpl implements ChatbotService {
     }
 
     @Override
-    public RestChatbotDTO handleChatbot(RestChatbotDTO restChatbotDTO) {
+    public ChatbotResponse chatbot(ChatbotRequest chatbotRequest) {
         StringBuilder bookInfo = new StringBuilder();
 
-        List<RestBookViewDTO> allRestBookViewDTOs = bookService.fetchAllRestBookViewDTOsFromBooks();
-        for (RestBookViewDTO restBookViewDTO : allRestBookViewDTOs) {
+        List<BookResponse> bookResponseList = bookService.fetchAllBookResponsesFromBooks();
+        for (BookResponse bookResponse : bookResponseList) {
             bookInfo.append(
                     """
-                    - ID: %d
-                      Name: %s
-                      Author: %s
-                      Category: %s
-                      Price: %s
-                      Quantity: %d
-                      Author: %s
-                      Rating: %s ⭐
-                      Introduce text: %s
-                      Description: %s
-                      Reader: %s
-                    """.formatted(
-                        restBookViewDTO.getId(),
-                        restBookViewDTO.getName(),
-                        restBookViewDTO.getAuthor(),
-                        restBookViewDTO.getCategory(),
-                        restBookViewDTO.getPrice(),
-                        restBookViewDTO.getQuantity(),
-                        restBookViewDTO.getAuthor(),
-                        restBookViewDTO.getAverageStars() != null
-                                ? String.format("%.1f", restBookViewDTO.getAverageStars())
-                                : "N/A",
-                        restBookViewDTO.getIntroduceText(),
-                        restBookViewDTO.getDescription(),
-                        restBookViewDTO.getReader()
+                            - ID: %d
+                              Name: %s
+                              Author: %s
+                              Category: %s
+                              Price: %s
+                              Quantity: %d
+                              Author: %s
+                              Rating: %s ⭐
+                              Introduce text: %s
+                              Description: %s
+                              Reader: %s
+                            """.formatted(
+                            bookResponse.getId(),
+                            bookResponse.getName(),
+                            bookResponse.getAuthor(),
+                            bookResponse.getCategory(),
+                            bookResponse.getPrice(),
+                            bookResponse.getQuantity(),
+                            bookResponse.getAuthor(),
+                            bookResponse.getAverageStars() != null
+                                    ? String.format("%.1f", bookResponse.getAverageStars())
+                                    : "N/A",
+                            bookResponse.getIntroduceText(),
+                            bookResponse.getDescription(),
+                            bookResponse.getReader()
                     )
             );
         }
 
         SystemMessage systemMessage = new SystemMessage(
-                        """
+                """
                         You are BookShop AI
                         You should response with a funny voice
                         All books database
                         """ + bookInfo
         );
 
-        UserMessage userMessage = new UserMessage(restChatbotDTO.getMessage());
+        UserMessage userMessage = new UserMessage(chatbotRequest.getMessage());
         Prompt prompt = new Prompt(systemMessage, userMessage);
 
-        String messageResponse = chatClient.prompt(prompt)
+        String botMessage = chatClient.prompt(prompt)
                 .call()
                 .content();
 
-        return new RestChatbotDTO(messageResponse);
+        return new ChatbotResponse(botMessage);
     }
 }

@@ -1,6 +1,8 @@
 package com.fullstack.bookShop.model;
 
-import com.fullstack.bookShop.util.constant.StatusEnum;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.OrderConstant;
+import com.fullstack.bookShop.util.enums.StatusEnum;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -16,52 +18,52 @@ import java.util.List;
 @Table(name = "orders")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must be less than 100 characters")
+    @NotBlank(message = OrderConstant.NAME_REQUIRED)
+    @Size(max = 100, message = OrderConstant.NAME_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹà-ỹ'\\-\\.\\s]+$",
-            message = "Name must only contain letters, spaces, apostrophes, dashes or dots"
+            message = OrderConstant.NAME_INVALID
     )
     private String name;
 
-    @Email(message = "Email should be valid")
-    @Size(max = 150, message = "Email must not exceed 150 characters")
+    @Email(message = OrderConstant.EMAIL_INVALID)
+    @Size(max = 150, message = OrderConstant.EMAIL_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$",
-            message = "Email format is invalid"
+            message = OrderConstant.EMAIL_INVALID
     )
     private String email;
 
-    @NotBlank(message = "Phone number is required")
+    @NotBlank(message = OrderConstant.PHONE_REQUIRED)
     @Pattern(
             regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",
-            message = "Phone number is invalid. Example: 0912345678 or +84912345678"
+            message = OrderConstant.PHONE_INVALID
     )
     private String phone;
 
-    @NotBlank(message = "Address is required")
-    @Size(max = 255, message = "Address must be less than 255 characters")
+    @NotBlank(message = OrderConstant.ADDRESS_REQUIRED)
+    @Size(max = 255, message = OrderConstant.ADDRESS_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹà-ỹ0-9'\\-,\\./#:\\s]{5,255}$",
-            message = "Address can only contain letters, numbers, spaces, and basic punctuation (.,-/#:')"
+            message = OrderConstant.ADDRESS_INVALID
     )
     private String address;
 
-    @NotBlank(message = "Payment method is required")
+    @NotBlank(message = OrderConstant.PAYMENT_METHOD_REQUIRED)
     private String paymentMethod;
 
     private Double totalPrice;
 
     @Enumerated(EnumType.STRING)
-    @NotNull(message = "Status is required")
+    @NotNull(message = OrderConstant.STATUS_REQUIRED)
     @Column(length = 20, nullable = false)
     private StatusEnum status;
 
@@ -80,12 +82,16 @@ public class Order {
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

@@ -1,5 +1,7 @@
 package com.fullstack.bookShop.model;
 
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.RatingConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -20,8 +22,8 @@ import java.time.Instant;
 )
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Rating {
 
     @Id
@@ -32,18 +34,10 @@ public class Rating {
     @Max(5)
     private int stars;
 
-    @NotBlank(message = "Comment must not be blank")
-    @Size(max = 200, message = "Comment must not exceed 200 characters")
+    @NotBlank(message = RatingConstant.COMMENT_REQUIRED)
+    @Size(max = 200, message = RatingConstant.COMMENT_MAX_LENGTH)
     @Column(columnDefinition = "TEXT")
     private String comment;
-
-    private Instant createdAt;
-
-    private Instant updatedAt;
-
-    private String createdBy;
-
-    private String updatedBy;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -53,15 +47,27 @@ public class Rating {
     @JoinColumn(name = "book_id")
     private Book book;
 
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private String createdBy;
+
+    private String updatedBy;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

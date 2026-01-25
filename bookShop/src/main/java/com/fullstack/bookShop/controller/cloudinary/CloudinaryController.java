@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.controller.cloudinary;
 
-import com.fullstack.bookShop.service.CloudinaryService;
+import com.fullstack.bookShop.service.interfaces.CloudinaryService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

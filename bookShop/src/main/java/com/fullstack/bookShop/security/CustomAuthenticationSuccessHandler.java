@@ -1,9 +1,10 @@
 package com.fullstack.bookShop.security;
 
-import com.fullstack.bookShop.dto.auth.RestLoginDTO;
-import com.fullstack.bookShop.model.Permission;
+import com.fullstack.bookShop.dto.response.auth.LoginResponse;
 import com.fullstack.bookShop.model.User;
-import com.fullstack.bookShop.service.UserService;
+import com.fullstack.bookShop.service.interfaces.UserService;
+import com.fullstack.bookShop.util.constant.auth.TokenConstant;
+import com.fullstack.bookShop.util.login.UserLoginResponseUtil;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +17,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -48,19 +46,19 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         String picture = oAuth2User.getAttribute("picture");
 
         User userCreatedFromGoogle = userService.createGoogleUser(email, name, picture);
-        RestLoginDTO restLoginDTO = new RestLoginDTO();
-        restLoginDTO.setUser(buildUserLogin(userCreatedFromGoogle));
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setUser(UserLoginResponseUtil.buildUserLogin(userCreatedFromGoogle));
 
-        String accessToken = securityUtil.createAccessToken(email, restLoginDTO);
-        String refreshToken = securityUtil.createRefreshToken(email, restLoginDTO);
-        userService.handleSaveUserRefreshToken(email, refreshToken);
+        String accessToken = securityUtil.createAccessToken(email, loginResponse);
+        String refreshToken = securityUtil.createRefreshToken(email, loginResponse);
+        userService.saveUserRefreshToken(email, refreshToken);
 
         // Lưu refresh_token vào cookie
-        Cookie cookie = new Cookie("refresh_token", refreshToken);
-        cookie.setHttpOnly(true);
+        Cookie cookie = new Cookie(TokenConstant.REFRESH_TOKEN, refreshToken);
         cookie.setPath("/");
-        cookie.setMaxAge(refreshTokenExpiration.intValue());
         cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(refreshTokenExpiration.intValue());
         response.addCookie(cookie);
 
         String redirectUrl = String.format(
@@ -69,42 +67,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         );
 
         response.sendRedirect(redirectUrl);
-    }
-
-    private RestLoginDTO.UserLogin buildUserLogin(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        if (user.getRole() != null) {
-            List<String> permissionList = Optional.ofNullable(user.getRole().getPermissions())
-                    .map(permissions -> permissions.stream()
-                            .map(Permission::getName)
-                            .toList()
-                    )
-                    .orElse(new ArrayList<>());
-
-            RestLoginDTO.UserLogin.RoleOfUserLogin roleOfUserLogin
-                    = new RestLoginDTO.UserLogin.RoleOfUserLogin(user.getRole().getName(), permissionList);
-
-            return new RestLoginDTO.UserLogin(
-                    user.getId(),
-                    user.getFullName(),
-                    user.getEmail(),
-                    user.getAvatar(),
-                    user.getPhone(),
-                    roleOfUserLogin
-            );
-        }
-
-        return new RestLoginDTO.UserLogin(
-                user.getId(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getAvatar(),
-                user.getPhone(),
-                null
-        );
     }
 }
 

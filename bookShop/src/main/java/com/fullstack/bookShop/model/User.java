@@ -1,6 +1,8 @@
 package com.fullstack.bookShop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.UserConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -19,37 +21,37 @@ import java.util.List;
 @Table(name = "users")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "FullName is required")
-    @Size(max = 100, message = "Name must be less than 100 characters")
+    @NotBlank(message = UserConstant.FULL_NAME_REQUIRED)
+    @Size(max = 100, message = UserConstant.FULL_NAME_MAX_LENGTH)
     @Pattern(
             regexp = "^[A-Za-zÀ-ỹà-ỹ0-9'\\-\\.\\s()]+$",
-            message = "Name contains invalid characters"
+            message = UserConstant.FULL_NAME_INVALID
     )
     private String fullName;
 
-    @Email(message = "Email should be valid")
-    @Size(max = 150, message = "Email must not exceed 150 characters")
+    @Email(message = UserConstant.EMAIL_INVALID)
+    @Size(max = 150, message = UserConstant.EMAIL_MAX_LENGTH)
     @Column(unique = true)
     @Pattern(
             regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$",
-            message = "Email format is invalid"
+            message = UserConstant.EMAIL_INVALID
     )
     private String email;
 
-    @Size(min = 6, message = "Password must be at least 6 characters long!")
+    @Size(min = 6, message = UserConstant.PASSWORD_MIN_LENGTH)
     private String password;
 
     @Pattern(
             regexp = "^(0|\\+84)(3|5|7|8|9)[0-9]{8}$",
-            message = "Phone number is invalid. Example: 0912345678 or +84912345678"
+            message = UserConstant.PHONE_INVALID
     )
     @Column(unique = true, length = 15)
     private String phone;
@@ -78,12 +80,16 @@ public class User {
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

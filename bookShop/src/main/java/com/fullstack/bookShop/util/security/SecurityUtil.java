@@ -1,8 +1,13 @@
 package com.fullstack.bookShop.util.security;
 
-import com.fullstack.bookShop.dto.auth.RestLoginDTO;
-import com.nimbusds.jose.util.Base64;
+import com.fullstack.bookShop.dto.response.auth.LoginResponse;
+import com.fullstack.bookShop.dto.response.auth.UserInsideTokenResponse;
+import com.fullstack.bookShop.dto.response.auth.UserLoginResponse;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.auth.TokenConstant;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -13,7 +18,6 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -22,10 +26,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SecurityUtil {
 
-    public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityUtil.class);
 
-    @Value("${bookshop.jwt.base64-secret}")
-    private String jwtKey;
+    public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
 
     @Value("${bookshop.jwt.access-token-validity-in-seconds}")
     private Long accessTokenExpiration;
@@ -33,88 +36,52 @@ public class SecurityUtil {
     @Value("${bookshop.jwt.refresh-token-validity-in-seconds}")
     private Long refreshTokenExpiration;
 
+    private final SecretKey secretKey;
+
     private final JwtEncoder jwtEncoder;
 
-    public SecretKey getSecretKey() {
-        byte[] bytes = Base64.from(jwtKey).decode();
-        return new SecretKeySpec(
-                bytes,
-                0,
-                bytes.length,
-                JWT_ALGORITHM.getName()
-        );
-    }
-
-    public Jwt checkValidRefreshToken(String refreshToken) {
-        NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(getSecretKey())
+    public Jwt validateRefreshToken(String refreshToken) {
+        NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(JWT_ALGORITHM)
                 .build();
 
         try {
             return nimbusJwtDecoder.decode(refreshToken);
         } catch (Exception ex) {
-            System.out.println(">>> Refresh token error: " + ex.getMessage());
+            LOGGER.error(">>> Refresh Token decode failed: {}", ex.getMessage(), ex);
             throw ex;
         }
     }
 
-    public String createAccessToken(String email, RestLoginDTO restLoginDTO) {
-        RestLoginDTO.UserInsideToken userInsideToken = new RestLoginDTO.UserInsideToken(
-                restLoginDTO.getUser().getId(),
-                restLoginDTO.getUser().getName(),
-                restLoginDTO.getUser().getEmail()
-        );
+    public String createAccessToken(String email, LoginResponse loginResponse) {
+        return createJwtToken(email, loginResponse, accessTokenExpiration);
+    }
 
-        String roleOfUser = Optional.ofNullable(restLoginDTO.getUser().getRole())
-                .map(RestLoginDTO.UserLogin.RoleOfUserLogin::getName)
-                .orElse("USER");
+    public String createRefreshToken(String email, LoginResponse loginResponse) {
+        return createJwtToken(email, loginResponse, refreshTokenExpiration);
+    }
 
-        String scope = "ROLE_" + roleOfUser;
-
+    private String createJwtToken(
+            String email,
+            LoginResponse loginResponse,
+            Long expirationSeconds
+    ) {
         Instant now = Instant.now();
-        Instant expiration = now.plus(accessTokenExpiration, ChronoUnit.SECONDS);
+        Instant expiration = now.plus(expirationSeconds, ChronoUnit.SECONDS);
+
+        UserInsideTokenResponse userInsideTokenResponse = buildUserInsideTokenResponse(loginResponse);
+        String scope = buildRoleOfUserLoginInClaim(loginResponse);
 
         // payload
         JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(expiration)
                 .subject(email)
-                .claim("user", userInsideToken)
-                .claim("scope", scope)
+                .claim(TokenConstant.USER_INSIDE_TOKEN, userInsideTokenResponse)
+                .claim(TokenConstant.SCOPE, scope)
                 .build();
 
         // header
-        JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
-
-        return jwtEncoder
-                .encode(JwtEncoderParameters.from(jwsHeader, jwtClaimsSet))
-                .getTokenValue();
-    }
-
-    public String createRefreshToken(String email, RestLoginDTO restLoginDTO) {
-        Instant now = Instant.now();
-        Instant expiration = now.plus(refreshTokenExpiration, ChronoUnit.SECONDS);
-
-        RestLoginDTO.UserInsideToken userInsideToken = new RestLoginDTO.UserInsideToken(
-                restLoginDTO.getUser().getId(),
-                restLoginDTO.getUser().getName(),
-                restLoginDTO.getUser().getEmail()
-        );
-
-        String roleOfUser = Optional.ofNullable(restLoginDTO.getUser().getRole())
-                .map(RestLoginDTO.UserLogin.RoleOfUserLogin::getName)
-                .orElse("USER");
-
-        String scope = "ROLE_" + roleOfUser;
-
-        JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
-                .issuedAt(now)
-                .expiresAt(expiration)
-                .subject(email)
-                .claim("user", userInsideToken)
-                .claim("scope", scope)
-                .build();
-
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
 
         return jwtEncoder
@@ -132,11 +99,27 @@ public class SecurityUtil {
             return null;
         } else if (authentication.getPrincipal() instanceof UserDetails springSecurityUser) {
             return springSecurityUser.getUsername();
-        } else if (authentication.getPrincipal() instanceof String s) {
-            return s;
         } else if (authentication.getPrincipal() instanceof Jwt jwt) {
             return jwt.getSubject();
+        } else if (authentication.getPrincipal() instanceof String s) {
+            return s;
         }
         return null;
+    }
+
+    private UserInsideTokenResponse buildUserInsideTokenResponse(LoginResponse loginResponse) {
+        return new UserInsideTokenResponse(
+                loginResponse.getUser().getId(),
+                loginResponse.getUser().getName(),
+                loginResponse.getUser().getEmail()
+        );
+    }
+
+    private String buildRoleOfUserLoginInClaim(LoginResponse loginResponse) {
+        String roleOfUser = Optional.ofNullable(loginResponse.getUser().getRole())
+                .map(UserLoginResponse.RoleOfUserLoginResponse::getName)
+                .orElse(AuthorityConstant.USER);
+
+        return AuthorityConstant.ROLE_PREFIX + roleOfUser;
     }
 }

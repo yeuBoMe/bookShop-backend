@@ -1,14 +1,16 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.dto.permission.RestPermissionCreateDTO;
-import com.fullstack.bookShop.dto.permission.RestPermissionUpdateDTO;
-import com.fullstack.bookShop.dto.permission.RestPermissionViewDTO;
+import com.fullstack.bookShop.dto.response.PermissionResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.PermissionMapper;
 import com.fullstack.bookShop.model.Permission;
 import com.fullstack.bookShop.repository.PermissionRepository;
-import com.fullstack.bookShop.service.PermissionService;
-import com.fullstack.bookShop.util.pagination.PageUtil;
+import com.fullstack.bookShop.service.interfaces.PermissionService;
+import com.fullstack.bookShop.util.enums.PermissionEnum;
+import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,93 +24,84 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
+    private final PermissionMapper permissionMapper;
+
     private final PermissionRepository permissionRepository;
 
-    @Transactional
     @Override
-    public Permission createPermission(Permission permission) {
-        if (!checkNameExistsIgnoreCase(permission.getName())
-                || checkApiPathAndMethodAndModuleExists(
-                        permission.getApiPath(), permission.getMethod(), permission.getModule())
-        ) {
-            throw new IllegalArgumentException(String.format(
-                    "Permission with name '%s' already exists!", permission.getName()
-            ));
-        }
-        return permissionRepository.save(permission);
+    public PaginationResponse fetchAllPermissions(Specification<Permission> spec, Pageable pageable) {
+        Page<Permission> permissionPage = permissionRepository.findAll(spec, pageable);
+
+        List<PermissionResponse> permissionResponseList = permissionPage.getContent()
+                .stream()
+                .map(permissionMapper::convertPermissionToViewResponse)
+                .toList();
+
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(permissionPage, pageable);
+        paginationResponse.setResult(permissionResponseList);
+        return paginationResponse;
     }
 
     @Transactional
     @Override
-    public Permission updatePermission(Long id, Permission permissionUpdated) {
-        Permission permissionGetById = getPermissionById(id);
+    public Permission createPermission(Permission permissionRequest) {
+        LOGGER.info(
+                "Creating permission name={}, apiPath={}, method={}",
+                permissionRequest.getName(),
+                permissionRequest.getApiPath(),
+                permissionRequest.getMethod()
+        );
 
-        if (checkNameExistsIgnoreCase(permissionUpdated.getName())
-                && !permissionGetById.getName().equals(permissionUpdated.getName())
-        ) {
-            throw new IllegalArgumentException(String.format(
-                    "Permission with name '%s' already exists!", permissionUpdated.getName())
-            );
-        }
+        validatePermissionForCreate(permissionRequest);
 
-        if (checkApiPathAndMethodAndModuleExists(
-                permissionUpdated.getApiPath(), permissionUpdated.getMethod(), permissionUpdated.getModule())
-                && !(permissionGetById.getApiPath().equals(permissionUpdated.getApiPath())
-                    && permissionGetById.getModule().equals(permissionUpdated.getModule())
-                    && permissionGetById.getMethod().equals(permissionUpdated.getMethod()))
-        ) {
-            throw new IllegalArgumentException(String.format(
-                    "Permission with apiPath: '%s', method: '%s', module: '%s' already exists!",
-                    permissionUpdated.getApiPath(),
-                    permissionUpdated.getMethod(),
-                    permissionUpdated.getModule()
-            ));
-        }
+        Permission permissionCreated = permissionRepository.save(permissionRequest);
+        LOGGER.info("Create permission successfully with id: {}", permissionCreated.getId());
 
-        permissionGetById.setName(permissionUpdated.getName());
-        permissionGetById.setApiPath(permissionUpdated.getApiPath());
-        permissionGetById.setMethod(permissionUpdated.getMethod());
-        permissionGetById.setModule(permissionUpdated.getModule());
-
-        return permissionRepository.save(permissionGetById);
+        return permissionCreated;
     }
 
     @Override
     public Permission getPermissionById(Long id) {
+        LOGGER.debug("Fetching permission by id: {}", id);
         return permissionRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Permission with id " + id + " not found!"));
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format(PermissionEnum.ID_NOT_FOUND.getMessage(), id)
+                ));
     }
 
+    @Transactional
     @Override
-    public ResultPaginationDTO fetchAllPermissions(Specification<Permission> spec, Pageable pageable) {
-        Page<Permission> pageHavPermissions = permissionRepository.findAll(spec, pageable);
+    public Permission updatePermissionById(Long id, Permission permissionRequest) {
+        LOGGER.info("Updating permission id: {}", id);
+        Permission permissionGetById = getPermissionById(id);
 
-        List<RestPermissionViewDTO> permissionViewDTOList = pageHavPermissions.getContent()
-                .stream()
-                .map(this::convertPermissionToRestPermissionViewDTO)
-                .toList();
+        validatePermissionForUpdate(permissionGetById, permissionRequest);
 
-        ResultPaginationDTO resultPaginationDTO
-                = PageUtil.handleFetchAllDataWithPagination(pageHavPermissions, pageable);
-        resultPaginationDTO.setResult(permissionViewDTOList);
+        permissionGetById.setName(permissionRequest.getName());
+        permissionGetById.setApiPath(permissionRequest.getApiPath());
+        permissionGetById.setMethod(permissionRequest.getMethod());
+        permissionGetById.setModule(permissionRequest.getModule());
 
-        return resultPaginationDTO;
+        Permission permissionUpdated = permissionRepository.save(permissionGetById);
+        LOGGER.info("Update permission successfully with id: {}", permissionUpdated.getId());
+
+        return permissionUpdated;
     }
 
     @Transactional
     @Override
     public void deletePermissionById(Long id) {
-        if (!checkIdExists(id)) {
-            throw new NoSuchElementException("Permission with id " + id + " not found!");
-        }
-
+        LOGGER.info("Deleting permission id: {}", id);
         Permission permissionGetById = getPermissionById(id);
-        permissionGetById.getRoles().forEach(role -> role.getPermissions()
+        permissionGetById.getRoles().forEach(role -> role
+                .getPermissions()
                 .remove(permissionGetById)
         );
-
         permissionRepository.delete(permissionGetById);
+        LOGGER.info("Delete permission successfully with id: {}", id);
     }
 
     @Override
@@ -126,44 +119,71 @@ public class PermissionServiceImpl implements PermissionService {
         return permissionRepository.existsByApiPathAndMethodAndModule(apiPath, method, module);
     }
 
-    @Override
-    public RestPermissionCreateDTO convertPermissionToRestPermissionCreateDTO(Permission permission) {
-        return new RestPermissionCreateDTO(
-                permission.getId(),
-                permission.getName(),
-                permission.getApiPath(),
-                permission.getMethod(),
-                permission.getModule(),
-                permission.getCreatedAt(),
-                permission.getCreatedBy()
-        );
+    private void validatePermissionForCreate(Permission permissionRequest) {
+        if (checkNameExistsIgnoreCase(permissionRequest.getName())) {
+            LOGGER.warn("Create failed: Permission name '{}' already exists", permissionRequest.getName());
+            throw new IllegalArgumentException(
+                    String.format(PermissionEnum.NAME_EXISTS.getMessage(), permissionRequest.getName())
+            );
+        }
+
+        if (checkApiPathAndMethodAndModuleExists(
+                permissionRequest.getApiPath(),
+                permissionRequest.getMethod(),
+                permissionRequest.getModule()
+        )) {
+            LOGGER.warn(
+                    "Create failed: Permission API {}-{}-{} already exists",
+                    permissionRequest.getApiPath(),
+                    permissionRequest.getMethod(),
+                    permissionRequest.getModule()
+            );
+            throw new IllegalArgumentException(
+                    String.format(
+                            PermissionEnum.API_EXISTS.getMessage(),
+                            permissionRequest.getApiPath(),
+                            permissionRequest.getMethod(),
+                            permissionRequest.getModule()
+                    )
+            );
+        }
     }
 
-    @Override
-    public RestPermissionUpdateDTO convertPermissionToRestPermissionUpdateDTO(Permission permission) {
-        return new RestPermissionUpdateDTO(
-                permission.getId(),
-                permission.getName(),
-                permission.getApiPath(),
-                permission.getMethod(),
-                permission.getModule(),
-                permission.getUpdatedAt(),
-                permission.getUpdatedBy()
-        );
-    }
+    private void validatePermissionForUpdate(Permission currentPermission, Permission permissionRequest) {
+        boolean isNameExists = checkNameExistsIgnoreCase(permissionRequest.getName());
 
-    @Override
-    public RestPermissionViewDTO convertPermissionToRestPermissionViewDTO(Permission permission) {
-        return new RestPermissionViewDTO(
-                permission.getId(),
-                permission.getName(),
-                permission.getApiPath(),
-                permission.getMethod(),
-                permission.getModule(),
-                permission.getCreatedAt(),
-                permission.getUpdatedAt(),
-                permission.getCreatedBy(),
-                permission.getUpdatedBy()
+        if (isNameExists && !permissionRequest.getName().equals(currentPermission.getName())) {
+            LOGGER.warn("Update failed: Permission name '{}' already exists", permissionRequest.getName());
+            throw new IllegalArgumentException(
+                    String.format(PermissionEnum.NAME_EXISTS.getMessage(), permissionRequest.getName())
+            );
+        }
+
+        boolean isApiExists = checkApiPathAndMethodAndModuleExists(
+                permissionRequest.getApiPath(),
+                permissionRequest.getMethod(),
+                permissionRequest.getModule()
         );
+
+        if (isApiExists && !(
+                permissionRequest.getApiPath().equals(currentPermission.getApiPath())
+                        && permissionRequest.getMethod().equals(currentPermission.getMethod())
+                        && permissionRequest.getModule().equals(currentPermission.getModule())
+        )) {
+            LOGGER.warn(
+                    "Update failed: Permission API {}-{}-{} already exists",
+                    permissionRequest.getApiPath(),
+                    permissionRequest.getMethod(),
+                    permissionRequest.getModule()
+            );
+            throw new IllegalArgumentException(
+                    String.format(
+                            PermissionEnum.API_EXISTS.getMessage(),
+                            permissionRequest.getApiPath(),
+                            permissionRequest.getMethod(),
+                            permissionRequest.getModule()
+                    )
+            );
+        }
     }
 }

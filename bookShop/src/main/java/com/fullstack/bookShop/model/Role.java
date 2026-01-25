@@ -2,6 +2,8 @@ package com.fullstack.bookShop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.entity.RoleConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -18,32 +20,24 @@ import java.util.List;
 @Table(name = "roles")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must be less than 100 characters")
+    @NotBlank(message = RoleConstant.NAME_REQUIRED)
+    @Size(max = 100, message = RoleConstant.NAME_MAX_LENGTH)
     private String name;
 
     @Column(columnDefinition = "TEXT")
-    @NotBlank(message = "Description must not be blank")
-    @Size(max = 5000, message = "Description must not exceed 5000 characters")
+    @NotBlank(message = RoleConstant.DESCRIPTION_REQUIRED)
+    @Size(max = 5000, message = RoleConstant.DESCRIPTION_MAX_LENGTH)
     private String description;
 
-    private boolean active;
-
-    private Instant createdAt;
-
-    private Instant updatedAt;
-
-    private String createdBy;
-
-    private String updatedBy;
+    private Boolean active;
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     @JsonIgnore
@@ -58,15 +52,27 @@ public class Role {
     @JsonIgnoreProperties(value = {"roles"})
     private List<Permission> permissions;
 
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private String createdBy;
+
+    private String updatedBy;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.createdBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil.getCurrentUserLoginEmail().orElse("");
+        this.updatedBy = SecurityUtil
+                .getCurrentUserLoginEmail()
+                .orElse(AuthorityConstant.SYSTEM);
     }
 }

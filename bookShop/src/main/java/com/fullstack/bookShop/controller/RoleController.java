@@ -1,12 +1,16 @@
 package com.fullstack.bookShop.controller;
 
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.dto.role.RestRoleCreateDTO;
-import com.fullstack.bookShop.dto.role.RestRoleUpdateDTO;
-import com.fullstack.bookShop.dto.role.RestRoleViewDTO;
+import com.fullstack.bookShop.dto.request.RoleCreateRequest;
+import com.fullstack.bookShop.dto.response.RoleResponse;
+import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.RoleMapper;
 import com.fullstack.bookShop.model.Role;
-import com.fullstack.bookShop.service.RoleService;
+import com.fullstack.bookShop.service.interfaces.RoleService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
+import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,57 +21,74 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/roles")
 @RequiredArgsConstructor
 public class RoleController {
 
+    private final RoleMapper roleMapper;
+
     private final RoleService roleService;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    @ApiMessage("Create role")
-    public ResponseEntity<RestRoleCreateDTO> createRoleRequest(@Valid @RequestBody Role roleRequest) {
-        Role roleCreated = roleService.createRole(roleRequest);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(roleService.convertRoleToRestRoleCreateDTO(roleCreated));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @GetMapping
-    @ApiMessage("Fetch list roles")
-    public ResponseEntity<ResultPaginationDTO> fetchAllRolesRequest(
+    @ApiMessage(ActionConstant.ROLE_FETCH_ALL)
+    public ResponseEntity<PaginationResponse> fetchAllRolesRequest(
             @Filter Specification<Role> spec,
             Pageable pageable
     ) {
         return ResponseEntity.ok(roleService.fetchAllRoles(spec, pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
-    @ApiMessage("Get role")
-    public ResponseEntity<RestRoleViewDTO> getRoleByIdRequest(@PathVariable Long id) {
-        Role roleGetById = roleService.getRoleById(id);
-        return ResponseEntity.ok(roleService.convertRoleToRestRoleViewDTO(roleGetById));
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @PostMapping
+    @ApiMessage(ActionConstant.ROLE_CREATE)
+    public ResponseEntity<RoleResponse> createRoleRequest(@Valid @RequestBody Role roleRequest) {
+        Role roleCreated = roleService.createRole(roleRequest);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(roleMapper.convertRoleToCreateResponse(roleCreated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @GetMapping("/{id}")
+    @ApiMessage(ActionConstant.ROLE_GET)
+    public ResponseEntity<RoleResponse> fetchRoleRequest(@PathVariable Long id) {
+        Role roleGetById = roleService.getRoleById(id);
+        return ResponseEntity.ok(roleMapper.convertRoleToViewResponse(roleGetById));
+    }
+
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @PutMapping("/{id}")
-    @ApiMessage("Update role")
-    public ResponseEntity<RestRoleUpdateDTO> updateRoleByIdRequest(
+    @ApiMessage(ActionConstant.ROLE_UPDATE)
+    public ResponseEntity<RoleResponse> updateRoleRequest(
             @PathVariable Long id,
             @Valid @RequestBody Role roleRequest
     ) {
         Role roleUpdated = roleService.updateRoleById(id, roleRequest);
-        return ResponseEntity.ok(roleService.convertRoleToRestRoleUpdateDTO(roleUpdated));
+        return ResponseEntity.ok(roleMapper.convertRoleToUpdateResponse(roleUpdated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete role")
-    public ResponseEntity<Void> deleteRoleByIdRequest(@PathVariable Long id) {
+    @ApiMessage(ActionConstant.ROLE_DELETE)
+    public ResponseEntity<Void> deleteRoleRequest(@PathVariable Long id) {
         roleService.deleteRoleById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @PostMapping("/import")
+    @ApiMessage(ActionConstant.ROLE_IMPORT)
+    public ResponseEntity<ImportFileResponse<RoleResponse>> importRolesFromFileRequest(
+            @Valid @RequestBody List<RoleCreateRequest> roleCreateRequestList
+    ) {
+        ImportFileResponse<RoleResponse> importFileResponse = roleService.importRolesFromFiles(roleCreateRequestList);
+        HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
+        return ResponseEntity
+                .status(status)
+                .body(importFileResponse);
     }
 }

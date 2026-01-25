@@ -1,11 +1,14 @@
 package com.fullstack.bookShop.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fullstack.bookShop.dto.response.RestResponse;
+import com.fullstack.bookShop.dto.response.global.GlobalResponse;
+import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.constant.ContentTypeConstant;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
@@ -25,25 +28,23 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull AuthenticationException authException
     ) throws IOException, ServletException {
 
         delegate.commence(request, response, authException);
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType(ContentTypeConstant.APPLICATION_JSON_UTF8);
 
-        String errorMessage = Optional.ofNullable(authException.getCause())
+        String authErrorMessage = Optional.ofNullable(authException.getCause())
                 .map(Throwable::getMessage)
                 .orElse(authException.getMessage());
 
-        RestResponse<Object> restResponse = new RestResponse<>();
-        restResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        restResponse.setError(errorMessage);
-        restResponse.setMessage(
-                "Token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền vào JWT ở header)..."
-        );
+        GlobalResponse<Object> globalResponse = new GlobalResponse<>();
+        globalResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        globalResponse.setError(authErrorMessage);
+        globalResponse.setMessage(CommonMessage.JWT_FAILED);
 
-        objectMapper.writeValue(response.getWriter(), restResponse);
+        objectMapper.writeValue(response.getWriter(), globalResponse);
     }
 }

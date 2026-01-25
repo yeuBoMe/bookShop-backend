@@ -1,21 +1,25 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.dto.book.RestBookCreateDTO;
-import com.fullstack.bookShop.dto.book.RestBookUpdateDTO;
-import com.fullstack.bookShop.dto.book.RestBookViewDTO;
-import com.fullstack.bookShop.dto.imports.RestImportDTO;
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
+import com.fullstack.bookShop.dto.response.BookResponse;
+import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.BookMapper;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Category;
 import com.fullstack.bookShop.repository.BookRepository;
 import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.RatingRepository;
-import com.fullstack.bookShop.service.BookService;
-import com.fullstack.bookShop.service.CategoryService;
-import com.fullstack.bookShop.util.pagination.PageUtil;
+import com.fullstack.bookShop.service.interfaces.BookService;
+import com.fullstack.bookShop.service.interfaces.CategoryService;
+import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.enums.BookEnum;
+import com.fullstack.bookShop.util.enums.CategoryEnum;
+import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,85 +35,114 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BookServiceImpl.class);
+
+    private final BookMapper bookMapper;
+
     private final BookRepository bookRepository;
+
+    private final CategoryService categoryService;
 
     private final RatingRepository ratingRepository;
 
     private final OrderDetailRepository orderDetailRepository;
 
-    private final CategoryService categoryService;
+    @Override
+    public PaginationResponse fetchAllBooks(Specification<Book> spec, Pageable pageable) {
+        Page<Book> bookPage = bookRepository.findAll(spec, pageable);
 
-    private void checkNullAndSetCategory(Book bookRequest, Book currentBook) {
-        if (bookRequest.getCategory() != null) {
-            if (!categoryService.checkIdExists(bookRequest.getCategory().getId())) {
-                throw new NoSuchElementException(
-                        "Category with id '" + bookRequest.getCategory().getId() + "' not exist!"
-                );
-            }
-            Category categoryGetById = categoryService.getCategoryById(bookRequest.getCategory().getId());
-            currentBook.setCategory(categoryGetById);
-        }
+        List<BookResponse> bookResponseList = bookPage.getContent()
+                .stream()
+                .map(bookMapper::convertBookToViewResponse)
+                .toList();
+
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(bookPage, pageable);
+        paginationResponse.setResult(bookResponseList);
+        return paginationResponse;
+    }
+
+    @Override
+    public PaginationResponse fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable) {
+        Page<Book> bookPageWithAverageRating = bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
+
+        List<BookResponse> bookResponseList = bookPageWithAverageRating.getContent()
+                .stream()
+                .map(bookMapper::convertBookToViewResponse)
+                .toList();
+
+        PaginationResponse paginationResponse =
+                PaginationUtil.fetchAllDataWithPagination(bookPageWithAverageRating, pageable);
+        paginationResponse.setResult(bookResponseList);
+        return paginationResponse;
+    }
+
+    @Override
+    public List<BookResponse> fetchAllBookResponsesFromBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(bookMapper::convertBookToViewResponse)
+                .toList();
     }
 
     @Transactional
     @Override
-    public Book createBook(Book book) {
-        if (checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
-            throw new IllegalArgumentException(String.format(
-                    "Book with name '%s' and author '%s' already exists!",
-                    book.getName(),
-                    book.getAuthor()
-            ));
-        }
-        checkNullAndSetCategory(book, book);
-        return bookRepository.save(book);
+    public Book createBook(Book bookRequest) {
+        LOGGER.info(
+                "Creating book name={}, introduceText={}, description={}, " +
+                "reader={}, price={}, quantity={}, author={}, sold={}, category={}",
+                bookRequest.getName(),
+                bookRequest.getIntroduceText(),
+                bookRequest.getDescription(),
+                bookRequest.getReader(),
+                bookRequest.getPrice(),
+                bookRequest.getQuantity(),
+                bookRequest.getAuthor(),
+                bookRequest.getSold(),
+                Optional.ofNullable(bookRequest.getCategory())
+                        .map(Category::getName)
+                        .orElse(null)
+        );
+
+        validateAndSetCategory(bookRequest, bookRequest);
+        validateBookForCreate(bookRequest);
+
+        Book bookCreated = bookRepository.save(bookRequest);
+        LOGGER.info("Create book successfully with id: {}", bookCreated.getId());
+
+        return bookCreated;
     }
 
     @Transactional
     @Override
-    public Book updateBookById(Long id, Book bookUpdated) {
+    public Book updateBookById(Long id, Book bookRequest) {
+        LOGGER.info("Updating book id: {}", id);
         Book bookGetById = getBookById(id);
-        checkNullAndSetCategory(bookUpdated, bookGetById);
 
-        if (checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
-                && !(bookGetById.getName().equals(bookUpdated.getName())
-                && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
-        ) {
-            throw new IllegalArgumentException(String.format(
-                    "Book with name '%s' and author '%s' already exists!",
-                    bookUpdated.getName(),
-                    bookUpdated.getAuthor()
-            ));
-        }
+        validateAndSetCategory(bookGetById, bookRequest);
+        validateBookForUpdate(bookGetById, bookRequest);
 
-        bookGetById.setName(bookUpdated.getName());
-        bookGetById.setPrice(bookUpdated.getPrice());
-        bookGetById.setQuantity(bookUpdated.getQuantity());
-        bookGetById.setAuthor(bookUpdated.getAuthor());
-        bookGetById.setDescription(bookUpdated.getDescription());
-        bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
-        bookGetById.setReader(bookUpdated.getReader());
+        bookGetById.setName(bookRequest.getName());
+        bookGetById.setPrice(bookRequest.getPrice());
+        bookGetById.setQuantity(bookRequest.getQuantity());
+        bookGetById.setAuthor(bookRequest.getAuthor());
+        bookGetById.setDescription(bookRequest.getDescription());
+        bookGetById.setIntroduceText(bookRequest.getIntroduceText());
+        bookGetById.setReader(bookRequest.getReader());
 
+        LOGGER.info("Update book successfully with id: {}", id);
         return bookRepository.save(bookGetById);
     }
 
     @Transactional
     @Override
-    public Book updateBookPartialById(Long id, Book bookUpdated) {
+    public Book partialUpdateBookById(Long id, Book bookUpdated) {
+        LOGGER.info("Updating book partial id: {}", id);
         Book bookGetById = getBookById(id);
 
-        if (checkNameAndAuthorExistsIgnoreCase(bookUpdated.getName(), bookUpdated.getAuthor())
-                && !(bookGetById.getName().equals(bookUpdated.getName())
-                && bookGetById.getAuthor().equals(bookUpdated.getAuthor()))
-        ) {
-            throw new IllegalArgumentException(String.format(
-                    "Book with name '%s' and author '%s' already exists!",
-                    bookUpdated.getName(),
-                    bookUpdated.getAuthor()
-            ));
-        }
+        validateAndSetCategory(bookGetById, bookUpdated);
 
-        if (bookUpdated.getName() != null && !bookUpdated.getName().isEmpty()) {
+        if (bookUpdated.getName() != null && !bookUpdated.getName().trim().isEmpty()) {
+            validateBookForUpdate(bookGetById, bookUpdated);
             bookGetById.setName(bookUpdated.getName());
         }
         if (bookUpdated.getPrice() != null) {
@@ -118,24 +151,65 @@ public class BookServiceImpl implements BookService {
         if (bookUpdated.getQuantity() != null) {
             bookGetById.setQuantity(bookUpdated.getQuantity());
         }
-        if (bookUpdated.getAuthor() != null) {
+        if (bookUpdated.getAuthor() != null && !bookUpdated.getAuthor().trim().isEmpty()) {
+            validateBookForUpdate(bookGetById, bookUpdated);
             bookGetById.setAuthor(bookUpdated.getAuthor());
         }
-        if (bookUpdated.getDescription() != null) {
+        if (bookUpdated.getDescription() != null && !bookUpdated.getDescription().trim().isEmpty()) {
             bookGetById.setDescription(bookUpdated.getDescription());
         }
-        if (bookUpdated.getIntroduceText() != null) {
+        if (bookUpdated.getIntroduceText() != null && !bookUpdated.getIntroduceText().trim().isEmpty()) {
             bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
         }
-        if (bookUpdated.getReader() != null) {
+        if (bookUpdated.getReader() != null && !bookUpdated.getReader().trim().isEmpty()) {
             bookGetById.setReader(bookUpdated.getReader());
         }
-        if (bookUpdated.getImages() != null && !bookUpdated.getImages().isEmpty()) {
-            System.out.println("Updating book image to: " + bookUpdated.getImages());
-            bookGetById.setImages(bookUpdated.getImages());
-        }
 
-        checkNullAndSetCategory(bookUpdated, bookGetById);
+        LOGGER.info("Update book partial successfully with id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Override
+    public Book uploadBookSingleImage(Long id, String image) {
+        LOGGER.info("Uploading image for book id={}, image={}", id, image);
+
+        Book bookGetById = getBookById(id);
+        bookGetById.setImages(List.of(image));
+
+        LOGGER.info("Upload image successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Override
+    public Book uploadBookMultipleImages(Long id, List<String> imageList) {
+        LOGGER.info("Uploading multiple images for book id={}, size={}", id, imageList.size());
+
+        Book bookGetById = getBookById(id);
+        bookGetById.setImages(imageList);
+
+        LOGGER.info("Upload multiple images successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Override
+    public Book removeBookSingleImage(Long id, String image) {
+        LOGGER.info("Removing single image for book id={}, image={}", id, image);
+
+        Book bookGetById = getBookById(id);
+        bookGetById.getImages().remove(image);
+
+        LOGGER.info("Remove image successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Override
+    public Book removeBookMultipleImages(Long id, List<String> imageList) {
+        LOGGER.info("Removing multiple images for book id={}, size={}", id, imageList.size());
+
+        Book bookGetById = getBookById(id);
+        bookGetById.getImages().removeAll(imageList);
+
+        LOGGER.info("Remove multiple images successfully for book id: {}", id);
         return bookRepository.save(bookGetById);
     }
 
@@ -143,18 +217,24 @@ public class BookServiceImpl implements BookService {
     public Book getBookById(Long id) {
         return bookRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Book with id '" + id + "' not found!"));
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format(BookEnum.ID_NOT_FOUND.getMessage(), id)
+                ));
     }
 
     @Transactional
     @Override
     public void deleteBookById(Long id) {
+        LOGGER.info("Deleting book id: {}", id);
         if (!checkIdExists(id)) {
-            throw new NoSuchElementException("Book with id '" + id + "' not found!");
+            throw new NoSuchElementException(
+                    String.format(BookEnum.ID_NOT_FOUND.getMessage(), id)
+            );
         }
         ratingRepository.deleteByBookId(id);
         orderDetailRepository.deleteByBookId(id);
         bookRepository.deleteById(id);
+        LOGGER.info("Delete book successfully with id: {}", id);
     }
 
     @Override
@@ -168,170 +248,101 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public RestBookCreateDTO convertBookToRestBookCreateDTO(Book book) {
-        String categoryName = Optional.ofNullable(book.getCategory())
-                .map(Category::getName)
-                .orElse(null);
-
-        return new RestBookCreateDTO(
-                book.getId(),
-                book.getName(),
-                categoryName,
-                book.getPrice(),
-                book.getQuantity(),
-                book.getImages(),
-                book.getAuthor(),
-                book.getIntroduceText(),
-                book.getDescription(),
-                book.getReader(),
-                book.getCreatedAt(),
-                book.getCreatedBy()
-        );
-    }
-
-    @Override
-    public RestBookUpdateDTO convertBookToRestBookUpdateDTO(Book book) {
-        String categoryName = Optional.ofNullable(book.getCategory())
-                .map(Category::getName)
-                .orElse(null);
-
-        return new RestBookUpdateDTO(
-                book.getId(),
-                book.getName(),
-                categoryName,
-                book.getPrice(),
-                book.getQuantity(),
-                book.getImages(),
-                book.getAuthor(),
-                book.getIntroduceText(),
-                book.getDescription(),
-                book.getReader(),
-                book.getUpdatedAt(),
-                book.getUpdatedBy()
-        );
-    }
-
-    @Override
-    public RestBookViewDTO convertBookToRestBookViewDTO(Book book) {
-        String categoryName = Optional.ofNullable(book.getCategory())
-                .map(Category::getName)
-                .orElse(null);
-
-        Double averageStars = ratingRepository.getAverageRatingByBookId(book.getId());
-
-        return RestBookViewDTO.builder()
-                .id(book.getId())
-                .name(book.getName())
-                .category(categoryName)
-                .price(book.getPrice())
-                .quantity(book.getQuantity())
-                .images(book.getImages())
-                .author(book.getAuthor())
-                .introduceText(book.getIntroduceText())
-                .description(book.getDescription())
-                .reader(book.getReader())
-                .averageStars(averageStars)
-                .createdAt(book.getCreatedAt())
-                .updatedAt(book.getUpdatedAt())
-                .createdBy(book.getCreatedBy())
-                .updatedBy(book.getUpdatedBy())
-                .build();
-    }
-
-    @Override
-    public List<RestBookViewDTO> fetchAllRestBookViewDTOsFromBooks() {
-        return bookRepository.findAll()
-                .stream()
-                .map(this::convertBookToRestBookViewDTO)
-                .toList();
-    }
-
-    @Override
-    public ResultPaginationDTO fetchListBooks(Specification<Book> spec, Pageable pageable) {
-        Page<Book> bookPage = bookRepository.findAll(spec, pageable);
-
-        List<RestBookViewDTO> restBookViewDTOList = bookPage.getContent()
-                .stream()
-                .map(this::convertBookToRestBookViewDTO)
-                .toList();
-
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(bookPage, pageable);
-        resultPaginationDTO.setResult(restBookViewDTOList);
-
-        return resultPaginationDTO;
-    }
-
-    @Override
-    public ResultPaginationDTO fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable) {
-        Page<Book> bookPage = bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
-
-        List<RestBookViewDTO> restBookViewDTOList = bookPage.getContent()
-                .stream()
-                .map(this::convertBookToRestBookViewDTO)
-                .toList();
-
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(bookPage, pageable);
-        resultPaginationDTO.setResult(restBookViewDTOList);
-
-        return resultPaginationDTO;
-    }
-
-    @Override
-    public RestImportDTO<RestBookCreateDTO> importListBooksFromFile(List<Book> bookList) {
-        RestImportDTO<RestBookCreateDTO> restImportDTO = new RestImportDTO<>();
-        List<RestBookCreateDTO> successData = new ArrayList<>();
-        List<RestImportDTO.DetailFaultInfo<RestBookCreateDTO>> detailFaultInfoList = new ArrayList<>();
+    public ImportFileResponse<BookResponse> importBooksFromFile(List<Book> bookList) {
+        ImportFileResponse<BookResponse> importFileResponse = new ImportFileResponse<>();
+        List<BookResponse> successData = new ArrayList<>();
+        List<ImportFileResponse.DetailFaultInfo<BookResponse>> detailFaultInfoList = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
 
         for (int i = 0; i < bookList.size(); i++) {
             Book book = bookList.get(i);
+            BookResponse bookResponse = bookMapper.convertBookToCreateResponse(book);
 
             try {
-                if (checkNameAndAuthorExistsIgnoreCase(book.getName(), book.getAuthor())) {
-                    throw new IllegalArgumentException(String.format(
-                            "Book with name '%s' and author '%s' already exists!",
-                            book.getName(),
-                            book.getAuthor()
-                    ));
-                }
-
-                checkNullAndSetCategory(book, book);
+                validateAndSetCategory(book, book);
+                validateBookForCreate(book);
                 bookRepository.save(book);
 
-                RestBookCreateDTO restBookCreateDTO = convertBookToRestBookCreateDTO(book);
-                successData.add(restBookCreateDTO);
+                successData.add(bookResponse);
                 countSuccess++;
 
             } catch (ConstraintViolationException e) {
-                RestBookCreateDTO restBookCreateDTO = convertBookToRestBookCreateDTO(book);
-                countError++;
-                List<String> errorMessage = e.getConstraintViolations().stream()
+                List<String> errorMessage = e.getConstraintViolations()
+                        .stream()
                         .map(ConstraintViolation::getMessage)
                         .toList();
-                detailFaultInfoList.add(new RestImportDTO.DetailFaultInfo<>(
+
+                detailFaultInfoList.add(new ImportFileResponse.DetailFaultInfo<>(
                         i + 1,
                         errorMessage,
-                        restBookCreateDTO
+                        bookResponse
                 ));
 
-            } catch (Exception e) {
-                RestBookCreateDTO restBookCreateDTO = convertBookToRestBookCreateDTO(book);
                 countError++;
-                detailFaultInfoList.add(new RestImportDTO.DetailFaultInfo<>(
+
+            } catch (Exception e) {
+                detailFaultInfoList.add(new ImportFileResponse.DetailFaultInfo<>(
                         i + 1,
                         e.getMessage(),
-                        restBookCreateDTO
+                        bookResponse
                 ));
+
+                countError++;
             }
         }
 
-        restImportDTO.setCountSuccess(countSuccess);
-        restImportDTO.setCountError(countError);
-        restImportDTO.setDetail(countError > 0 ? detailFaultInfoList : "Import books successfully!");
-        restImportDTO.setItems(successData);
+        importFileResponse.setCountSuccess(countSuccess);
+        importFileResponse.setCountError(countError);
+        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
+        importFileResponse.setItems(successData);
 
-        return restImportDTO;
+        return importFileResponse;
+    }
+
+    private void validateBookForCreate(Book bookRequest) {
+        if (checkNameAndAuthorExistsIgnoreCase(bookRequest.getName(), bookRequest.getAuthor())) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            BookEnum.NAME_AUTHOR_EXISTS.getMessage(),
+                            bookRequest.getName(),
+                            bookRequest.getAuthor()
+                    )
+            );
+        }
+    }
+
+    private void validateBookForUpdate(Book currentBook, Book bookRequest) {
+        boolean isNameAndAuthorExists = checkNameAndAuthorExistsIgnoreCase(
+                bookRequest.getName(),
+                bookRequest.getAuthor()
+        );
+
+        if (isNameAndAuthorExists && !(
+                currentBook.getName().equals(bookRequest.getName())
+                        && currentBook.getAuthor().equals(bookRequest.getAuthor())
+        )) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            BookEnum.NAME_AUTHOR_EXISTS.getMessage(),
+                            bookRequest.getName(),
+                            bookRequest.getAuthor()
+                    )
+            );
+        }
+    }
+
+    private void validateAndSetCategory(Book currentBook, Book bookRequest) {
+        if (bookRequest.getCategory() != null) {
+            Long categoryId = bookRequest.getCategory().getId();
+            if (!categoryService.checkIdExists(categoryId)) {
+                throw new NoSuchElementException(
+                        String.format(CategoryEnum.ID_NOT_FOUND.getMessage(), categoryId)
+                );
+            }
+            Category categoryGetById = categoryService.getCategoryById(categoryId);
+            currentBook.setCategory(categoryGetById);
+        }
     }
 }

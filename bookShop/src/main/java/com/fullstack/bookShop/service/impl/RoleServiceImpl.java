@@ -1,17 +1,25 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.dto.role.RestRoleCreateDTO;
-import com.fullstack.bookShop.dto.role.RestRoleUpdateDTO;
-import com.fullstack.bookShop.dto.role.RestRoleViewDTO;
+import com.fullstack.bookShop.dto.request.RoleCreateRequest;
+import com.fullstack.bookShop.dto.response.RoleResponse;
+import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.RoleMapper;
 import com.fullstack.bookShop.model.Permission;
 import com.fullstack.bookShop.model.Role;
 import com.fullstack.bookShop.repository.PermissionRepository;
 import com.fullstack.bookShop.repository.RoleRepository;
 import com.fullstack.bookShop.repository.UserRepository;
-import com.fullstack.bookShop.service.RoleService;
-import com.fullstack.bookShop.util.pagination.PageUtil;
+import com.fullstack.bookShop.service.interfaces.RoleService;
+import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.enums.PermissionEnum;
+import com.fullstack.bookShop.util.enums.RoleEnum;
+import com.fullstack.bookShop.util.pagination.PaginationUtil;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,11 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoleServiceImpl.class);
+
+    private final RoleMapper roleMapper;
 
     private final RoleRepository roleRepository;
 
@@ -33,68 +44,91 @@ public class RoleServiceImpl implements RoleService {
 
     private final PermissionRepository permissionRepository;
 
-    private void checkNullAndSetListPermissions(Role roleRequest, Role currentRole) {
-        if (roleRequest.getPermissions() != null && !roleRequest.getPermissions().isEmpty()) {
-            for (Permission permission : roleRequest.getPermissions()) {
-                if (!permissionRepository.existsById(permission.getId())) {
-                    throw new NoSuchElementException("Permission with id " + permission.getId() + " not found!");
-                }
-            }
+    @Override
+    public PaginationResponse fetchAllRoles(Specification<Role> spec, Pageable pageable) {
+        Page<Role> rolePage = roleRepository.findAll(spec, pageable);
 
-            List<Long> permissionIds = roleRequest.getPermissions()
-                    .stream()
-                    .map(Permission::getId)
-                    .toList();
+        List<RoleResponse> roleResponseList = rolePage.getContent()
+                .stream()
+                .map(roleMapper::convertRoleToViewResponse)
+                .toList();
 
-            List<Permission> permissionList = permissionRepository.findALlByIdIn(permissionIds);
-            currentRole.setPermissions(permissionList);
-        }
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(rolePage, pageable);
+        paginationResponse.setResult(roleResponseList);
+        return paginationResponse;
     }
 
     @Transactional
     @Override
-    public Role createRole(Role role) {
-        if (checkNameExistsIgnoreCase(role.getName())) {
-            throw new IllegalArgumentException(String.format("Role with name '%s' already exists!", role.getName()));
-        }
-        checkNullAndSetListPermissions(role, role);
-        return roleRepository.save(role);
-    }
+    public Role createRole(Role roleRequest) {
+        LOGGER.info(
+                "Creating role name={}, description={}, active={}, permissions={}",
+                roleRequest.getName(),
+                roleRequest.getDescription(),
+                roleRequest.getActive(),
+                roleRequest.getPermissions()
+        );
 
-    @Transactional
-    @Override
-    public Role updateRoleById(Long id, Role roleUpdated) {
-        Role roleGetById = getRoleById(id);
-        checkNullAndSetListPermissions(roleUpdated, roleGetById);
+        validateRoleForCreate(roleRequest);
+        validateAndSetPermissions(roleRequest, roleRequest);
 
-        if (checkNameExistsIgnoreCase(roleUpdated.getName())
-            && !roleGetById.getName().equals(roleUpdated.getName())
-        ) {
-            throw new IllegalArgumentException(String.format("Role with name '%s' already exists!", roleUpdated.getName()));
-        }
+        Role roleCreated = roleRepository.save(roleRequest);
+        LOGGER.info("Create role successfully with id: {}", roleCreated.getId());
 
-        roleGetById.setName(roleUpdated.getName());
-        roleGetById.setActive(roleUpdated.isActive());
-        roleGetById.setDescription(roleUpdated.getDescription());
-
-        return roleRepository.save(roleGetById);
+        return roleCreated;
     }
 
     @Override
     public Role getRoleById(Long id) {
+        LOGGER.debug("Fetching role by id: {}", id);
         return roleRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Role with id " + id + " not found!"));
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format(RoleEnum.ID_NOT_FOUND.getMessage(), id)
+                ));
+    }
+
+    @Override
+    public Role getRoleByName(String name) {
+        LOGGER.debug("Fetching role by name: {}", name);
+        return roleRepository
+                .findByName(name)
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format(RoleEnum.NAME_NOT_FOUND.getMessage(), name)
+                ));
+    }
+
+    @Transactional
+    @Override
+    public Role updateRoleById(Long id, Role roleRequest) {
+        LOGGER.info("Updating role id: {}", id);
+        Role roleGetById = getRoleById(id);
+
+        validateRoleForUpdate(roleGetById, roleRequest);
+        validateAndSetPermissions(roleGetById, roleRequest);
+
+        roleGetById.setName(roleRequest.getName());
+        roleGetById.setDescription(roleRequest.getDescription());
+        roleGetById.setActive(roleRequest.getActive());
+
+        Role roleUpdated = roleRepository.save(roleGetById);
+        LOGGER.info("Update role successfully with id: {}", roleUpdated.getId());
+
+        return roleUpdated;
     }
 
     @Transactional
     @Override
     public void deleteRoleById(Long id) {
+        LOGGER.info("Deleting role id: {}", id);
         if (!checkIdExists(id)) {
-            throw new NoSuchElementException("Role with id " + id + " not found!");
+            throw new NoSuchElementException(
+                    String.format(RoleEnum.ID_NOT_FOUND.getMessage(), id)
+            );
         }
         userRepository.deleteByRoleId(id);
         roleRepository.deleteById(id);
+        LOGGER.info("Delete role successfully with id: {}", id);
     }
 
     @Override
@@ -108,79 +142,120 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public RestRoleCreateDTO convertRoleToRestRoleCreateDTO(Role role) {
-        List<String> permissionList = Optional.ofNullable(role.getPermissions())
-                .map(permissions -> permissions.stream()
-                        .map(Permission::getName)
-                        .toList()
-                )
-                .orElse(new ArrayList<>());
+    public ImportFileResponse<RoleResponse> importRolesFromFiles(List<RoleCreateRequest> roleCreateRequestList) {
+        ImportFileResponse<RoleResponse> importFileResponse = new ImportFileResponse<>();
+        List<RoleResponse> successRoles = new ArrayList<>();
+        List<ImportFileResponse.DetailFaultInfo<RoleCreateRequest>> detailFaultInfoList = new ArrayList<>();
 
-        return new RestRoleCreateDTO(
-                role.getId(),
-                role.getName(),
-                role.getDescription(),
-                role.isActive(),
-                role.getCreatedAt(),
-                role.getCreatedBy(),
-                permissionList
-        );
+        int countSuccess = 0;
+        int countError = 0;
+
+        for (int i = 0; i < roleCreateRequestList.size(); i++) {
+            RoleCreateRequest roleCreateRequest = roleCreateRequestList.get(i);
+            int index = i + 1;
+
+            try {
+                validateRoleForImport(roleCreateRequest);
+
+                Role roleBuiltFromRoleCreateRequest = buildRoleFromRoleCreateRequest(roleCreateRequest);
+                RoleResponse roleResponse = roleMapper.convertRoleToCreateResponse(roleBuiltFromRoleCreateRequest);
+
+                successRoles.add(roleResponse);
+                countSuccess++;
+
+                LOGGER.info("Import role successfully with index {}: {}", index, roleCreateRequest.getName());
+
+            } catch (ConstraintViolationException ex) {
+                List<String> errorMessage = ex.getConstraintViolations()
+                        .stream()
+                        .map(ConstraintViolation::getMessage)
+                        .toList();
+
+                detailFaultInfoList.add(new ImportFileResponse.DetailFaultInfo<>(
+                        index,
+                        errorMessage,
+                        roleCreateRequest
+                ));
+
+                countError++;
+                LOGGER.warn("Import failed at row {} due to validation: {}", index, errorMessage);
+
+            } catch (Exception ex) {
+                detailFaultInfoList.add(new ImportFileResponse.DetailFaultInfo<>(
+                        index,
+                        ex.getMessage(),
+                        roleCreateRequest
+                ));
+
+                countError++;
+                LOGGER.error("Unexpected error importing role at row {}: {}", index, ex.getMessage(), ex);
+            }
+        }
+
+        importFileResponse.setCountSuccess(countSuccess);
+        importFileResponse.setCountError(countError);
+        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
+        importFileResponse.setItems(successRoles);
+
+        LOGGER.info("Import roles completed: {} success, {} failed", countSuccess, countError);
+        return importFileResponse;
     }
 
-    @Override
-    public RestRoleUpdateDTO convertRoleToRestRoleUpdateDTO(Role role) {
-        List<String> permissionList = Optional.ofNullable(role.getPermissions())
-                .map(permissions -> permissions.stream()
-                        .map(Permission::getName)
-                        .toList()
-                )
-                .orElse(new ArrayList<>());
-
-        return new RestRoleUpdateDTO(
-                role.getId(),
-                role.getName(),
-                role.getDescription(),
-                role.isActive(),
-                role.getUpdatedAt(),
-                role.getUpdatedBy(),
-                permissionList
-        );
+    private void validateRoleForCreate(Role roleRequest) {
+        if (checkNameExistsIgnoreCase(roleRequest.getName())) {
+            LOGGER.warn("Create failed: Role name '{}' already exists", roleRequest.getName());
+            throw new IllegalArgumentException(
+                    String.format(RoleEnum.NAME_EXISTS.getMessage(), roleRequest.getName())
+            );
+        }
     }
 
-    @Override
-    public RestRoleViewDTO convertRoleToRestRoleViewDTO(Role role) {
-        List<String> permissionList = Optional.ofNullable(role.getPermissions())
-                .map(permissions -> permissions.stream()
-                        .map(Permission::getName)
-                        .toList()
-                )
-                .orElse(new ArrayList<>());
+    private void validateRoleForUpdate(Role currentRole, Role roleRequest) {
+        boolean isNameExists = checkNameExistsIgnoreCase(roleRequest.getName());
 
-        return new RestRoleViewDTO(
-                role.getId(),
-                role.getName(),
-                role.getDescription(),
-                role.isActive(),
-                role.getCreatedAt(),
-                role.getUpdatedAt(),
-                role.getCreatedBy(),
-                role.getUpdatedBy(),
-                permissionList
-        );
+        if (isNameExists && !roleRequest.getName().equals(currentRole.getName())) {
+            LOGGER.warn("Update failed: Role name '{}' already exists", roleRequest.getName());
+            throw new IllegalArgumentException(
+                    String.format(RoleEnum.NAME_EXISTS.getMessage(), roleRequest.getName())
+            );
+        }
     }
 
-    @Override
-    public ResultPaginationDTO fetchAllRoles(Specification<Role> spec, Pageable pageable) {
-        Page<Role> pageHavRoles = roleRepository.findAll(spec, pageable);
+    private void validateRoleForImport(RoleCreateRequest roleCreateRequest) {
+        if (checkNameExistsIgnoreCase(roleCreateRequest.getName())) {
+            LOGGER.warn("Import failed: Role name '{}' already exists", roleCreateRequest.getName());
+            throw new IllegalArgumentException(
+                    String.format(RoleEnum.NAME_EXISTS.getMessage(), roleCreateRequest.getName())
+            );
+        }
+    }
 
-        List<RestRoleViewDTO> restRoleViewDTOList = pageHavRoles.getContent()
-                .stream()
-                .map(this::convertRoleToRestRoleViewDTO)
-                .toList();
+    private Role buildRoleFromRoleCreateRequest(RoleCreateRequest roleCreateRequest) {
+        Role role = new Role();
+        role.setName(roleCreateRequest.getName());
+        role.setDescription(roleCreateRequest.getDescription());
+        role.setActive(roleCreateRequest.isActive());
+        return roleRepository.save(role);
+    }
 
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(pageHavRoles, pageable);
-        resultPaginationDTO.setResult(restRoleViewDTOList);
+    private void validateAndSetPermissions(Role currentRole, Role roleRequest) {
+        if (roleRequest.getPermissions() != null && !roleRequest.getPermissions().isEmpty()) {
+            for (Permission permission : roleRequest.getPermissions()) {
+                if (!permissionRepository.existsById(permission.getId())) {
+                    throw new NoSuchElementException(
+                            String.format(PermissionEnum.ID_NOT_FOUND.getMessage(), permission.getId())
+                    );
+                }
+            }
 
-        return resultPaginationDTO;
+            List<Long> permissionIds = roleRequest.getPermissions()
+                    .stream()
+                    .map(Permission::getId)
+                    .toList();
+
+            List<Permission> permissionList = permissionRepository.findALlByIdIn(permissionIds);
+            currentRole.setPermissions(permissionList);
+        }
     }
 }
+

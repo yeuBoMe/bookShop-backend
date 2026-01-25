@@ -1,17 +1,22 @@
 package com.fullstack.bookShop.service.impl;
 
-import com.fullstack.bookShop.dto.pagination.ResultPaginationDTO;
-import com.fullstack.bookShop.dto.rating.RestRatingCreateDTO;
-import com.fullstack.bookShop.dto.rating.RestRatingViewDTO;
+import com.fullstack.bookShop.dto.response.RatingResponse;
+import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.mapper.RatingMapper;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Rating;
 import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.repository.RatingRepository;
-import com.fullstack.bookShop.service.BookService;
-import com.fullstack.bookShop.service.RatingService;
-import com.fullstack.bookShop.service.UserService;
-import com.fullstack.bookShop.util.pagination.PageUtil;
+import com.fullstack.bookShop.service.interfaces.BookService;
+import com.fullstack.bookShop.service.interfaces.RatingService;
+import com.fullstack.bookShop.service.interfaces.UserService;
+import com.fullstack.bookShop.util.enums.BookEnum;
+import com.fullstack.bookShop.util.enums.RatingEnum;
+import com.fullstack.bookShop.util.enums.UserEnum;
+import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,48 +25,73 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class RatingServiceImpl implements RatingService {
 
-    private final RatingRepository ratingRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RatingServiceImpl.class);
 
     private final UserService userService;
 
     private final BookService bookService;
 
-    private void validateAndSetUserAndBook(Rating ratingRequest, Rating currentRating) {
-        if (ratingRequest.getUser() != null) {
-            if (!userService.checkIdExists(ratingRequest.getUser().getId())) {
-                throw new NoSuchElementException("User with id '" + ratingRequest.getUser().getId() + "' not exist!");
-            }
-            User userGetById = userService.getUserById(ratingRequest.getUser().getId());
-            currentRating.setUser(userGetById);
-        }
+    private final RatingMapper ratingMapper;
 
-        if (ratingRequest.getBook() != null) {
-            if (!bookService.checkIdExists(ratingRequest.getBook().getId())) {
-                throw new NoSuchElementException("Book with id '" + ratingRequest.getBook().getId() + "' not exist!");
-            }
-            Book bookGetById = bookService.getBookById(ratingRequest.getBook().getId());
-            currentRating.setBook(bookGetById);
-        }
+    private final RatingRepository ratingRepository;
+
+    @Override
+    public PaginationResponse fetchAllRatings(Specification<Rating> spec, Pageable pageable) {
+        Page<Rating> ratingPage = ratingRepository.findAll(spec, pageable);
+
+        List<RatingResponse> ratingResponseList = ratingPage.getContent()
+                .stream()
+                .map(ratingMapper::convertRatingToViewResponse)
+                .toList();
+
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(ratingPage, pageable);
+        paginationResponse.setResult(ratingResponseList);
+        return paginationResponse;
+    }
+
+    @Override
+    public PaginationResponse fetchListRatingsByBookId(Long bookId, Pageable pageable) {
+        Page<Rating> ratingPage = ratingRepository.findAllByBookId(bookId, pageable);
+
+        List<RatingResponse> ratingResponseList = ratingPage.getContent()
+                .stream()
+                .map(ratingMapper::convertRatingToViewResponse)
+                .toList();
+
+        PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(ratingPage, pageable);
+        paginationResponse.setResult(ratingResponseList);
+        return paginationResponse;
     }
 
     @Transactional
     @Override
-    public Rating createRating(Rating rating) {
-        validateAndSetUserAndBook(rating, rating);
-        return ratingRepository.save(rating);
+    public Rating createRating(Rating ratingRequest) {
+        LOGGER.info(
+                "Creating rating stars={}, comment={}",
+                ratingRequest.getStars(),
+                ratingRequest.getComment()
+        );
+
+        validateAndSetUserWithBook(ratingRequest, ratingRequest);
+
+        Rating ratingCreated = ratingRepository.save(ratingRequest);
+        LOGGER.info("Create rating successfully with id: {}", ratingCreated.getId());
+
+        return ratingCreated;
     }
 
     @Override
     public Rating getRatingById(Long id) {
         return ratingRepository
                 .findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Rating with id '" + id + "' not found!"));
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format(RatingEnum.ID_NOT_FOUND.getMessage(), id)
+                ));
     }
 
     @Override
@@ -69,38 +99,8 @@ public class RatingServiceImpl implements RatingService {
         return ratingRepository
                 .findByUserIdAndBookId(userId, bookId)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "No rating found with user id '" + userId + "' and book id '" + bookId + "'!")
-                );
-    }
-
-    @Override
-    public ResultPaginationDTO fetchListRatingsByBookId(Long bookId, Pageable pageable) {
-        Page<Rating> ratingPage = ratingRepository.findAllByBookId(bookId, pageable);
-
-        List<RestRatingViewDTO> ratingViewDTOList = ratingPage.getContent()
-                .stream()
-                .map(this::convertRatingToRestRatingViewDTO)
-                .toList();
-
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(ratingPage, pageable);
-        resultPaginationDTO.setResult(ratingViewDTOList);
-
-        return resultPaginationDTO;
-    }
-
-    @Override
-    public ResultPaginationDTO fetchListRatings(Specification<Rating> spec, Pageable pageable) {
-        Page<Rating> ratingPage = ratingRepository.findAll(spec, pageable);
-
-        List<RestRatingViewDTO> ratingViewDTOList = ratingPage.getContent()
-                .stream()
-                .map(this::convertRatingToRestRatingViewDTO)
-                .toList();
-
-        ResultPaginationDTO resultPaginationDTO = PageUtil.handleFetchAllDataWithPagination(ratingPage, pageable);
-        resultPaginationDTO.setResult(ratingViewDTOList);
-
-        return resultPaginationDTO;
+                        String.format(RatingEnum.USER_BOOK_NOT_FOUND.getMessage(), userId, bookId)
+                ));
     }
 
     @Override
@@ -111,61 +111,37 @@ public class RatingServiceImpl implements RatingService {
     @Transactional
     @Override
     public void deleteRatingById(Long id) {
+        LOGGER.info("Deleting rating id: {}", id);
         if (!checkIdExists(id)) {
-            throw new NoSuchElementException("Rating with id '" + id + "' not found!");
+            throw new NoSuchElementException(
+                    String.format(RatingEnum.ID_NOT_FOUND.getMessage(), id)
+            );
         }
         ratingRepository.deleteById(id);
+        LOGGER.info("Delete rating successfully with id: {}", id);
     }
 
-    @Override
-    public RestRatingCreateDTO convertRatingToRestRatingCreateDTO(Rating rating) {
-        RestRatingCreateDTO.UserRatingCreateDTO userRatingCreateDTO = Optional.ofNullable(rating.getUser())
-                .map(user -> new RestRatingCreateDTO.UserRatingCreateDTO(
-                        user.getId(),
-                        user.getFullName(),
-                        user.getAvatar()
-                ))
-                .orElse(null);
+    private void validateAndSetUserWithBook(Rating currentRating, Rating ratingRequest) {
+        if (ratingRequest.getUser() != null) {
+            Long userId = ratingRequest.getUser().getId();
+            if (!userService.checkIdExists(userId)) {
+                throw new NoSuchElementException(
+                        String.format(UserEnum.ID_NOT_FOUND.getMessage(), userId)
+                );
+            }
+            User userGetById = userService.getUserById(userId);
+            currentRating.setUser(userGetById);
+        }
 
-        String bookName = Optional.ofNullable(rating.getBook())
-                .map(Book::getName)
-                .orElse(null);
-
-        return new RestRatingCreateDTO(
-                rating.getId(),
-                rating.getStars(),
-                rating.getComment(),
-                userRatingCreateDTO,
-                bookName,
-                rating.getCreatedAt(),
-                rating.getCreatedBy()
-        );
-    }
-
-    @Override
-    public RestRatingViewDTO convertRatingToRestRatingViewDTO(Rating rating) {
-        RestRatingViewDTO.UserRatingViewDTO userRatingViewDTO = Optional.ofNullable(rating.getUser())
-                .map(user -> new RestRatingViewDTO.UserRatingViewDTO(
-                        user.getId(),
-                        user.getFullName(),
-                        user.getAvatar()
-                ))
-                .orElse(null);
-
-        String bookName = Optional.ofNullable(rating.getBook())
-                .map(Book::getName)
-                .orElse(null);
-
-        return new RestRatingViewDTO(
-                rating.getId(),
-                rating.getStars(),
-                rating.getComment(),
-                userRatingViewDTO,
-                bookName,
-                rating.getCreatedAt(),
-                rating.getUpdatedAt(),
-                rating.getCreatedBy(),
-                rating.getUpdatedBy()
-        );
+        if (ratingRequest.getBook() != null) {
+            Long bookId = ratingRequest.getBook().getId();
+            if (!bookService.checkIdExists(bookId)) {
+                throw new NoSuchElementException(
+                        String.format(BookEnum.ID_NOT_FOUND.getMessage(), bookId)
+                );
+            }
+            Book bookGetById = bookService.getBookById(bookId);
+            currentRating.setBook(bookGetById);
+        }
     }
 }
