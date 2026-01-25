@@ -1,6 +1,6 @@
 package com.fullstack.bookShop.controller.vnpay;
 
-import com.fullstack.bookShop.dto.payment.RestPaymentDTO;
+import com.fullstack.bookShop.dto.response.payment.PaymentResponse;
 import com.fullstack.bookShop.service.interfaces.VnPayService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
@@ -21,10 +21,10 @@ public class VnPayController {
 
     @PostMapping("/create-url")
     @ApiMessage(ActionConstant.VN_PAY)
-    public ResponseEntity<RestPaymentDTO> createVnPayUrl(@RequestBody Map<String, Object> body)
+    public ResponseEntity<PaymentResponse> createVnPayUrl(@RequestBody Map<String, Object> body)
             throws UnsupportedEncodingException {
         String paymentUrl = vnPayService.createPaymentUrl(body);
-        return ResponseEntity.ok(new RestPaymentDTO(paymentUrl));
+        return ResponseEntity.ok(new PaymentResponse(paymentUrl));
     }
 
     // SỬA: Endpoint này nhận callback từ VNPay và redirect về frontend
