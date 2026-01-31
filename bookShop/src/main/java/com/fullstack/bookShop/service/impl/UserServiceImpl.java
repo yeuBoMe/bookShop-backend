@@ -5,25 +5,32 @@ import com.fullstack.bookShop.dto.request.user.UserPasswordRequest;
 import com.fullstack.bookShop.dto.response.UserResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.mapper.UserMapper;
 import com.fullstack.bookShop.model.Role;
 import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.repository.UserRepository;
+import com.fullstack.bookShop.service.interfaces.CloudinaryService;
+import com.fullstack.bookShop.service.interfaces.FileService;
 import com.fullstack.bookShop.service.interfaces.RoleService;
 import com.fullstack.bookShop.service.interfaces.UserService;
+import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
+import com.fullstack.bookShop.util.constant.FolderConstant;
 import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
 import com.fullstack.bookShop.util.constant.CommonMessage;
 import com.fullstack.bookShop.util.constant.PasswordConstant;
 import com.fullstack.bookShop.util.constant.SymbolConstant;
 import com.fullstack.bookShop.util.enums.RoleEnum;
 import com.fullstack.bookShop.util.enums.UserEnum;
+import com.fullstack.bookShop.util.file.FileValidUtil;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,9 +38,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -42,15 +53,22 @@ public class UserServiceImpl implements UserService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
+    @Value("${bookshop.upload-file.base-uri}")
+    private String baseURI;
+
     private final UserMapper userMapper;
 
     private final RoleService roleService;
+
+    private final FileService fileService;
 
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
 
     private final RatingRepository ratingRepository;
+
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public PaginationResponse fetchAllUsers(Specification<User> spec, Pageable pageable) {
@@ -159,7 +177,6 @@ public class UserServiceImpl implements UserService {
         userGetById.setPhone(userRequest.getPhone());
 
         LOGGER.info("Update user successfully with id: {}", id);
-
         return userRepository.save(userGetById);
     }
 
@@ -180,7 +197,6 @@ public class UserServiceImpl implements UserService {
         }
 
         LOGGER.info("Update user partial successfully with id: {}", id);
-
         return userRepository.save(userGetById);
     }
 
@@ -199,25 +215,51 @@ public class UserServiceImpl implements UserService {
         }
 
         LOGGER.info("Update user password successfully with id: {}", id);
-
-        return userRepository.save(userGetById);
-    }
-
-    @Override
-    public User uploadUserAvatar(Long id, String avatarRequest) {
-        LOGGER.info("Uploading avatar for user id={}, avatar={}", id, avatarRequest);
-
-        User userGetById = getUserById(id);
-        userGetById.setAvatar(avatarRequest);
-
-        LOGGER.info("Upload avatar successfully for user id={}", id);
         return userRepository.save(userGetById);
     }
 
     @Transactional
     @Override
-    public User removeUserAvatar(Long id, String avatarRequest) {
-        LOGGER.info("Removing avatar for user id={}, avatar={}", id, avatarRequest);
+    public User uploadUserAvatarInLocal(Long id, MultipartFile file)
+            throws FileException,
+                   URISyntaxException,
+                   IOException {
+
+        LOGGER.info("Uploading avatar in local for user id={}, avatar={}", id, file);
+
+        User userGetById = getUserById(id);
+        FileValidUtil.validateSingleFile(file);
+        fileService.createUploadFolder(baseURI + FolderConstant.AVATAR);
+
+        String fileUploaded = fileService.storeSingleFile(file, FolderConstant.AVATAR);
+        userGetById.setAvatar(fileUploaded);
+
+        LOGGER.info("Upload avatar in local successfully for user id={}", id);
+        return userRepository.save(userGetById);
+    }
+
+    @Transactional
+    @Override
+    public User uploadUserAvatarToCloud(Long id, MultipartFile file) throws FileException, IOException {
+        LOGGER.info("Uploading avatar to cloud for user id={}, avatar={}", id, file);
+
+        User userGetById = getUserById(id);
+        FileValidUtil.validateSingleFile(file);
+        Map<String, Object> filePushToCloudinary = cloudinaryService.uploadImageToCloudinary(file);
+
+        String fileUploaded = CloudinaryUtil.getFilePushedFromCloudinary(filePushToCloudinary);
+        userGetById.setAvatar(fileUploaded);
+
+        LOGGER.info("Upload avatar to cloud successfully for user id={}", id);
+        return userRepository.save(userGetById);
+    }
+
+    @Transactional
+    @Override
+    public User removeUserAvatarInLocal(Long id, String avatarRequest) throws URISyntaxException, IOException {
+        LOGGER.info("Removing avatar in local for user id={}, avatar={}", id, avatarRequest);
+
+        fileService.deleteSingleFile(avatarRequest, FolderConstant.AVATAR);
 
         User userGetById = getUserById(id);
         String userAvatar = userGetById.getAvatar();
@@ -226,7 +268,26 @@ public class UserServiceImpl implements UserService {
             userGetById.setAvatar(null);
         }
 
-        LOGGER.info("Remove avatar successfully for user id={}", id);
+        LOGGER.info("Remove avatar in local successfully for user id={}", id);
+        return userRepository.save(userGetById);
+    }
+
+    @Transactional
+    @Override
+    public User removeUserAvatarInCloud(Long id, String avatarRequest) throws IOException {
+        LOGGER.info("Removing avatar in cloud for user id={}, avatar={}", id, avatarRequest);
+
+        String publicId = CloudinaryUtil.generatePublicId(avatarRequest);
+        cloudinaryService.deleteImageFromCloudinary(publicId);
+
+        User userGetById = getUserById(id);
+        String userAvatar = userGetById.getAvatar();
+
+        if (userAvatar != null && userAvatar.equals(avatarRequest)) {
+            userGetById.setAvatar(null);
+        }
+
+        LOGGER.info("Remove avatar in cloud successfully for user id={}", id);
         return userRepository.save(userGetById);
     }
 

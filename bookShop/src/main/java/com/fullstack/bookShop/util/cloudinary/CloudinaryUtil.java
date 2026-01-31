@@ -1,8 +1,10 @@
 package com.fullstack.bookShop.util.cloudinary;
 
+import com.fullstack.bookShop.util.constant.CloudinaryConstant;
 import com.fullstack.bookShop.util.constant.SymbolConstant;
 
 import java.util.List;
+import java.util.Map;
 
 public final class CloudinaryUtil {
 
@@ -18,5 +20,10 @@ public final class CloudinaryUtil {
         return fileNames.stream()
                 .map(CloudinaryUtil::generatePublicId)
                 .toList();
+    }
+
+    public static String getFilePushedFromCloudinary(Map<String, Object> filePushToCloudinary) {
+        return filePushToCloudinary.get(CloudinaryConstant.PUBLIC_ID) + SymbolConstant.DOT
+                + filePushToCloudinary.get(CloudinaryConstant.FORMAT);
     }
 }

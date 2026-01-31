@@ -3,6 +3,7 @@ package com.fullstack.bookShop.service.impl;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.mapper.BookMapper;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Category;
@@ -11,25 +12,31 @@ import com.fullstack.bookShop.repository.OrderDetailRepository;
 import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.service.interfaces.BookService;
 import com.fullstack.bookShop.service.interfaces.CategoryService;
+import com.fullstack.bookShop.service.interfaces.CloudinaryService;
+import com.fullstack.bookShop.service.interfaces.FileService;
+import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
 import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.constant.FolderConstant;
 import com.fullstack.bookShop.util.enums.BookEnum;
 import com.fullstack.bookShop.util.enums.CategoryEnum;
+import com.fullstack.bookShop.util.file.FileValidUtil;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,13 +44,20 @@ public class BookServiceImpl implements BookService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BookServiceImpl.class);
 
+    @Value("${bookshop.upload-file.base-uri}")
+    private String baseURI;
+
     private final BookMapper bookMapper;
 
     private final BookRepository bookRepository;
 
+    private final FileService fileService;
+
     private final CategoryService categoryService;
 
     private final RatingRepository ratingRepository;
+
+    private final CloudinaryService cloudinaryService;
 
     private final OrderDetailRepository orderDetailRepository;
 
@@ -89,7 +103,7 @@ public class BookServiceImpl implements BookService {
     public Book createBook(Book bookRequest) {
         LOGGER.info(
                 "Creating book name={}, introduceText={}, description={}, " +
-                "reader={}, price={}, quantity={}, author={}, sold={}, category={}",
+                        "reader={}, price={}, quantity={}, author={}, sold={}, category={}",
                 bookRequest.getName(),
                 bookRequest.getIntroduceText(),
                 bookRequest.getDescription(),
@@ -116,8 +130,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public Book updateBookById(Long id, Book bookRequest) {
         LOGGER.info("Updating book id: {}", id);
-        Book bookGetById = getBookById(id);
 
+        Book bookGetById = getBookById(id);
         validateAndSetCategory(bookGetById, bookRequest);
         validateBookForUpdate(bookGetById, bookRequest);
 
@@ -137,8 +151,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public Book partialUpdateBookById(Long id, Book bookUpdated) {
         LOGGER.info("Updating book partial id: {}", id);
-        Book bookGetById = getBookById(id);
 
+        Book bookGetById = getBookById(id);
         validateAndSetCategory(bookGetById, bookUpdated);
 
         if (bookUpdated.getName() != null && !bookUpdated.getName().trim().isEmpty()) {
@@ -169,47 +183,142 @@ public class BookServiceImpl implements BookService {
         return bookRepository.save(bookGetById);
     }
 
+    @Transactional
     @Override
-    public Book uploadBookSingleImage(Long id, String image) {
-        LOGGER.info("Uploading image for book id={}, image={}", id, image);
+    public Book uploadBookSingleImageInLocal(Long id, MultipartFile file)
+            throws FileException,
+                   URISyntaxException,
+                   IOException {
+
+        LOGGER.info("Uploading image in local for book id={}, image={}", id, file);
 
         Book bookGetById = getBookById(id);
-        bookGetById.setImages(List.of(image));
+        FileValidUtil.validateSingleFile(file);
+        fileService.createUploadFolder(baseURI + FolderConstant.BOOK);
 
-        LOGGER.info("Upload image successfully for book id: {}", id);
+        String fileUploaded = fileService.storeSingleFile(file, FolderConstant.BOOK);
+        bookGetById.setImages(List.of(fileUploaded));
+
+        LOGGER.info("Upload image in local successfully for book id: {}", id);
         return bookRepository.save(bookGetById);
     }
 
+    @Transactional
     @Override
-    public Book uploadBookMultipleImages(Long id, List<String> imageList) {
-        LOGGER.info("Uploading multiple images for book id={}, size={}", id, imageList.size());
+    public Book uploadBookSingleImageToCloud(Long id, MultipartFile file) throws FileException, IOException {
+        LOGGER.info("Uploading image to cloud for book id={}, image={}", id, file);
 
         Book bookGetById = getBookById(id);
-        bookGetById.setImages(imageList);
+        FileValidUtil.validateSingleFile(file);
+        Map<String, Object> filePushToCloudinary = cloudinaryService.uploadImageToCloudinary(file);
 
-        LOGGER.info("Upload multiple images successfully for book id: {}", id);
+        String fileUploaded = CloudinaryUtil.getFilePushedFromCloudinary(filePushToCloudinary);
+        bookGetById.setImages(List.of(fileUploaded));
+
+        LOGGER.info("Upload image to cloud successfully for book id: {}", id);
         return bookRepository.save(bookGetById);
     }
 
+    @Transactional
     @Override
-    public Book removeBookSingleImage(Long id, String image) {
-        LOGGER.info("Removing single image for book id={}, image={}", id, image);
+    public Book uploadBookMultipleImagesInLocal(Long id, List<MultipartFile> fileList)
+            throws FileException,
+                   URISyntaxException,
+                   IOException {
+
+        LOGGER.info("Uploading multiple images in local for book id={}, size={}", id, fileList.size());
+
+        Book bookGetById = getBookById(id);
+        FileValidUtil.validateMultipleFiles(fileList);
+        fileService.createUploadFolder(baseURI + FolderConstant.BOOK);
+
+        List<String> fileNames = fileService.storeMultipleFiles(fileList, FolderConstant.BOOK);
+        bookGetById.setImages(fileNames);
+
+        LOGGER.info("Upload multiple images in local successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Transactional
+    @Override
+    public Book uploadBookMultipleImagesToCloud(Long id, List<MultipartFile> fileList)
+            throws FileException, IOException {
+
+        LOGGER.info("Uploading multiple images to cloud for book id={}, size={}", id, fileList.size());
+
+        FileValidUtil.validateMultipleFiles(fileList);
+        List<String> fileNames = new ArrayList<>();
+
+        List<Map<String, Object>> listImagesInCloud = cloudinaryService.uploadMultipleImagesToCloudinary(fileList);
+        for (Map<String, Object> image : listImagesInCloud) {
+            String fileUploaded = CloudinaryUtil.getFilePushedFromCloudinary(image);
+            fileNames.add(fileUploaded);
+        }
+
+        Book bookGetById = getBookById(id);
+        bookGetById.setImages(fileNames);
+
+        LOGGER.info("Upload multiple images to cloud successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Transactional
+    @Override
+    public Book removeBookSingleImageInLocal(Long id, String image) throws URISyntaxException, IOException {
+        LOGGER.info("Removing single image in local for book id={}, image={}", id, image);
+
+        fileService.deleteSingleFile(image, FolderConstant.BOOK);
 
         Book bookGetById = getBookById(id);
         bookGetById.getImages().remove(image);
 
-        LOGGER.info("Remove image successfully for book id: {}", id);
+        LOGGER.info("Remove image in local successfully for book id: {}", id);
         return bookRepository.save(bookGetById);
     }
 
+    @Transactional
     @Override
-    public Book removeBookMultipleImages(Long id, List<String> imageList) {
-        LOGGER.info("Removing multiple images for book id={}, size={}", id, imageList.size());
+    public Book removeBookSingleImageInCloud(Long id, String image) throws IOException {
+        LOGGER.info("Removing single image in cloud for book id={}, image={}", id, image);
+
+        String publicId = CloudinaryUtil.generatePublicId(image);
+        cloudinaryService.deleteImageFromCloudinary(publicId);
+
+        Book bookGetById = getBookById(id);
+        bookGetById.getImages().remove(image);
+
+        LOGGER.info("Remove image in cloud successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Transactional
+    @Override
+    public Book removeBookMultipleImagesInLocal(Long id, List<String> imageList)
+            throws URISyntaxException, IOException {
+
+        LOGGER.info("Removing multiple images in local for book id={}, size={}", id, imageList.size());
+
+        fileService.deleteMultipleFiles(imageList, FolderConstant.BOOK);
 
         Book bookGetById = getBookById(id);
         bookGetById.getImages().removeAll(imageList);
 
-        LOGGER.info("Remove multiple images successfully for book id: {}", id);
+        LOGGER.info("Remove multiple images in local successfully for book id: {}", id);
+        return bookRepository.save(bookGetById);
+    }
+
+    @Transactional
+    @Override
+    public Book removeBookMultipleImagesInCloud(Long id, List<String> imageList) throws Exception {
+        LOGGER.info("Removing multiple images in cloud for book id={}, size={}", id, imageList.size());
+
+        List<String> publicIdsList = CloudinaryUtil.generateListPublicIds(imageList);
+        cloudinaryService.deleteMultipleImagesFromCloudinary(publicIdsList);
+
+        Book bookGetById = getBookById(id);
+        bookGetById.getImages().removeAll(imageList);
+
+        LOGGER.info("Remove multiple images in cloud successfully for book id: {}", id);
         return bookRepository.save(bookGetById);
     }
 

@@ -86,10 +86,4 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
         LOGGER.info("Delete multiple files from Cloudinary successfully with total={}", publicIds.size());
     }
-
-    @Override
-    public String getFilePushedFromCloudinary(Map<String, Object> filePushToCloudinary) {
-        return filePushToCloudinary.get(CloudinaryConstant.PUBLIC_ID) + SymbolConstant.DOT
-                + filePushToCloudinary.get(CloudinaryConstant.FORMAT);
-    }
 }

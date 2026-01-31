@@ -21,8 +21,8 @@ public final class OrderConstant {
     public static final String ADDRESS_REQUIRED = "Address is required";
 
     public static final String ADDRESS_MAX_LENGTH = "Address must be less than 255 characters";
-    public static final String ADDRESS_INVALID =
 
+    public static final String ADDRESS_INVALID =
             "Address can only contain letters, numbers, spaces, and basic punctuation (.,-/#:')";
 
     public static final String PAYMENT_METHOD_REQUIRED = "Payment method is required";

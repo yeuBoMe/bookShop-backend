@@ -5,10 +5,14 @@ import com.fullstack.bookShop.dto.request.user.UserPasswordRequest;
 import com.fullstack.bookShop.dto.response.UserResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.model.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 public interface UserService {
@@ -31,9 +35,13 @@ public interface UserService {
 
     User updateUserPasswordById(Long id, UserPasswordRequest userPasswordRequest);
 
-    User uploadUserAvatar(Long id, String avatarRequest);
+    User uploadUserAvatarInLocal(Long id, MultipartFile file) throws FileException, URISyntaxException, IOException;
 
-    User removeUserAvatar(Long id, String avatarRequest);
+    User uploadUserAvatarToCloud(Long id, MultipartFile file) throws FileException, IOException;
+
+    User removeUserAvatarInLocal(Long id, String avatarRequest) throws URISyntaxException, IOException;
+
+    User removeUserAvatarInCloud(Long id, String avatarRequest) throws IOException;
 
     void saveUserRefreshToken(String email, String refreshToken);
 

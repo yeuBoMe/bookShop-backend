@@ -16,6 +16,4 @@ public interface CloudinaryService {
     void deleteImageFromCloudinary(String publicId) throws IOException;
 
     void deleteMultipleImagesFromCloudinary(List<String> publicIds) throws Exception;
-
-    String getFilePushedFromCloudinary(Map<String, Object> filePushToCloudinary);
 }

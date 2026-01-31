@@ -3,10 +3,14 @@ package com.fullstack.bookShop.service.interfaces;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
+import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.model.Book;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 public interface BookService {
@@ -23,13 +27,27 @@ public interface BookService {
 
     Book partialUpdateBookById(Long id, Book bookRequest);
 
-    Book uploadBookSingleImage(Long id, String image);
+    Book uploadBookSingleImageInLocal(Long id, MultipartFile file)
+            throws FileException,
+                   URISyntaxException,
+                   IOException;
 
-    Book uploadBookMultipleImages(Long id, List<String> imageList);
+    Book uploadBookSingleImageToCloud(Long id, MultipartFile file) throws FileException, IOException;
 
-    Book removeBookSingleImage(Long id, String image);
+    Book uploadBookMultipleImagesInLocal(Long id, List<MultipartFile> fileList)
+            throws FileException,
+                   URISyntaxException,
+                   IOException;
 
-    Book removeBookMultipleImages(Long id, List<String> imageList);
+    Book uploadBookMultipleImagesToCloud(Long id, List<MultipartFile> fileList) throws FileException, IOException;
+
+    Book removeBookSingleImageInLocal(Long id, String image) throws URISyntaxException, IOException;
+
+    Book removeBookSingleImageInCloud(Long id, String image) throws IOException;
+
+    Book removeBookMultipleImagesInLocal(Long id, List<String> imageList) throws URISyntaxException, IOException;
+
+    Book removeBookMultipleImagesInCloud(Long id, List<String> imageList) throws Exception;
 
     Book getBookById(Long id);
 

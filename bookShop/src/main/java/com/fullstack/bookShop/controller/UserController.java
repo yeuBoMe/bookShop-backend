@@ -7,22 +7,16 @@ import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
 import com.fullstack.bookShop.mapper.UserMapper;
 import com.fullstack.bookShop.model.User;
-import com.fullstack.bookShop.service.interfaces.CloudinaryService;
-import com.fullstack.bookShop.service.interfaces.FileService;
 import com.fullstack.bookShop.service.interfaces.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.util.annotation.HasAdminOrSelf;
-import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
 import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
-import com.fullstack.bookShop.util.constant.FolderConstant;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
-import com.fullstack.bookShop.util.file.FileValidUtil;
 import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -34,23 +28,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    @Value("${bookshop.upload-file.base-uri")
-    private String baseURI;
-
     private final UserMapper userMapper;
 
     private final UserService userService;
-
-    private final FileService fileService;
-
-    private final CloudinaryService cloudinaryService;
 
     @HasAdminOrSelf
     @GetMapping
@@ -116,19 +102,13 @@ public class UserController {
     @HasAdminOrSelf
     @PatchMapping("/{id}/avatar")
     @ApiMessage(ActionConstant.USER_UPLOAD_AVATAR)
-    public ResponseEntity<UserResponse> uploadUserAvatarRequest(
+    public ResponseEntity<UserResponse> uploadUserAvatarInLocalRequest(
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
     ) throws FileException,
              URISyntaxException,
-             IOException
-    {
-        FileValidUtil.validateSingleFile(file);
-        fileService.createUploadFolder(baseURI + FolderConstant.AVATAR);
-
-        String fileUploaded = fileService.storeSingleFile(file, FolderConstant.AVATAR);
-        User userUpdated = userService.uploadUserAvatar(id, fileUploaded);
-
+             IOException {
+        User userUpdated = userService.uploadUserAvatarInLocal(id, file);
         return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
     }
 
@@ -139,13 +119,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) MultipartFile file
     ) throws FileException, IOException {
-
-        FileValidUtil.validateSingleFile(file);
-        Map<String, Object> filePushToCloudinary = cloudinaryService.uploadImageToCloudinary(file);
-
-        String fileUploaded = cloudinaryService.getFilePushedFromCloudinary(filePushToCloudinary);
-        User userUpdated = userService.uploadUserAvatar(id, fileUploaded);
-
+        User userUpdated = userService.uploadUserAvatarToCloud(id, file);
         return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
     }
 
@@ -156,10 +130,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws URISyntaxException, IOException {
-
-        fileService.deleteSingleFile(fileName, FolderConstant.AVATAR);
-        User userRemoveAvatar = userService.removeUserAvatar(id, fileName);
-
+        User userRemoveAvatar = userService.removeUserAvatarInLocal(id, fileName);
         return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userRemoveAvatar));
     }
 
@@ -170,11 +141,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws IOException {
-
-        String publicId = CloudinaryUtil.generatePublicId(fileName);
-        cloudinaryService.deleteImageFromCloudinary(publicId);
-        User userRemoveAvatar = userService.removeUserAvatar(id, fileName);
-
+        User userRemoveAvatar = userService.removeUserAvatarInCloud(id, fileName);
         return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userRemoveAvatar));
     }
 
@@ -190,7 +157,7 @@ public class UserController {
     @PostMapping("/import")
     @ApiMessage(ActionConstant.USER_IMPORT)
     public ResponseEntity<ImportFileResponse<UserResponse>> importUsersFromFileRequest(
-            @Valid List<UserCreateRequest> userCreateRequestList
+            @Valid @RequestBody List<UserCreateRequest> userCreateRequestList
     ) {
         ImportFileResponse<UserResponse> importFileResponse = userService.importUsersFromFiles(userCreateRequestList);
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
