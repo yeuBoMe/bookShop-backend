@@ -208,7 +208,7 @@ public class UserServiceImpl implements UserService {
         User userGetById = getUserById(id);
 
         if (!passwordEncoder.matches(userPasswordRequest.getCurrentPassword(), userGetById.getPassword())) {
-            throw new IllegalArgumentException(String.format(PasswordConstant.PASSWORD_NOT_MATCH));
+            throw new IllegalArgumentException(PasswordConstant.PASSWORD_NOT_MATCH);
         }
         if (userPasswordRequest.getNewPassword() != null && !userPasswordRequest.getNewPassword().trim().isEmpty()) {
             userGetById.setPassword(passwordEncoder.encode(userPasswordRequest.getNewPassword()));
