@@ -52,7 +52,7 @@ public class RatingController {
         Rating ratingCreated = ratingService.createRating(ratingRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ratingMapper.convertRatingToCreateResponse(ratingCreated));
+                .body(ratingMapper.toResponse(ratingCreated, ActionConstant.CREATE));
     }
 
     @GetMapping("/book/{bookId}/user/{userId}")
@@ -62,7 +62,7 @@ public class RatingController {
             @PathVariable Long userId
     ) {
         Rating ratingGetByUserAndBook = ratingService.getRatingByUserIdAndBookId(userId, bookId);
-        return ResponseEntity.ok(ratingMapper.convertRatingToViewResponse(ratingGetByUserAndBook));
+        return ResponseEntity.ok(ratingMapper.toResponse(ratingGetByUserAndBook, ActionConstant.FETCH));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -70,7 +70,7 @@ public class RatingController {
     @ApiMessage(ActionConstant.RATING_GET)
     public ResponseEntity<RatingResponse> getRatingByIdRequest(@PathVariable Long id) {
         Rating ratingGetById = ratingService.getRatingById(id);
-        return ResponseEntity.ok(ratingMapper.convertRatingToViewResponse(ratingGetById));
+        return ResponseEntity.ok(ratingMapper.toResponse(ratingGetById, ActionConstant.FETCH));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")

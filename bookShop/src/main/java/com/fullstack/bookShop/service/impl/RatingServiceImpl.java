@@ -10,6 +10,7 @@ import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.service.interfaces.BookService;
 import com.fullstack.bookShop.service.interfaces.RatingService;
 import com.fullstack.bookShop.service.interfaces.UserService;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.BookEnum;
 import com.fullstack.bookShop.util.enums.RatingEnum;
 import com.fullstack.bookShop.util.enums.UserEnum;
@@ -46,7 +47,7 @@ public class RatingServiceImpl implements RatingService {
 
         List<RatingResponse> ratingResponseList = ratingPage.getContent()
                 .stream()
-                .map(ratingMapper::convertRatingToViewResponse)
+                .map(rating -> ratingMapper.toResponse(rating, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(ratingPage, pageable);
@@ -60,7 +61,7 @@ public class RatingServiceImpl implements RatingService {
 
         List<RatingResponse> ratingResponseList = ratingPage.getContent()
                 .stream()
-                .map(ratingMapper::convertRatingToViewResponse)
+                .map(rating -> ratingMapper.toResponse(rating, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(ratingPage, pageable);

@@ -10,6 +10,7 @@ import com.fullstack.bookShop.repository.BookRepository;
 import com.fullstack.bookShop.repository.CategoryRepository;
 import com.fullstack.bookShop.service.interfaces.CategoryService;
 import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.CategoryEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import jakarta.validation.ConstraintViolation;
@@ -45,7 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         List<CategoryResponse> categoryResponseList = categoryPage.getContent()
                 .stream()
-                .map(categoryMapper::convertCategoryToViewResponse)
+                .map(category -> categoryMapper.toResponse(category, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(categoryPage, pageable);
@@ -146,7 +147,7 @@ public class CategoryServiceImpl implements CategoryService {
                 validateCategoryForImport(categoryCreateRequest);
 
                 Category category = buildCategoryFromRestCategoryCreateDTO(categoryCreateRequest);
-                CategoryResponse categoryResponse = categoryMapper.convertCategoryToCreateResponse(category);
+                CategoryResponse categoryResponse = categoryMapper.toResponse(category, ActionConstant.CREATE);
 
                 successData.add(categoryResponse);
                 countSuccess++;

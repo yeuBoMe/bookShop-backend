@@ -2,46 +2,33 @@ package com.fullstack.bookShop.mapper;
 
 import com.fullstack.bookShop.dto.response.PermissionResponse;
 import com.fullstack.bookShop.model.Permission;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PermissionMapper {
 
-    public PermissionResponse convertPermissionToCreateResponse(Permission permission) {
-        return PermissionResponse.builder()
+    public PermissionResponse toResponse(Permission permission, String methodName) {
+        PermissionResponse.PermissionResponseBuilder builder = PermissionResponse.builder()
                 .id(permission.getId())
                 .name(permission.getName())
                 .apiPath(permission.getApiPath())
                 .method(permission.getMethod())
-                .module(permission.getModule())
-                .createdAt(permission.getCreatedAt())
-                .createdBy(permission.getCreatedBy())
-                .build();
-    }
+                .module(permission.getModule());
 
-    public PermissionResponse convertPermissionToUpdateResponse(Permission permission) {
-        return PermissionResponse.builder()
-                .id(permission.getId())
-                .name(permission.getName())
-                .apiPath(permission.getApiPath())
-                .method(permission.getMethod())
-                .module(permission.getModule())
-                .updatedAt(permission.getUpdatedAt())
-                .updatedBy(permission.getUpdatedBy())
-                .build();
-    }
+        if (ActionConstant.CREATE.equals(methodName)) {
+            builder.createdAt(permission.getCreatedAt())
+                    .createdBy(permission.getCreatedBy());
+        } else if (ActionConstant.UPDATE.equals(methodName)) {
+            builder.updatedAt(permission.getUpdatedAt())
+                    .updatedBy(permission.getUpdatedBy());
+        } else if (ActionConstant.FETCH.equals(methodName)) {
+            builder.createdAt(permission.getCreatedAt())
+                    .updatedAt(permission.getUpdatedAt())
+                    .createdBy(permission.getCreatedBy())
+                    .updatedBy(permission.getUpdatedBy());
+        }
 
-    public PermissionResponse convertPermissionToViewResponse(Permission permission) {
-        return PermissionResponse.builder()
-                .id(permission.getId())
-                .name(permission.getName())
-                .apiPath(permission.getApiPath())
-                .method(permission.getMethod())
-                .module(permission.getModule())
-                .createdAt(permission.getCreatedAt())
-                .updatedAt(permission.getUpdatedAt())
-                .createdBy(permission.getCreatedBy())
-                .updatedBy(permission.getUpdatedBy())
-                .build();
+        return builder.build();
     }
 }

@@ -17,6 +17,7 @@ import com.fullstack.bookShop.service.interfaces.FileService;
 import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
 import com.fullstack.bookShop.util.constant.CommonMessage;
 import com.fullstack.bookShop.util.constant.FolderConstant;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.BookEnum;
 import com.fullstack.bookShop.util.enums.CategoryEnum;
 import com.fullstack.bookShop.util.file.FileValidUtil;
@@ -67,7 +68,7 @@ public class BookServiceImpl implements BookService {
 
         List<BookResponse> bookResponseList = bookPage.getContent()
                 .stream()
-                .map(bookMapper::convertBookToViewResponse)
+                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(bookPage, pageable);
@@ -81,7 +82,7 @@ public class BookServiceImpl implements BookService {
 
         List<BookResponse> bookResponseList = bookPageWithAverageRating.getContent()
                 .stream()
-                .map(bookMapper::convertBookToViewResponse)
+                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse =
@@ -94,7 +95,7 @@ public class BookServiceImpl implements BookService {
     public List<BookResponse> fetchAllBookResponsesFromBooks() {
         return bookRepository.findAll()
                 .stream()
-                .map(bookMapper::convertBookToViewResponse)
+                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
                 .toList();
     }
 
@@ -112,9 +113,7 @@ public class BookServiceImpl implements BookService {
                 bookRequest.getQuantity(),
                 bookRequest.getAuthor(),
                 bookRequest.getSold(),
-                Optional.ofNullable(bookRequest.getCategory())
-                        .map(Category::getName)
-                        .orElse(null)
+                bookMapper.convertCategory(bookRequest)
         );
 
         validateAndSetCategory(bookRequest, bookRequest);
@@ -367,7 +366,7 @@ public class BookServiceImpl implements BookService {
 
         for (int i = 0; i < bookList.size(); i++) {
             Book book = bookList.get(i);
-            BookResponse bookResponse = bookMapper.convertBookToCreateResponse(book);
+            BookResponse bookResponse = bookMapper.toResponse(book, ActionConstant.CREATE);
 
             try {
                 validateAndSetCategory(book, book);

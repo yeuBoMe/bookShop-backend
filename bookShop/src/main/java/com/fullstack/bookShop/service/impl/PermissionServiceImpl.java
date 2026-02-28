@@ -6,6 +6,7 @@ import com.fullstack.bookShop.mapper.PermissionMapper;
 import com.fullstack.bookShop.model.Permission;
 import com.fullstack.bookShop.repository.PermissionRepository;
 import com.fullstack.bookShop.service.interfaces.PermissionService;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.PermissionEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class PermissionServiceImpl implements PermissionService {
 
         List<PermissionResponse> permissionResponseList = permissionPage.getContent()
                 .stream()
-                .map(permissionMapper::convertPermissionToViewResponse)
+                .map(permission -> permissionMapper.toResponse(permission, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(permissionPage, pageable);

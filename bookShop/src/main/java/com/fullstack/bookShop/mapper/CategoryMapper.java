@@ -2,37 +2,30 @@ package com.fullstack.bookShop.mapper;
 
 import com.fullstack.bookShop.dto.response.CategoryResponse;
 import com.fullstack.bookShop.model.Category;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CategoryMapper {
 
-    public CategoryResponse convertCategoryToCreateResponse(Category category) {
-        return CategoryResponse.builder()
+    public CategoryResponse toResponse(Category category, String methodName) {
+        CategoryResponse.CategoryResponseBuilder builder = CategoryResponse.builder()
                 .id(category.getId())
-                .name(category.getName())
-                .createdAt(category.getCreatedAt())
-                .createdBy(category.getCreatedBy())
-                .build();
-    }
+                .name(category.getName());
 
-    public CategoryResponse convertCategoryToUpdateResponse(Category category) {
-        return CategoryResponse.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .updatedAt(category.getUpdatedAt())
-                .updatedBy(category.getUpdatedBy())
-                .build();
-    }
+        if (ActionConstant.CREATE.equals(methodName)) {
+            builder.createdAt(category.getCreatedAt())
+                    .createdBy(category.getCreatedBy());
+        } else if (ActionConstant.UPDATE.equals(methodName)) {
+            builder.updatedAt(category.getUpdatedAt())
+                    .updatedBy(category.getUpdatedBy());
+        } else if (ActionConstant.FETCH.equals(methodName)) {
+            builder.createdAt(category.getCreatedAt())
+                    .updatedAt(category.getUpdatedAt())
+                    .createdBy(category.getCreatedBy())
+                    .updatedBy(category.getUpdatedBy());
+        }
 
-    public CategoryResponse convertCategoryToViewResponse(Category category) {
-        return CategoryResponse.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .createdAt(category.getCreatedAt())
-                .updatedAt(category.getUpdatedAt())
-                .createdBy(category.getCreatedBy())
-                .updatedBy(category.getUpdatedBy())
-                .build();
+        return builder.build();
     }
 }

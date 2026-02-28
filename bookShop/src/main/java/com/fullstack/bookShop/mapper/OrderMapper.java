@@ -5,6 +5,7 @@ import com.fullstack.bookShop.dto.response.OrderResponse;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Order;
 import com.fullstack.bookShop.model.OrderDetail;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,8 +14,8 @@ import java.util.Optional;
 @Component
 public class OrderMapper {
 
-    public OrderResponse convertOrderToCreateResponse(Order order){
-        return OrderResponse.builder()
+    public OrderResponse toResponse(Order order, String methodName) {
+        OrderResponse.OrderResponseBuilder builder = OrderResponse.builder()
                 .id(order.getId())
                 .name(order.getName())
                 .email(order.getEmail())
@@ -23,44 +24,22 @@ public class OrderMapper {
                 .paymentMethod(order.getPaymentMethod())
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
-                .detail(convertListOrderDetails(order.getDetail()))
-                .createdAt(order.getCreatedAt())
-                .createdBy(order.getCreatedBy())
-                .build();
-    }
+                .detail(convertListOrderDetails(order.getDetail()));
 
-    public OrderResponse convertOrderToUpdateResponse(Order order){
-        return OrderResponse.builder()
-                .id(order.getId())
-                .name(order.getName())
-                .email(order.getEmail())
-                .phone(order.getPhone())
-                .address(order.getAddress())
-                .paymentMethod(order.getPaymentMethod())
-                .totalPrice(order.getTotalPrice())
-                .status(order.getStatus())
-                .detail(convertListOrderDetails(order.getDetail()))
-                .updatedAt(order.getUpdatedAt())
-                .updatedBy(order.getUpdatedBy())
-                .build();
-    }
+        if (ActionConstant.CREATE.equals(methodName)) {
+            builder.createdAt(order.getCreatedAt())
+                    .createdBy(order.getCreatedBy());
+        } else if (ActionConstant.UPDATE.equals(methodName)) {
+            builder.updatedAt(order.getUpdatedAt())
+                    .updatedBy(order.getUpdatedBy());
+        } else if (ActionConstant.FETCH.equals(methodName)) {
+            builder.createdAt(order.getCreatedAt())
+                    .updatedAt(order.getUpdatedAt())
+                    .createdBy(order.getCreatedBy())
+                    .updatedBy(order.getUpdatedBy());
+        }
 
-    public OrderResponse convertOrderToViewResponse(Order order){
-        return OrderResponse.builder()
-                .id(order.getId())
-                .name(order.getName())
-                .email(order.getEmail())
-                .phone(order.getPhone())
-                .address(order.getAddress())
-                .paymentMethod(order.getPaymentMethod())
-                .totalPrice(order.getTotalPrice())
-                .status(order.getStatus())
-                .detail(convertListOrderDetails(order.getDetail()))
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .createdBy(order.getCreatedBy())
-                .updatedBy(order.getUpdatedBy())
-                .build();
+        return builder.build();
     }
 
     private List<OrderDetailResponse> convertListOrderDetails(List<OrderDetail> orderDetailList) {
@@ -71,7 +50,7 @@ public class OrderMapper {
                         orderDetail.getId(),
                         orderDetail.getQuantity(),
                         convertBookName(orderDetail),
-                        convertPrice(orderDetail)
+                        convertBookPrice(orderDetail)
                 ))
                 .toList();
     }
@@ -82,7 +61,7 @@ public class OrderMapper {
                 .orElse(null);
     }
 
-    private Double convertPrice(OrderDetail orderDetail) {
+    private Double convertBookPrice(OrderDetail orderDetail) {
         return Optional.ofNullable(orderDetail.getBook())
                 .map(Book::getPrice)
                 .orElse(null);

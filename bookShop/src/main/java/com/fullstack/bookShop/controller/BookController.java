@@ -60,14 +60,14 @@ public class BookController {
         Book bookCreated = bookService.createBook(bookRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(bookMapper.convertBookToCreateResponse(bookCreated));
+                .body(bookMapper.toResponse(bookCreated, ActionConstant.CREATE));
     }
 
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.BOOK_GET)
     public ResponseEntity<BookResponse> getBookByIdRequest(@PathVariable Long id) {
         Book bookGetById = bookService.getBookById(id);
-        return ResponseEntity.ok(bookMapper.convertBookToViewResponse(bookGetById));
+        return ResponseEntity.ok(bookMapper.toResponse(bookGetById, ActionConstant.FETCH));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -78,7 +78,7 @@ public class BookController {
             @Valid @RequestBody Book bookRequest
     ) {
         Book bookUpdated = bookService.updateBookById(id, bookRequest);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -89,7 +89,7 @@ public class BookController {
             @Valid @RequestBody Book bookRequest
     ) {
         Book bookPartialUpdated = bookService.partialUpdateBookById(id, bookRequest);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookPartialUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookPartialUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -110,7 +110,7 @@ public class BookController {
              URISyntaxException,
              IOException {
         Book bookUpdated = bookService.uploadBookSingleImageInLocal(id, file);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -121,7 +121,7 @@ public class BookController {
             @RequestParam(name = "file", required = false) MultipartFile file
     ) throws FileException, IOException {
         Book bookUpdated = bookService.uploadBookSingleImageToCloud(id, file);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -134,7 +134,7 @@ public class BookController {
              URISyntaxException,
              IOException {
         Book bookUpdated = bookService.uploadBookMultipleImagesInLocal(id, files);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -145,7 +145,7 @@ public class BookController {
             @RequestParam(name = "files", required = false) List<MultipartFile> files
     ) throws FileException, IOException {
         Book bookUpdated = bookService.uploadBookMultipleImagesToCloud(id, files);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -156,7 +156,7 @@ public class BookController {
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws URISyntaxException, IOException {
         Book bookUpdated = bookService.removeBookSingleImageInLocal(id, fileName);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -167,7 +167,7 @@ public class BookController {
             @RequestParam(name = "imageName", required = false) String fileName
     ) throws IOException {
         Book bookUpdated = bookService.removeBookSingleImageInCloud(id, fileName);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -178,7 +178,7 @@ public class BookController {
             @Valid @RequestBody List<String> fileNames
     ) throws URISyntaxException, IOException {
         Book bookUpdated = bookService.removeBookMultipleImagesInLocal(id, fileNames);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -189,7 +189,7 @@ public class BookController {
             @Valid @RequestBody List<String> fileNames
     ) throws Exception {
         Book bookUpdated = bookService.removeBookMultipleImagesInCloud(id, fileNames);
-        return ResponseEntity.ok(bookMapper.convertBookToUpdateResponse(bookUpdated));
+        return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")

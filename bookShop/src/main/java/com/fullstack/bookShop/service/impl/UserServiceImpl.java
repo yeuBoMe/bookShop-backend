@@ -17,6 +17,7 @@ import com.fullstack.bookShop.service.interfaces.RoleService;
 import com.fullstack.bookShop.service.interfaces.UserService;
 import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
 import com.fullstack.bookShop.util.constant.FolderConstant;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
 import com.fullstack.bookShop.util.constant.CommonMessage;
 import com.fullstack.bookShop.util.constant.PasswordConstant;
@@ -76,7 +77,7 @@ public class UserServiceImpl implements UserService {
 
         List<UserResponse> userResponseList = userPage.getContent()
                 .stream()
-                .map(userMapper::convertUserToViewResponse)
+                .map(user -> userMapper.toResponse(user, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(userPage, pageable);
@@ -341,7 +342,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ImportFileResponse<UserResponse> importUsersFromFiles(List<UserCreateRequest> userCreateRequestList) {
+    public ImportFileResponse<UserResponse> importUsersFromFile(List<UserCreateRequest> userCreateRequestList) {
         ImportFileResponse<UserResponse> importFileResponse = new ImportFileResponse<>();
         List<UserResponse> successList = new ArrayList<>();
         List<ImportFileResponse.DetailFaultInfo<UserCreateRequest>> detailFaultInfoList = new ArrayList<>();
@@ -357,7 +358,7 @@ public class UserServiceImpl implements UserService {
                 validateUserForImport(userCreateRequest);
 
                 User userBuildFromUserCreateRequest = buildUserFromUserCreateRequest(userCreateRequest);
-                UserResponse userResponse = userMapper.convertUserToViewResponse(userBuildFromUserCreateRequest);
+                UserResponse userResponse = userMapper.toResponse(userBuildFromUserCreateRequest, ActionConstant.CREATE);
 
                 successList.add(userResponse);
                 countSuccess++;

@@ -53,5 +53,5 @@ public interface UserService {
 
     boolean checkPhoneExists(String phone);
 
-    ImportFileResponse<UserResponse> importUsersFromFiles(List<UserCreateRequest> userCreateRequestList);
+    ImportFileResponse<UserResponse> importUsersFromFile(List<UserCreateRequest> userCreateRequestList);
 }

@@ -49,7 +49,7 @@ public class RoleController {
         Role roleCreated = roleService.createRole(roleRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(roleMapper.convertRoleToCreateResponse(roleCreated));
+                .body(roleMapper.toRoleResponse(roleCreated, ActionConstant.CREATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -57,7 +57,7 @@ public class RoleController {
     @ApiMessage(ActionConstant.ROLE_GET)
     public ResponseEntity<RoleResponse> fetchRoleRequest(@PathVariable Long id) {
         Role roleGetById = roleService.getRoleById(id);
-        return ResponseEntity.ok(roleMapper.convertRoleToViewResponse(roleGetById));
+        return ResponseEntity.ok(roleMapper.toRoleResponse(roleGetById, ActionConstant.FETCH));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -68,7 +68,7 @@ public class RoleController {
             @Valid @RequestBody Role roleRequest
     ) {
         Role roleUpdated = roleService.updateRoleById(id, roleRequest);
-        return ResponseEntity.ok(roleMapper.convertRoleToUpdateResponse(roleUpdated));
+        return ResponseEntity.ok(roleMapper.toRoleResponse(roleUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -85,7 +85,7 @@ public class RoleController {
     public ResponseEntity<ImportFileResponse<RoleResponse>> importRolesFromFileRequest(
             @Valid @RequestBody List<RoleCreateRequest> roleCreateRequestList
     ) {
-        ImportFileResponse<RoleResponse> importFileResponse = roleService.importRolesFromFiles(roleCreateRequestList);
+        ImportFileResponse<RoleResponse> importFileResponse = roleService.importRolesFromFile(roleCreateRequestList);
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
                 .status(status)

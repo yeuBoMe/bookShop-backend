@@ -4,6 +4,12 @@ public final class ActionConstant {
 
     private ActionConstant() {}
 
+    // Method
+    public static final String FETCH = "Fetch";
+    public static final String CREATE = "Create";
+    public static final String UPDATE = "Update";
+    public static final String DELETE = "Delete";
+
     // Permission
     public static final String PERMISSION_FETCH_ALL = "Fetch all permissions";
     public static final String PERMISSION_CREATE = "Create permission";

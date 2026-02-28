@@ -28,5 +28,5 @@ public interface RoleService {
 
     boolean checkNameExistsIgnoreCase(String name);
 
-    ImportFileResponse<RoleResponse> importRolesFromFiles(List<RoleCreateRequest> roleCreateRequestList);
+    ImportFileResponse<RoleResponse> importRolesFromFile(List<RoleCreateRequest> roleCreateRequestList);
 }

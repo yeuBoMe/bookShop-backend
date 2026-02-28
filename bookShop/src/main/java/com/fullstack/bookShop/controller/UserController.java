@@ -55,7 +55,7 @@ public class UserController {
         User userCreated = userService.createUser(userRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userMapper.convertUserToCreateResponse(userCreated));
+                .body(userMapper.toResponse(userCreated, ActionConstant.CREATE));
     }
 
     @HasAdminOrSelf
@@ -63,7 +63,7 @@ public class UserController {
     @ApiMessage(ActionConstant.USER_GET)
     public ResponseEntity<UserResponse> fetchUserById(@PathVariable Long id) {
         User userGetById = userService.getUserById(id);
-        return ResponseEntity.ok(userMapper.convertUserToViewResponse(userGetById));
+        return ResponseEntity.ok(userMapper.toResponse(userGetById, ActionConstant.FETCH));
     }
 
     @HasAdminOrSelf
@@ -74,7 +74,7 @@ public class UserController {
             @Valid @RequestBody User userRequest
     ) {
         User userUpdated = userService.updateUserById(id, userRequest);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
+        return ResponseEntity.ok(userMapper.toResponse(userUpdated, ActionConstant.UPDATE));
     }
 
     @HasAdminOrSelf
@@ -85,7 +85,7 @@ public class UserController {
             @Valid @RequestBody User userRequest
     ) {
         User userPartialUpdated = userService.partialUpdateUserById(id, userRequest);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userPartialUpdated));
+        return ResponseEntity.ok(userMapper.toResponse(userPartialUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("#id == authentication.principal.claims['user']['id']")
@@ -96,7 +96,7 @@ public class UserController {
             @Valid @RequestBody UserPasswordRequest userPasswordRequest
     ) {
         User userPasswordUpdated = userService.updateUserPasswordById(id, userPasswordRequest);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userPasswordUpdated));
+        return ResponseEntity.ok(userMapper.toResponse(userPasswordUpdated, ActionConstant.UPDATE));
     }
 
     @HasAdminOrSelf
@@ -109,7 +109,7 @@ public class UserController {
              URISyntaxException,
              IOException {
         User userUpdated = userService.uploadUserAvatarInLocal(id, file);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
+        return ResponseEntity.ok(userMapper.toResponse(userUpdated, ActionConstant.UPDATE));
     }
 
     @HasAdminOrSelf
@@ -120,7 +120,7 @@ public class UserController {
             @RequestParam(name = "fileName", required = false) MultipartFile file
     ) throws FileException, IOException {
         User userUpdated = userService.uploadUserAvatarToCloud(id, file);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userUpdated));
+        return ResponseEntity.ok(userMapper.toResponse(userUpdated, ActionConstant.UPDATE));
     }
 
     @HasAdminOrSelf
@@ -131,7 +131,7 @@ public class UserController {
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws URISyntaxException, IOException {
         User userRemoveAvatar = userService.removeUserAvatarInLocal(id, fileName);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userRemoveAvatar));
+        return ResponseEntity.ok(userMapper.toResponse(userRemoveAvatar, ActionConstant.UPDATE));
     }
 
     @HasAdminOrSelf
@@ -142,13 +142,13 @@ public class UserController {
             @RequestParam(name = "fileName", required = false) String fileName
     ) throws IOException {
         User userRemoveAvatar = userService.removeUserAvatarInCloud(id, fileName);
-        return ResponseEntity.ok(userMapper.convertUserToUpdateResponse(userRemoveAvatar));
+        return ResponseEntity.ok(userMapper.toResponse(userRemoveAvatar, ActionConstant.UPDATE));
     }
 
     @HasAdminOrSelf
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.USER_DELETE)
-    public ResponseEntity<UserResponse> deleteUserRequest(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUserRequest(@PathVariable Long id) {
         userService.deleteUserById(id);
         return ResponseEntity.noContent().build();
     }
@@ -159,7 +159,7 @@ public class UserController {
     public ResponseEntity<ImportFileResponse<UserResponse>> importUsersFromFileRequest(
             @Valid @RequestBody List<UserCreateRequest> userCreateRequestList
     ) {
-        ImportFileResponse<UserResponse> importFileResponse = userService.importUsersFromFiles(userCreateRequestList);
+        ImportFileResponse<UserResponse> importFileResponse = userService.importUsersFromFile(userCreateRequestList);
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
                 .status(status)

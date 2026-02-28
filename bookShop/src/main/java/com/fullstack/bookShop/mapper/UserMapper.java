@@ -2,6 +2,7 @@ package com.fullstack.bookShop.mapper;
 
 import com.fullstack.bookShop.dto.response.UserResponse;
 import com.fullstack.bookShop.model.User;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -9,45 +10,29 @@ import java.util.Optional;
 @Component
 public class UserMapper {
 
-    public UserResponse convertUserToCreateResponse(User user) {
-        return UserResponse.builder()
+    public UserResponse toResponse(User user, String methodName) {
+        UserResponse.UserResponseBuilder builder = UserResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .avatar(user.getAvatar())
                 .phone(user.getPhone())
-                .role(convertRole(user))
-                .createdAt(user.getCreatedAt())
-                .createdBy(user.getCreatedBy())
-                .build();
-    }
+                .role(convertRole(user));
 
-    public UserResponse convertUserToUpdateResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .avatar(user.getAvatar())
-                .phone(user.getPhone())
-                .role(convertRole(user))
-                .updatedAt(user.getUpdatedAt())
-                .updatedBy(user.getUpdatedBy())
-                .build();
-    }
+        if (ActionConstant.CREATE.equals(methodName)) {
+            builder.createdAt(user.getCreatedAt())
+                    .createdBy(user.getCreatedBy());
+        } else if (ActionConstant.UPDATE.equals(methodName)) {
+            builder.updatedAt(user.getUpdatedAt())
+                    .updatedBy(user.getUpdatedBy());
+        } else if (ActionConstant.FETCH.equals(methodName)) {
+            builder.createdAt(user.getCreatedAt())
+                    .updatedAt(user.getUpdatedAt())
+                    .createdBy(user.getCreatedBy())
+                    .updatedBy(user.getUpdatedBy());
+        }
 
-    public UserResponse convertUserToViewResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .avatar(user.getAvatar())
-                .phone(user.getPhone())
-                .role(convertRole(user))
-                .createdAt(user.getCreatedAt())
-                .createdBy(user.getCreatedBy())
-                .updatedAt(user.getUpdatedAt())
-                .updatedBy(user.getUpdatedBy())
-                .build();
+        return builder.build();
     }
 
     private UserResponse.RoleOfUserResponse convertRole(User user) {

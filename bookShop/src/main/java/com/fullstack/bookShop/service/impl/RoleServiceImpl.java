@@ -12,6 +12,7 @@ import com.fullstack.bookShop.repository.RoleRepository;
 import com.fullstack.bookShop.repository.UserRepository;
 import com.fullstack.bookShop.service.interfaces.RoleService;
 import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.PermissionEnum;
 import com.fullstack.bookShop.util.enums.RoleEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
@@ -50,7 +51,7 @@ public class RoleServiceImpl implements RoleService {
 
         List<RoleResponse> roleResponseList = rolePage.getContent()
                 .stream()
-                .map(roleMapper::convertRoleToViewResponse)
+                .map(role -> roleMapper.toRoleResponse(role, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(rolePage, pageable);
@@ -142,7 +143,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public ImportFileResponse<RoleResponse> importRolesFromFiles(List<RoleCreateRequest> roleCreateRequestList) {
+    public ImportFileResponse<RoleResponse> importRolesFromFile(List<RoleCreateRequest> roleCreateRequestList) {
         ImportFileResponse<RoleResponse> importFileResponse = new ImportFileResponse<>();
         List<RoleResponse> successRoles = new ArrayList<>();
         List<ImportFileResponse.DetailFaultInfo<RoleCreateRequest>> detailFaultInfoList = new ArrayList<>();
@@ -158,7 +159,7 @@ public class RoleServiceImpl implements RoleService {
                 validateRoleForImport(roleCreateRequest);
 
                 Role roleBuiltFromRoleCreateRequest = buildRoleFromRoleCreateRequest(roleCreateRequest);
-                RoleResponse roleResponse = roleMapper.convertRoleToCreateResponse(roleBuiltFromRoleCreateRequest);
+                RoleResponse roleResponse = roleMapper.toRoleResponse(roleBuiltFromRoleCreateRequest, ActionConstant.CREATE);
 
                 successRoles.add(roleResponse);
                 countSuccess++;

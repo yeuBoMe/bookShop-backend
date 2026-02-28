@@ -52,7 +52,7 @@ public class OrderController {
         Order orderCreated = orderService.createOrder(orderRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(orderMapper.convertOrderToCreateResponse(orderCreated));
+                .body(orderMapper.toResponse(orderCreated, ActionConstant.CREATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
@@ -60,7 +60,7 @@ public class OrderController {
     @ApiMessage(ActionConstant.ORDER_GET)
     public ResponseEntity<OrderResponse> getOrderByIdRequest(@PathVariable Long id) {
         Order orderGetById = orderService.getOrderById(id);
-        return ResponseEntity.ok(orderMapper.convertOrderToViewResponse(orderGetById));
+        return ResponseEntity.ok(orderMapper.toResponse(orderGetById, ActionConstant.FETCH));
     }
 
     @PatchMapping("/{id}")
@@ -70,7 +70,7 @@ public class OrderController {
             @Valid @RequestBody OrderStatusRequest orderStatusRequest
     ) {
         Order orderUpdated = orderService.partialUpdateOrderById(id, orderStatusRequest);
-        return ResponseEntity.ok(orderMapper.convertOrderToUpdateResponse(orderUpdated));
+        return ResponseEntity.ok(orderMapper.toResponse(orderUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )

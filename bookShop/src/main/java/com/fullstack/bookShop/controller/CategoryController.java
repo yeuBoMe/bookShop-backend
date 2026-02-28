@@ -48,7 +48,7 @@ public class CategoryController {
         Category categoryCreated = categoryService.createCategory(categoryRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(categoryMapper.convertCategoryToCreateResponse(categoryCreated));
+                .body(categoryMapper.toResponse(categoryCreated, ActionConstant.CREATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
@@ -56,7 +56,7 @@ public class CategoryController {
     @ApiMessage(ActionConstant.CATEGORY_GET)
     public ResponseEntity<CategoryResponse> getCategoryByIdRequest(@PathVariable Long id) {
         Category categoryGetById = categoryService.getCategoryById(id);
-        return ResponseEntity.ok(categoryMapper.convertCategoryToViewResponse(categoryGetById));
+        return ResponseEntity.ok(categoryMapper.toResponse(categoryGetById, ActionConstant.FETCH));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
@@ -67,7 +67,7 @@ public class CategoryController {
             @Valid @RequestBody Category categoryRequest
     ) {
         Category categoryUpdated = categoryService.updateCategoryById(id, categoryRequest);
-        return ResponseEntity.ok(categoryMapper.convertCategoryToUpdateResponse(categoryUpdated));
+        return ResponseEntity.ok(categoryMapper.toResponse(categoryUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
@@ -78,7 +78,7 @@ public class CategoryController {
             @Valid @RequestBody Category categoryRequest
     ) {
         Category categoryUpdated = categoryService.partialUpdateCategoryPartialById(id, categoryRequest);
-        return ResponseEntity.ok(categoryMapper.convertCategoryToUpdateResponse(categoryUpdated));
+        return ResponseEntity.ok(categoryMapper.toResponse(categoryUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )

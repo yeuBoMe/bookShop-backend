@@ -46,7 +46,7 @@ public class PermissionController {
         Permission permissionCreated = permissionService.createPermission(permissionRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(permissionMapper.convertPermissionToCreateResponse(permissionCreated));
+                .body(permissionMapper.toResponse(permissionCreated, ActionConstant.CREATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -54,7 +54,7 @@ public class PermissionController {
     @ApiMessage(ActionConstant.PERMISSION_GET)
     public ResponseEntity<PermissionResponse> fetchPermissionRequest(@PathVariable Long id) {
         Permission permissionGetById = permissionService.getPermissionById(id);
-        return ResponseEntity.ok(permissionMapper.convertPermissionToViewResponse(permissionGetById));
+        return ResponseEntity.ok(permissionMapper.toResponse(permissionGetById, ActionConstant.FETCH));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
@@ -65,13 +65,13 @@ public class PermissionController {
             @Valid @RequestBody Permission permissionRequest
     ) {
         Permission permissionUpdated = permissionService.updatePermissionById(id, permissionRequest);
-        return ResponseEntity.ok(permissionMapper.convertPermissionToUpdateResponse(permissionUpdated));
+        return ResponseEntity.ok(permissionMapper.toResponse(permissionUpdated, ActionConstant.UPDATE));
     }
 
     @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.PERMISSION_DELETE)
-    public ResponseEntity<PermissionResponse> deletePermissionRequest(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePermissionRequest(@PathVariable Long id) {
         permissionService.deletePermissionById(id);
         return ResponseEntity.noContent().build();
     }

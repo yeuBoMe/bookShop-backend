@@ -62,7 +62,7 @@ public class AuthenticationController {
         User userCreated = userService.createUser(userRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userMapper.convertUserToCreateResponse(userCreated));
+                .body(userMapper.toResponse(userCreated, ActionConstant.CREATE));
     }
 
     @PreAuthorize("#id == authentication.principal.claims['user']['id']")

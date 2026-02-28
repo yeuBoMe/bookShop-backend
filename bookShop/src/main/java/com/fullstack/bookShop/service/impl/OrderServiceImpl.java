@@ -12,6 +12,7 @@ import com.fullstack.bookShop.repository.OrderRepository;
 import com.fullstack.bookShop.service.interfaces.BookService;
 import com.fullstack.bookShop.service.interfaces.EmailService;
 import com.fullstack.bookShop.service.interfaces.OrderService;
+import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.BookEnum;
 import com.fullstack.bookShop.util.enums.OrderEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
@@ -50,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderResponse> orderResponseList = orderPage.getContent()
                 .stream()
-                .map(orderMapper::convertOrderToViewResponse)
+                .map(order -> orderMapper.toResponse(order, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(orderPage, pageable);
@@ -64,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderResponse> orderResponseList = orderPage.getContent()
                 .stream()
-                .map(orderMapper::convertOrderToViewResponse)
+                .map(order -> orderMapper.toResponse(order, ActionConstant.FETCH))
                 .toList();
 
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(orderPage, pageable);
@@ -84,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
         orderCreated.setDetail(orderDetailList);
 
         // send order to email
-        OrderResponse orderResponse = orderMapper.convertOrderToCreateResponse(orderCreated);
+        OrderResponse orderResponse = orderMapper.toResponse(orderCreated, ActionConstant.CREATE);
         try {
             emailService.sendEmailWithTemplateSync(
                     orderCreated.getEmail(),
