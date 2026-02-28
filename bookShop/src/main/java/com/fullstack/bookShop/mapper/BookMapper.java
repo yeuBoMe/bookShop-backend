@@ -42,6 +42,7 @@ public class BookMapper {
                     .createdBy(book.getCreatedBy())
                     .updatedBy(book.getUpdatedBy());
         }
+
         return builder.build();
     }
 

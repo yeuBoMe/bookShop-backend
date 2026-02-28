@@ -8,7 +8,7 @@ import com.fullstack.bookShop.mapper.RoleMapper;
 import com.fullstack.bookShop.model.Role;
 import com.fullstack.bookShop.service.interfaces.RoleService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.annotation.IsAdmin;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,7 +31,7 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @GetMapping
     @ApiMessage(ActionConstant.ROLE_FETCH_ALL)
     public ResponseEntity<PaginationResponse> fetchAllRolesRequest(
@@ -42,7 +41,7 @@ public class RoleController {
         return ResponseEntity.ok(roleService.fetchAllRoles(spec, pageable));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PostMapping
     @ApiMessage(ActionConstant.ROLE_CREATE)
     public ResponseEntity<RoleResponse> createRoleRequest(@Valid @RequestBody Role roleRequest) {
@@ -52,7 +51,7 @@ public class RoleController {
                 .body(roleMapper.toRoleResponse(roleCreated, ActionConstant.CREATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.ROLE_GET)
     public ResponseEntity<RoleResponse> fetchRoleRequest(@PathVariable Long id) {
@@ -60,7 +59,7 @@ public class RoleController {
         return ResponseEntity.ok(roleMapper.toRoleResponse(roleGetById, ActionConstant.FETCH));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PutMapping("/{id}")
     @ApiMessage(ActionConstant.ROLE_UPDATE)
     public ResponseEntity<RoleResponse> updateRoleRequest(
@@ -71,7 +70,7 @@ public class RoleController {
         return ResponseEntity.ok(roleMapper.toRoleResponse(roleUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.ROLE_DELETE)
     public ResponseEntity<Void> deleteRoleRequest(@PathVariable Long id) {
@@ -79,7 +78,7 @@ public class RoleController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PostMapping("/import")
     @ApiMessage(ActionConstant.ROLE_IMPORT)
     public ResponseEntity<ImportFileResponse<RoleResponse>> importRolesFromFileRequest(

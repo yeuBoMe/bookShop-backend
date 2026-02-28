@@ -8,7 +8,8 @@ import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.service.interfaces.AuthenticationService;
 import com.fullstack.bookShop.service.interfaces.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.annotation.HasAdminOrSelf;
+import com.fullstack.bookShop.util.annotation.IsAdminOrSelf;
+import com.fullstack.bookShop.util.annotation.IsSelf;
 import com.fullstack.bookShop.util.constant.auth.TokenConstant;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,7 +19,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -65,7 +65,7 @@ public class AuthenticationController {
                 .body(userMapper.toResponse(userCreated, ActionConstant.CREATE));
     }
 
-    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
+    @IsSelf
     @PostMapping("/logout")
     @ApiMessage(ActionConstant.LOGOUT)
     public ResponseEntity<Void> logoutRequest() {
@@ -96,7 +96,7 @@ public class AuthenticationController {
                 .body(loginResponse);
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @GetMapping("/account")
     @ApiMessage(ActionConstant.ACCOUNT)
     public ResponseEntity<LoginResponse.UserGetAccountResponse> accountInfoRequest() {

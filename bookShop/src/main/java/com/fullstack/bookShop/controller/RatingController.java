@@ -6,7 +6,7 @@ import com.fullstack.bookShop.mapper.RatingMapper;
 import com.fullstack.bookShop.model.Rating;
 import com.fullstack.bookShop.service.interfaces.RatingService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.annotation.IsAdmin;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,7 +26,7 @@ public class RatingController {
 
     private final RatingService ratingService;
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @GetMapping
     @ApiMessage(ActionConstant.RATING_FETCH_ALL)
     public ResponseEntity<PaginationResponse> fetchAllRatingsRequest(
@@ -65,7 +64,7 @@ public class RatingController {
         return ResponseEntity.ok(ratingMapper.toResponse(ratingGetByUserAndBook, ActionConstant.FETCH));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.RATING_GET)
     public ResponseEntity<RatingResponse> getRatingByIdRequest(@PathVariable Long id) {
@@ -73,7 +72,7 @@ public class RatingController {
         return ResponseEntity.ok(ratingMapper.toResponse(ratingGetById, ActionConstant.FETCH));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.RATING_DELETE)
     public ResponseEntity<Void> deleteRatingByIdRequest(@PathVariable Long id) {

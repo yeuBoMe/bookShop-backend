@@ -6,7 +6,7 @@ import com.fullstack.bookShop.mapper.PermissionMapper;
 import com.fullstack.bookShop.model.Permission;
 import com.fullstack.bookShop.service.interfaces.PermissionService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.annotation.IsAdmin;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,7 +26,7 @@ public class PermissionController {
 
     private final PermissionService permissionService;
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @GetMapping
     @ApiMessage(ActionConstant.PERMISSION_FETCH_ALL)
     public ResponseEntity<PaginationResponse> fetchAllPermissionsRequest(
@@ -37,7 +36,7 @@ public class PermissionController {
         return ResponseEntity.ok(permissionService.fetchAllPermissions(spec, pageable));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PostMapping
     @ApiMessage(ActionConstant.PERMISSION_CREATE)
     public ResponseEntity<PermissionResponse> createPermissionRequest(
@@ -49,7 +48,7 @@ public class PermissionController {
                 .body(permissionMapper.toResponse(permissionCreated, ActionConstant.CREATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.PERMISSION_GET)
     public ResponseEntity<PermissionResponse> fetchPermissionRequest(@PathVariable Long id) {
@@ -57,7 +56,7 @@ public class PermissionController {
         return ResponseEntity.ok(permissionMapper.toResponse(permissionGetById, ActionConstant.FETCH));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PutMapping("/{id}")
     @ApiMessage(ActionConstant.PERMISSION_UPDATE)
     public ResponseEntity<PermissionResponse> updatePermissionRequest(
@@ -68,7 +67,7 @@ public class PermissionController {
         return ResponseEntity.ok(permissionMapper.toResponse(permissionUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.PERMISSION_DELETE)
     public ResponseEntity<Void> deletePermissionRequest(@PathVariable Long id) {

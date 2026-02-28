@@ -7,8 +7,8 @@ import com.fullstack.bookShop.mapper.OrderMapper;
 import com.fullstack.bookShop.model.Order;
 import com.fullstack.bookShop.service.interfaces.OrderService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
+import com.fullstack.bookShop.util.annotation.IsAdmin;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
 import com.fullstack.bookShop.util.security.SecurityUtil;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,7 +28,7 @@ public class OrderController {
     
     private final OrderService orderService;
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @IsAdmin
     @GetMapping
     @ApiMessage(ActionConstant.ORDER_FETCH_ALL)
     public ResponseEntity<PaginationResponse> fetchAllOrdersRequest(
@@ -55,7 +54,7 @@ public class OrderController {
                 .body(orderMapper.toResponse(orderCreated, ActionConstant.CREATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @IsAdmin
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.ORDER_GET)
     public ResponseEntity<OrderResponse> getOrderByIdRequest(@PathVariable Long id) {
@@ -73,7 +72,7 @@ public class OrderController {
         return ResponseEntity.ok(orderMapper.toResponse(orderUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')" )
+    @IsAdmin
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.ORDER_DELETE)
     public ResponseEntity<Void> deleteOrderRequest(@PathVariable Long id) {

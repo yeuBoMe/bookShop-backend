@@ -8,7 +8,7 @@ import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.service.interfaces.BookService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.exception.custom.FileException;
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.annotation.IsAdmin;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,7 +52,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PostMapping
     @ApiMessage(ActionConstant.BOOK_CREATE)
     public ResponseEntity<BookResponse> createBookRequest(@Valid @RequestBody Book bookRequest) {
@@ -70,7 +69,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookGetById, ActionConstant.FETCH));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PutMapping("/{id}")
     @ApiMessage(ActionConstant.BOOK_UPDATE)
     public ResponseEntity<BookResponse> updateBookByIdRequest(
@@ -81,7 +80,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PatchMapping("/{id}")
     @ApiMessage(ActionConstant.BOOK_UPDATE_PARTIAL)
     public ResponseEntity<BookResponse> partialUpdateBookByIdRequest(
@@ -92,7 +91,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookPartialUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.BOOK_DELETE)
     public ResponseEntity<Void> deleteBookByIdRequest(@PathVariable Long id) {
@@ -100,7 +99,7 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PatchMapping("/{id}/image")
     @ApiMessage(ActionConstant.BOOK_UPLOAD_SINGLE_IMAGE)
     public ResponseEntity<BookResponse> updateBookSingleImageInLocalRequest(
@@ -113,7 +112,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PatchMapping("/{id}/image/cloud")
     @ApiMessage(ActionConstant.BOOK_UPLOAD_IMAGE_CLOUDINARY)
     public ResponseEntity<BookResponse> updateBookSingleImageToCloudinaryRequest(
@@ -124,7 +123,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PatchMapping("/{id}/multiple-images")
     @ApiMessage(ActionConstant.BOOK_UPDATE_MULTIPLE_IMAGES)
     public ResponseEntity<BookResponse> updateBookMultipleImagesInLocalRequest(
@@ -137,7 +136,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PatchMapping("/{id}/multiple-images/cloud")
     @ApiMessage(ActionConstant.BOOK_UPLOAD_MULTIPLE_IMAGES_CLOUDINARY)
     public ResponseEntity<BookResponse> updateBookMultipleImagesToCloudinaryRequest(
@@ -148,7 +147,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}/image")
     @ApiMessage(ActionConstant.BOOK_DELETE_IMAGE)
     public ResponseEntity<BookResponse> deleteBookSingleImageInLocalRequest(
@@ -159,7 +158,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}/image/cloud")
     @ApiMessage(ActionConstant.BOOK_DELETE_IMAGE_CLOUDINARY)
     public ResponseEntity<BookResponse> deleteBookSingleImageInCloudRequest(
@@ -170,7 +169,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}/multiple-images")
     @ApiMessage(ActionConstant.BOOK_DELETE_MULTIPLE_IMAGES)
     public ResponseEntity<BookResponse> deleteBookMultipleImageRequest(
@@ -181,7 +180,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @DeleteMapping("/{id}/multiple-images/cloud")
     @ApiMessage(ActionConstant.BOOK_DELETE_MULTIPLE_IMAGES_CLOUDINARY)
     public ResponseEntity<BookResponse> deleteBookMultipleImageInCloudRequest(
@@ -192,7 +191,7 @@ public class BookController {
         return ResponseEntity.ok(bookMapper.toResponse(bookUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PostMapping("/import")
     @ApiMessage(ActionConstant.BOOK_IMPORT)
     public ResponseEntity<ImportFileResponse<BookResponse>> importBooksFromFileRequest(

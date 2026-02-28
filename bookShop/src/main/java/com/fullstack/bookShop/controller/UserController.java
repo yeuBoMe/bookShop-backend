@@ -10,8 +10,9 @@ import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.service.interfaces.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.exception.custom.FileException;
-import com.fullstack.bookShop.util.annotation.HasAdminOrSelf;
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.annotation.IsAdmin;
+import com.fullstack.bookShop.util.annotation.IsAdminOrSelf;
+import com.fullstack.bookShop.util.annotation.IsSelf;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.status.HttpStatusUtil;
 import com.turkraft.springfilter.boot.Filter;
@@ -21,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,7 +38,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @HasAdminOrSelf
+    @IsAdmin
     @GetMapping
     @ApiMessage(ActionConstant.USER_FETCH_ALL)
     public ResponseEntity<PaginationResponse> fetchAllUsersRequest(
@@ -48,7 +48,7 @@ public class UserController {
         return ResponseEntity.ok(userService.fetchAllUsers(spec, pageable));
     }
 
-    @HasAdminOrSelf
+    @IsAdmin
     @PostMapping
     @ApiMessage(ActionConstant.USER_CREATE)
     public ResponseEntity<UserResponse> createUserRequest(@Valid @RequestBody User userRequest) {
@@ -58,7 +58,7 @@ public class UserController {
                 .body(userMapper.toResponse(userCreated, ActionConstant.CREATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.USER_GET)
     public ResponseEntity<UserResponse> fetchUserById(@PathVariable Long id) {
@@ -66,7 +66,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userGetById, ActionConstant.FETCH));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @PutMapping("/{id}")
     @ApiMessage(ActionConstant.USER_UPDATE)
     public ResponseEntity<UserResponse> updateUserRequest(
@@ -77,7 +77,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userUpdated, ActionConstant.UPDATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @PatchMapping("/{id}")
     @ApiMessage(ActionConstant.USER_UPDATE_PARTIAL)
     public ResponseEntity<UserResponse> partialUpdateUserRequest(
@@ -88,7 +88,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userPartialUpdated, ActionConstant.UPDATE));
     }
 
-    @PreAuthorize("#id == authentication.principal.claims['user']['id']")
+    @IsSelf
     @PatchMapping("/{id}/password")
     @ApiMessage(ActionConstant.USER_UPDATE_PASSWORD)
     public ResponseEntity<UserResponse> updateUserPasswordRequest(
@@ -99,7 +99,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userPasswordUpdated, ActionConstant.UPDATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @PatchMapping("/{id}/avatar")
     @ApiMessage(ActionConstant.USER_UPLOAD_AVATAR)
     public ResponseEntity<UserResponse> uploadUserAvatarInLocalRequest(
@@ -112,7 +112,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userUpdated, ActionConstant.UPDATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @PatchMapping("/{id}/avatar/cloud")
     @ApiMessage(ActionConstant.USER_UPLOAD_AVATAR_CLOUDINARY)
     public ResponseEntity<UserResponse> uploadUserAvatarToCloudinaryRequest(
@@ -123,7 +123,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userUpdated, ActionConstant.UPDATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @DeleteMapping("/{id}/avatar")
     @ApiMessage(ActionConstant.USER_DELETE_AVATAR)
     public ResponseEntity<UserResponse> deleteUserAvatarRequest(
@@ -134,7 +134,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userRemoveAvatar, ActionConstant.UPDATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdminOrSelf
     @DeleteMapping("/{id}/avatar/cloud")
     @ApiMessage(ActionConstant.USER_DELETE_AVATAR_CLOUDINARY)
     public ResponseEntity<UserResponse> deleteUserAvatarFromCloudinaryRequest(
@@ -145,7 +145,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(userRemoveAvatar, ActionConstant.UPDATE));
     }
 
-    @HasAdminOrSelf
+    @IsAdmin
     @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.USER_DELETE)
     public ResponseEntity<Void> deleteUserRequest(@PathVariable Long id) {
@@ -153,7 +153,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('" + AuthorityConstant.ADMIN + "')")
+    @IsAdmin
     @PostMapping("/import")
     @ApiMessage(ActionConstant.USER_IMPORT)
     public ResponseEntity<ImportFileResponse<UserResponse>> importUsersFromFileRequest(

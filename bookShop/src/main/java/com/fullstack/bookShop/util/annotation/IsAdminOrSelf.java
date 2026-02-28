@@ -12,5 +12,5 @@ import java.lang.annotation.*;
         "hasRole('" + AuthorityConstant.ADMIN + "') " +
         "or #id == authentication.principal.claims['user']['id']"
 )
-public @interface HasAdminOrSelf {
+public @interface IsAdminOrSelf {
 }
