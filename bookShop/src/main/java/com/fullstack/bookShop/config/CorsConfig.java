@@ -17,7 +17,7 @@ public class CorsConfig {
     private String frontendUrl;
 
     @Bean
-    public UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource() {
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(frontendUrl));
         configuration.setAllowedMethods(CorsConstant.ALLOWED_METHODS);

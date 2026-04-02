@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.security;
 
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -19,7 +20,7 @@ public class CustomDefaultOauth2UserService extends DefaultOAuth2UserService {
         OAuth2User oauth2User = super.loadUser(userRequest);
 
         return new DefaultOAuth2User(
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+                Collections.singletonList(new SimpleGrantedAuthority(AuthorityConstant.ROLE_USER_PREFIX)),
                 oauth2User.getAttributes(), // full data trả về từ gg
                 "email" // key name định danh
         );

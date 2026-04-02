@@ -8,8 +8,6 @@ import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.service.interfaces.AuthenticationService;
 import com.fullstack.bookShop.service.interfaces.UserService;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
-import com.fullstack.bookShop.util.annotation.IsAdminOrSelf;
-import com.fullstack.bookShop.util.annotation.IsSelf;
 import com.fullstack.bookShop.util.constant.auth.TokenConstant;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import jakarta.servlet.http.HttpServletResponse;
@@ -65,7 +63,6 @@ public class AuthenticationController {
                 .body(userMapper.toResponse(userCreated, ActionConstant.CREATE));
     }
 
-    @IsSelf
     @PostMapping("/logout")
     @ApiMessage(ActionConstant.LOGOUT)
     public ResponseEntity<Void> logoutRequest() {
@@ -96,7 +93,6 @@ public class AuthenticationController {
                 .body(loginResponse);
     }
 
-    @IsAdminOrSelf
     @GetMapping("/account")
     @ApiMessage(ActionConstant.ACCOUNT)
     public ResponseEntity<LoginResponse.UserGetAccountResponse> accountInfoRequest() {

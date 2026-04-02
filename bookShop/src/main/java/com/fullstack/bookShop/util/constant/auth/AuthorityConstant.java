@@ -13,5 +13,7 @@ public final class AuthorityConstant {
     public static final String SUPER_ADMIN = "SUPER_ADMIN";
 
     public static final String ROLE_PREFIX = "ROLE_";
+
+    public static final String ROLE_USER_PREFIX = "ROLE_USER";
 }
 
