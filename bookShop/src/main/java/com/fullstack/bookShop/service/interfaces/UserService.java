@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Set;
 
 public interface UserService {
 
@@ -52,6 +53,10 @@ public interface UserService {
     boolean checkEmailExists(String email);
 
     boolean checkPhoneExists(String phone);
+
+    Set<String> findExistingEmails(Set<String> emails);
+
+    Set<String> findExistingPhones(Set<String> phones);
 
     ImportFileResponse<UserResponse> importUsersFromFile(List<UserCreateRequest> userCreateRequestList);
 }

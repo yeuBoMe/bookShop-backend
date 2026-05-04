@@ -9,15 +9,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CategoryCreateRequest {
-
-    private Long id;
 
     @NotBlank(message = CategoryConstant.NAME_REQUIRED)
     @Size(max = 100, message = CategoryConstant.NAME_MAX_LENGTH)
@@ -26,8 +22,4 @@ public class CategoryCreateRequest {
             message = CategoryConstant.NAME_INVALID
     )
     private String name;
-
-    private Instant createdAt;
-
-    private String createdBy;
 }

@@ -157,7 +157,7 @@ public class UserController {
     @PostMapping("/import")
     @ApiMessage(ActionConstant.USER_IMPORT)
     public ResponseEntity<ImportFileResponse<UserResponse>> importUsersFromFileRequest(
-            @Valid @RequestBody List<UserCreateRequest> userCreateRequestList
+            @Valid @RequestBody List<@Valid UserCreateRequest> userCreateRequestList
     ) {
         ImportFileResponse<UserResponse> importFileResponse = userService.importUsersFromFile(userCreateRequestList);
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);

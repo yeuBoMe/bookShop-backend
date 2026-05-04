@@ -43,10 +43,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -342,24 +340,44 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Set<String> findExistingEmails(Set<String> emails) {
+        return userRepository.findExistingEmails(emails);
+    }
+
+    @Override
+    public Set<String> findExistingPhones(Set<String> phones) {
+        return userRepository.findExistingPhones(phones);
+    }
+
+    @Transactional
+    @Override
     public ImportFileResponse<UserResponse> importUsersFromFile(List<UserCreateRequest> userCreateRequestList) {
+
         ImportFileResponse<UserResponse> importFileResponse = new ImportFileResponse<>();
         List<UserResponse> successList = new ArrayList<>();
         List<ImportFileResponse.DetailFaultInfo<UserCreateRequest>> detailFaultInfoList = new ArrayList<>();
+        List<User> listUsersToSave = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
+
+        Set<String> existingEmails = getExistingEmailsFromUserCreateRequestList(userCreateRequestList);
+        Set<String> existingPhones = getExistingPhonesFromUserCreateRequestList(userCreateRequestList);
+
+        Role roleDefault = roleService.getRoleByName(AuthorityConstant.USER);
+        String passwordDefault = passwordEncoder.encode(PasswordConstant.DEFAULT_PASSWORD);
 
         for (int i = 0; i < userCreateRequestList.size(); i++) {
             UserCreateRequest userCreateRequest = userCreateRequestList.get(i);
             int index = i + 1;
 
             try {
-                validateUserForImport(userCreateRequest);
+                validateUserForImport(existingEmails, existingPhones, userCreateRequest);
 
-                User userBuildFromUserCreateRequest = buildUserFromUserCreateRequest(userCreateRequest);
+                User userBuildFromUserCreateRequest = buildUserFromUserCreateRequest(userCreateRequest, roleDefault, passwordDefault);
+                listUsersToSave.add(userBuildFromUserCreateRequest);
+
                 UserResponse userResponse = userMapper.toResponse(userBuildFromUserCreateRequest, ActionConstant.CREATE);
-
                 successList.add(userResponse);
                 countSuccess++;
 
@@ -390,6 +408,11 @@ public class UserServiceImpl implements UserService {
                 countError++;
                 LOGGER.error("Unexpected error importing user at row {}: {}", index, ex.getMessage(), ex);
             }
+        }
+
+        if (!listUsersToSave.isEmpty()) {
+            userRepository.saveAll(listUsersToSave);
+            LOGGER.info("List users saved {} users successfully", listUsersToSave.size());
         }
 
         importFileResponse.setCountSuccess(countSuccess);
@@ -426,14 +449,27 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void validateUserForImport(UserCreateRequest userCreateRequest) {
-        if (checkEmailExists(userCreateRequest.getEmail())) {
+    private void validateUserForImport(
+            Set<String> existingEmails,
+            Set<String> existingPhones,
+            UserCreateRequest userCreateRequest
+    ) {
+        String normalizedEmail = userCreateRequest.getEmail() != null
+                ? userCreateRequest.getEmail().trim()
+                : null;
+
+        if (existingEmails.contains(normalizedEmail)) {
             LOGGER.warn("Import failed: User email '{}' already exists", userCreateRequest.getEmail());
             throw new IllegalArgumentException(
                     String.format(UserEnum.EMAIL_EXISTS.getMessage(), userCreateRequest.getEmail())
             );
         }
-        if (checkPhoneExists(userCreateRequest.getPhone())) {
+
+        String normalizedPhone = userCreateRequest.getPhone() != null
+                ? userCreateRequest.getPhone().trim()
+                : null;
+
+        if (existingPhones.contains(normalizedPhone)) {
             LOGGER.warn("Import failed: User phone '{}' already exists", userCreateRequest.getPhone());
             throw new IllegalArgumentException(
                     String.format(UserEnum.PHONE_EXISTS.getMessage(), userCreateRequest.getPhone())
@@ -441,14 +477,36 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private User buildUserFromUserCreateRequest(UserCreateRequest userCreateRequest) {
+    private Set<String> getExistingEmailsFromUserCreateRequestList(List<UserCreateRequest> userCreateRequestList) {
+        Set<String> listEmailsToCheck = userCreateRequestList.stream()
+                .map(UserCreateRequest::getEmail)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+        return findExistingEmails(listEmailsToCheck);
+    }
+
+    private Set<String> getExistingPhonesFromUserCreateRequestList(List<UserCreateRequest> userCreateRequestList) {
+        Set<String> listPhonesToCheck = userCreateRequestList.stream()
+                .map(UserCreateRequest::getPhone)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+        return findExistingPhones(listPhonesToCheck);
+    }
+
+    private User buildUserFromUserCreateRequest(
+            UserCreateRequest userCreateRequest,
+            Role roleDefault,
+            String passwordDefault
+    ) {
         User user = new User();
         user.setFullName(userCreateRequest.getFullName());
         user.setEmail(userCreateRequest.getEmail());
         user.setPhone(userCreateRequest.getPhone());
-        user.setPassword(PasswordConstant.DEFAULT_PASSWORD);
-        user.setRole(roleService.getRoleByName(AuthorityConstant.USER));
-        return userRepository.save(user);
+        user.setPassword(passwordDefault);
+        user.setRole(roleDefault);
+        return user;
     }
 
     private void validateAndSetRole(User currentUser, User userRequest) {

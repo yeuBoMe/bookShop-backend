@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/categories" )
+@RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
@@ -51,7 +51,7 @@ public class CategoryController {
     }
 
     @IsAdmin
-    @GetMapping("/{id}" )
+    @GetMapping("/{id}")
     @ApiMessage(ActionConstant.CATEGORY_GET)
     public ResponseEntity<CategoryResponse> getCategoryByIdRequest(@PathVariable Long id) {
         Category categoryGetById = categoryService.getCategoryById(id);
@@ -59,7 +59,7 @@ public class CategoryController {
     }
 
     @IsAdmin
-    @PutMapping("/{id}" )
+    @PutMapping("/{id}")
     @ApiMessage(ActionConstant.CATEGORY_UPDATE)
     public ResponseEntity<CategoryResponse> updateCategoryByIdRequest(
             @PathVariable Long id,
@@ -70,7 +70,7 @@ public class CategoryController {
     }
 
     @IsAdmin
-    @PatchMapping("/{id}" )
+    @PatchMapping("/{id}")
     @ApiMessage(ActionConstant.CATEGORY_UPDATE_PARTIAL)
     public ResponseEntity<CategoryResponse> partialUpdateCategoryByIdRequest(
             @PathVariable Long id,
@@ -81,7 +81,7 @@ public class CategoryController {
     }
 
     @IsAdmin
-    @DeleteMapping("/{id}" )
+    @DeleteMapping("/{id}")
     @ApiMessage(ActionConstant.CATEGORY_DELETE)
     public ResponseEntity<Void> deleteCategoryByIdRequest(@PathVariable Long id) {
         categoryService.deleteCategoryById(id);
@@ -89,10 +89,10 @@ public class CategoryController {
     }
 
     @IsAdmin
-    @PostMapping("/import" )
+    @PostMapping("/import")
     @ApiMessage(ActionConstant.CATEGORY_IMPORT)
     public ResponseEntity<ImportFileResponse<CategoryResponse>> importCategoriesFromFileRequest(
-            @Valid @RequestBody List<CategoryCreateRequest> categoryCreateRequestList
+            @Valid @RequestBody List<@Valid CategoryCreateRequest> categoryCreateRequestList
     ) {
         ImportFileResponse<CategoryResponse> importFileResponse
                 = categoryService.importCategoriesFromFile(categoryCreateRequestList);

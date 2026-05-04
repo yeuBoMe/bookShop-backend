@@ -24,9 +24,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -129,26 +128,35 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public Set<String> findExistingNamesIgnoreCase(Set<String> names) {
+        return categoryRepository.findExistingNamesIgnoreCase(names);
+    }
+
+    @Override
     public ImportFileResponse<CategoryResponse> importCategoriesFromFile(
             List<CategoryCreateRequest> categoryCreateRequestList
     ) {
         ImportFileResponse<CategoryResponse> importFileResponse = new ImportFileResponse<>();
         List<CategoryResponse> successData = new ArrayList<>();
         List<ImportFileResponse.DetailFaultInfo<CategoryCreateRequest>> detailFaultInfoList = new ArrayList<>();
+        List<Category> listCategoriesToSave = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
+
+        Set<String> existingNamesIgnoreCase = getExistingNamesIgnoreCaseFromCategoryCreateRequest(categoryCreateRequestList);
 
         for (int i = 0; i < categoryCreateRequestList.size(); i++) {
             CategoryCreateRequest categoryCreateRequest = categoryCreateRequestList.get(i);
             int index = i + 1;
 
             try {
-                validateCategoryForImport(categoryCreateRequest);
+                validateCategoryForImport(existingNamesIgnoreCase, categoryCreateRequest);
 
                 Category category = buildCategoryFromRestCategoryCreateDTO(categoryCreateRequest);
-                CategoryResponse categoryResponse = categoryMapper.toResponse(category, ActionConstant.CREATE);
+                listCategoriesToSave.add(category);
 
+                CategoryResponse categoryResponse = categoryMapper.toResponse(category, ActionConstant.CREATE);
                 successData.add(categoryResponse);
                 countSuccess++;
 
@@ -180,12 +188,28 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
 
+        if (!listCategoriesToSave.isEmpty()) {
+            categoryRepository.saveAll(listCategoriesToSave);
+            LOGGER.info("List categories saved {} categories successfully", listCategoriesToSave.size());
+        }
+
         importFileResponse.setCountSuccess(countSuccess);
         importFileResponse.setCountError(countError);
         importFileResponse.setItems(successData);
         importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
 
         return importFileResponse;
+    }
+
+    private Set<String> getExistingNamesIgnoreCaseFromCategoryCreateRequest(
+            List<CategoryCreateRequest> categoryCreateRequestList
+    ) {
+        Set<String> setNamesToCheck = categoryCreateRequestList.stream()
+                .map(CategoryCreateRequest::getName)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+        return findExistingNamesIgnoreCase(setNamesToCheck);
     }
 
     private void validateCategoryForCreate(Category categoryRequest) {
@@ -207,8 +231,16 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private void validateCategoryForImport(CategoryCreateRequest categoryCreateRequest) {
-        if (checkNameExistsIgnoreCase(categoryCreateRequest.getName())) {
+    private void validateCategoryForImport(
+            Set<String> existingNamesIgnoreCase,
+            CategoryCreateRequest categoryCreateRequest
+    ) {
+        // Check name exists
+        String normalizedNameLowerCase = categoryCreateRequest.getName() != null
+                ? categoryCreateRequest.getName().trim().toLowerCase()
+                : null;
+
+        if (existingNamesIgnoreCase.contains(normalizedNameLowerCase)) {
             LOGGER.warn("Import failed: Category name '{}' already exists", categoryCreateRequest.getName());
             throw new IllegalArgumentException(
                     String.format(CategoryEnum.NAME_EXISTS.getMessage(), categoryCreateRequest.getName())
@@ -219,6 +251,6 @@ public class CategoryServiceImpl implements CategoryService {
     private Category buildCategoryFromRestCategoryCreateDTO(CategoryCreateRequest categoryCreateRequest) {
         Category category = new Category();
         category.setName(categoryCreateRequest.getName());
-        return categoryRepository.save(category);
+        return category;
     }
 }
