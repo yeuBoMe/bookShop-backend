@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
+import java.util.Set;
 
 public interface RoleService {
 
@@ -27,6 +28,8 @@ public interface RoleService {
     boolean checkIdExists(Long id);
 
     boolean checkNameExistsIgnoreCase(String name);
+
+    Set<String> findExistingNamesIgnoreCase(Set<String> names);
 
     ImportFileResponse<RoleResponse> importRolesFromFile(List<RoleCreateRequest> roleCreateRequestList);
 }

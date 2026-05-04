@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class Role {
     @Size(max = 5000, message = RoleConstant.DESCRIPTION_MAX_LENGTH)
     private String description;
 
+    @NotNull(message = RoleConstant.ACTIVE_REQUIRED)
     private Boolean active;
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)

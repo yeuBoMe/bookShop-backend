@@ -11,4 +11,6 @@ public final class RoleConstant {
     public static final String DESCRIPTION_REQUIRED = "Description is required";
 
     public static final String DESCRIPTION_MAX_LENGTH = "Description must not exceed 5000 characters";
+
+    public static final String ACTIVE_REQUIRED = "Active is required";
 }

@@ -27,9 +27,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +70,7 @@ public class RoleServiceImpl implements RoleService {
         );
 
         validateRoleForCreate(roleRequest);
-        validateAndSetPermissions(roleRequest, roleRequest);
+        validateAndSetPermissionsForRole(roleRequest, roleRequest);
 
         Role roleCreated = roleRepository.save(roleRequest);
         LOGGER.info("Create role successfully with id: {}", roleCreated.getId());
@@ -106,7 +105,7 @@ public class RoleServiceImpl implements RoleService {
         Role roleGetById = getRoleById(id);
 
         validateRoleForUpdate(roleGetById, roleRequest);
-        validateAndSetPermissions(roleGetById, roleRequest);
+        validateAndSetPermissionsForRole(roleGetById, roleRequest);
 
         roleGetById.setName(roleRequest.getName());
         roleGetById.setDescription(roleRequest.getDescription());
@@ -143,24 +142,36 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public Set<String> findExistingNamesIgnoreCase(Set<String> names) {
+        return roleRepository.findExistingNamesIgnoreCase(names);
+    }
+
+    @Transactional
+    @Override
     public ImportFileResponse<RoleResponse> importRolesFromFile(List<RoleCreateRequest> roleCreateRequestList) {
+
         ImportFileResponse<RoleResponse> importFileResponse = new ImportFileResponse<>();
         List<RoleResponse> successRoles = new ArrayList<>();
         List<ImportFileResponse.DetailFaultInfo<RoleCreateRequest>> detailFaultInfoList = new ArrayList<>();
+        List<Role> listRolesToSave = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
+
+        Set<String> existingNamesIgnoreCase = getExistingNamesIgnoreCaseFromRoleCreateRequestList(roleCreateRequestList);
 
         for (int i = 0; i < roleCreateRequestList.size(); i++) {
             RoleCreateRequest roleCreateRequest = roleCreateRequestList.get(i);
             int index = i + 1;
 
             try {
-                validateRoleForImport(roleCreateRequest);
+                validateRoleForImport(existingNamesIgnoreCase, roleCreateRequest);
 
+                // Build Role from RoleCreateRequest
                 Role roleBuiltFromRoleCreateRequest = buildRoleFromRoleCreateRequest(roleCreateRequest);
-                RoleResponse roleResponse = roleMapper.toRoleResponse(roleBuiltFromRoleCreateRequest, ActionConstant.CREATE);
+                listRolesToSave.add(roleBuiltFromRoleCreateRequest);
 
+                RoleResponse roleResponse = roleMapper.toRoleResponse(roleBuiltFromRoleCreateRequest, ActionConstant.CREATE);
                 successRoles.add(roleResponse);
                 countSuccess++;
 
@@ -193,6 +204,11 @@ public class RoleServiceImpl implements RoleService {
             }
         }
 
+        if (!listRolesToSave.isEmpty()) {
+            roleRepository.saveAll(listRolesToSave);
+            LOGGER.info("List roles saved {} roles successfully", listRolesToSave.size());
+        }
+
         importFileResponse.setCountSuccess(countSuccess);
         importFileResponse.setCountError(countError);
         importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
@@ -222,8 +238,22 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
-    private void validateRoleForImport(RoleCreateRequest roleCreateRequest) {
-        if (checkNameExistsIgnoreCase(roleCreateRequest.getName())) {
+    private Set<String> getExistingNamesIgnoreCaseFromRoleCreateRequestList(List<RoleCreateRequest> roleCreateRequestList) {
+        Set<String> setNamesToCheck = roleCreateRequestList.stream()
+                .map(RoleCreateRequest::getName)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+        return findExistingNamesIgnoreCase(setNamesToCheck);
+    }
+
+    private void validateRoleForImport(Set<String> existingNamesIgnoreCase, RoleCreateRequest roleCreateRequest) {
+        // Check name exists
+        String normalizedNameLowerCase = roleCreateRequest.getName() != null
+                ? roleCreateRequest.getName().trim().toLowerCase()
+                : null;
+
+        if (existingNamesIgnoreCase.contains(normalizedNameLowerCase)) {
             LOGGER.warn("Import failed: Role name '{}' already exists", roleCreateRequest.getName());
             throw new IllegalArgumentException(
                     String.format(RoleEnum.NAME_EXISTS.getMessage(), roleCreateRequest.getName())
@@ -235,28 +265,40 @@ public class RoleServiceImpl implements RoleService {
         Role role = new Role();
         role.setName(roleCreateRequest.getName());
         role.setDescription(roleCreateRequest.getDescription());
-        role.setActive(roleCreateRequest.isActive());
-        return roleRepository.save(role);
+        role.setActive(roleCreateRequest.getActive());
+        return role;
     }
 
-    private void validateAndSetPermissions(Role currentRole, Role roleRequest) {
+    private void validateAndSetPermissionsForRole(Role currentRole, Role roleRequest) {
         if (roleRequest.getPermissions() != null && !roleRequest.getPermissions().isEmpty()) {
-            for (Permission permission : roleRequest.getPermissions()) {
-                if (!permissionRepository.existsById(permission.getId())) {
-                    throw new NoSuchElementException(
-                            String.format(PermissionEnum.ID_NOT_FOUND.getMessage(), permission.getId())
-                    );
-                }
-            }
 
             List<Long> permissionIds = roleRequest.getPermissions()
                     .stream()
+                    .distinct()
                     .map(Permission::getId)
                     .toList();
 
-            List<Permission> permissionList = permissionRepository.findALlByIdIn(permissionIds);
-            currentRole.setPermissions(permissionList);
+            List<Permission> listPermissions = permissionRepository.findALlByIdIn(permissionIds);
+
+            if (listPermissions.size() != permissionIds.size()) {
+                Set<Long> foundIds = listPermissions.stream()
+                        .map(Permission::getId)
+                        .collect(Collectors.toSet());
+
+                List<Long> notFoundIds = permissionIds.stream()
+                        .filter(id -> !foundIds.contains(id))
+                        .toList();
+
+                String missingIdsString = notFoundIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(", ", "(", ")"));
+
+                throw new NoSuchElementException(
+                        String.format(PermissionEnum.IDS_NOT_FOUND.getMessage(), missingIdsString)
+                );
+            }
+
+            currentRole.setPermissions(listPermissions);
         }
     }
 }
-

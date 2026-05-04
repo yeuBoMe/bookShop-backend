@@ -82,7 +82,7 @@ public class RoleController {
     @PostMapping("/import")
     @ApiMessage(ActionConstant.ROLE_IMPORT)
     public ResponseEntity<ImportFileResponse<RoleResponse>> importRolesFromFileRequest(
-            @Valid @RequestBody List<RoleCreateRequest> roleCreateRequestList
+            @Valid @RequestBody List<@Valid RoleCreateRequest> roleCreateRequestList
     ) {
         ImportFileResponse<RoleResponse> importFileResponse = roleService.importRolesFromFile(roleCreateRequestList);
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);

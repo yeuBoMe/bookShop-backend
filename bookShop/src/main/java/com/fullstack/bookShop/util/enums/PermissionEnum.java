@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum PermissionEnum {
     ID_NOT_FOUND("Permission not found with ID: %d"),
+    IDS_NOT_FOUND("Permission not found with IDs in: %s"),
     NAME_EXISTS("Permission name '%s' already exists"),
     API_EXISTS("Permission with API path '%s', method '%s' and module '%s' already exists");
 
