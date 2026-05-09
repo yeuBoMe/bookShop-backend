@@ -133,6 +133,11 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<Category> findAllCategoriesByNamesIgnoreCase(Set<String> names) {
+        return categoryRepository.findAllByNamesIgnoreCase(names);
+    }
+
+    @Override
     public ImportFileResponse<CategoryResponse> importCategoriesFromFile(
             List<CategoryCreateRequest> categoryCreateRequestList
     ) {

@@ -31,5 +31,7 @@ public interface CategoryService {
 
     Set<String> findExistingNamesIgnoreCase(Set<String> names);
 
+    List<Category> findAllCategoriesByNamesIgnoreCase(Set<String> names);
+
     ImportFileResponse<CategoryResponse> importCategoriesFromFile(List<CategoryCreateRequest> categoryCreateRequestList);
 }

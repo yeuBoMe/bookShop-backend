@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.service.interfaces;
 
+import com.fullstack.bookShop.dto.request.BookCreateRequest;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Set;
 
 public interface BookService {
 
@@ -57,5 +59,7 @@ public interface BookService {
 
     boolean checkNameAndAuthorExistsIgnoreCase(String name, String author);
 
-    ImportFileResponse<BookResponse> importBooksFromFile(List<Book> bookList);
+    Set<String> findExistingNamesAndAuthorIgnoreCase(Set<String> keys);
+
+    ImportFileResponse<BookResponse> importBooksFromFile(List<BookCreateRequest> bookCreateRequestList);
 }

@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.service.impl;
 
+import com.fullstack.bookShop.dto.request.BookCreateRequest;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
@@ -38,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -356,23 +358,42 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public ImportFileResponse<BookResponse> importBooksFromFile(List<Book> bookList) {
+    public Set<String> findExistingNamesAndAuthorIgnoreCase(Set<String> keys) {
+        return bookRepository.findExistingNamesAndAuthorsIgnoreCase(keys);
+    }
+
+    @Transactional
+    @Override
+    public ImportFileResponse<BookResponse> importBooksFromFile(List<BookCreateRequest> bookCreateRequestList) {
+
         ImportFileResponse<BookResponse> importFileResponse = new ImportFileResponse<>();
         List<BookResponse> successData = new ArrayList<>();
-        List<ImportFileResponse.DetailFaultInfo<BookResponse>> detailFaultInfoList = new ArrayList<>();
+        List<ImportFileResponse.DetailFaultInfo<BookCreateRequest>> detailFaultInfoList = new ArrayList<>();
+        List<Book> listBooksToSave = new ArrayList<>();
 
         int countSuccess = 0;
         int countError = 0;
 
-        for (int i = 0; i < bookList.size(); i++) {
-            Book book = bookList.get(i);
-            BookResponse bookResponse = bookMapper.toResponse(book, ActionConstant.CREATE);
+        Set<String> existingNamesAndAuthorsIgnoreCase
+                = getExistingNamesAndAuthorsIgnoreCaseFromBookCreateRequestList(bookCreateRequestList);
+
+        Map<String, Category> mapCategories = getMapCategoriesWithStringFromBookCreateRequestList(bookCreateRequestList);
+
+        for (int i = 0; i < bookCreateRequestList.size(); i++) {
+            BookCreateRequest bookCreateRequest = bookCreateRequestList.get(i);
 
             try {
-                validateAndSetCategory(book, book);
-                validateBookForCreate(book);
-                bookRepository.save(book);
+                validateBookForImport(existingNamesAndAuthorsIgnoreCase, bookCreateRequest);
+                Book book = buildBookFromBookCreateRequest(bookCreateRequest);
 
+                if (bookCreateRequest.getCategory() != null) {
+                    Category category = mapCategories.get(bookCreateRequest.getCategory());
+                    book.setCategory(category);
+                }
+
+                listBooksToSave.add(book);
+
+                BookResponse bookResponse = bookMapper.toResponse(book, ActionConstant.CREATE);
                 successData.add(bookResponse);
                 countSuccess++;
 
@@ -385,7 +406,7 @@ public class BookServiceImpl implements BookService {
                 detailFaultInfoList.add(new ImportFileResponse.DetailFaultInfo<>(
                         i + 1,
                         errorMessage,
-                        bookResponse
+                        bookCreateRequest
                 ));
 
                 countError++;
@@ -394,11 +415,15 @@ public class BookServiceImpl implements BookService {
                 detailFaultInfoList.add(new ImportFileResponse.DetailFaultInfo<>(
                         i + 1,
                         e.getMessage(),
-                        bookResponse
+                        bookCreateRequest
                 ));
 
                 countError++;
             }
+        }
+
+        if (!listBooksToSave.isEmpty()) {
+            bookRepository.saveAll(listBooksToSave);
         }
 
         importFileResponse.setCountSuccess(countSuccess);
@@ -439,6 +464,62 @@ public class BookServiceImpl implements BookService {
                     )
             );
         }
+    }
+
+    private void validateBookForImport(
+            Set<String> existingNamesAndAuthorsIgnoreCase,
+            BookCreateRequest bookCreateRequest
+    ) {
+        if (bookCreateRequest.getName() != null && bookCreateRequest.getAuthor() != null) {
+            String keys = (bookCreateRequest.getName() + "_" + bookCreateRequest.getAuthor()).toLowerCase().trim();
+            if (existingNamesAndAuthorsIgnoreCase.contains(keys)) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                BookEnum.NAME_AUTHOR_EXISTS.getMessage(),
+                                bookCreateRequest.getName(),
+                                bookCreateRequest.getAuthor()
+                        )
+                );
+            }
+        }
+    }
+
+    private Set<String> getExistingNamesAndAuthorsIgnoreCaseFromBookCreateRequestList(
+            List<BookCreateRequest> bookCreateRequestList
+    ) {
+        Set<String> setKeysToCheck = bookCreateRequestList.stream()
+                .map(b -> (b.getName() + "_" + b.getAuthor()).toLowerCase())
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        return findExistingNamesAndAuthorIgnoreCase(setKeysToCheck);
+    }
+
+    private Map<String, Category> getMapCategoriesWithStringFromBookCreateRequestList(
+            List<BookCreateRequest> bookCreateRequestList
+    ) {
+        Set<String> setNamesToCheck = bookCreateRequestList.stream()
+                .map(BookCreateRequest::getCategory)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        List<Category> categories = categoryService.findAllCategoriesByNamesIgnoreCase(setNamesToCheck);
+        return categories.stream()
+                .collect(Collectors.toMap(Category::getName, c -> c));
+    }
+
+    private Book buildBookFromBookCreateRequest(BookCreateRequest bookCreateRequest) {
+        Book book = new Book();
+        book.setName(bookCreateRequest.getName());
+        book.setIntroduceText(bookCreateRequest.getIntroduceText());
+        book.setDescription(bookCreateRequest.getDescription());
+        book.setReader(bookCreateRequest.getReader());
+        book.setPrice(bookCreateRequest.getPrice());
+        book.setQuantity(bookCreateRequest.getQuantity());
+        book.setAuthor(bookCreateRequest.getAuthor());
+        book.setSold(bookCreateRequest.getSold());
+        return book;
     }
 
     private void validateAndSetCategory(Book currentBook, Book bookRequest) {

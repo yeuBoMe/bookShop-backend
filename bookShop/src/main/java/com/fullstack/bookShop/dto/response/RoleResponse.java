@@ -14,7 +14,7 @@ public class RoleResponse {
     private Long id;
     private String name;
     private String description;
-    private boolean active;
+    private Boolean active;
     private List<String> permissions;
     private Instant createdAt;
     private Instant updatedAt;

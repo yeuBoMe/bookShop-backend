@@ -1,5 +1,6 @@
 package com.fullstack.bookShop.controller;
 
+import com.fullstack.bookShop.dto.request.BookCreateRequest;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
@@ -195,9 +196,9 @@ public class BookController {
     @PostMapping("/import")
     @ApiMessage(ActionConstant.BOOK_IMPORT)
     public ResponseEntity<ImportFileResponse<BookResponse>> importBooksFromFileRequest(
-            @Valid @RequestBody List<Book> bookList
+            @Valid @RequestBody List<@Valid BookCreateRequest> bookCreateRequestList
     ) {
-        ImportFileResponse<BookResponse> restImportDTO = bookService.importBooksFromFile(bookList);
+        ImportFileResponse<BookResponse> restImportDTO = bookService.importBooksFromFile(bookCreateRequestList);
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(restImportDTO);
         return ResponseEntity
                 .status(httpStatus)

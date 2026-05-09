@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Set;
+
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificationExecutor<Book> {
 
@@ -19,6 +21,13 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
         AND LOWER(b.author) = LOWER(:author)
     """)
     boolean existsByNameAndAuthorIgnoreCase(@Param("name") String name, @Param("author") String author);
+
+    @Query("""
+         SELECT LOWER(CONCAT(b.name, '_', b.author))
+         FROM Book b 
+         WHERE LOWER(CONCAT(b.name, '_', b.author)) IN :keys
+    """)
+    Set<String> findExistingNamesAndAuthorsIgnoreCase(@Param("keys") Set<String> keys);
 
     // Find list book with average rating filter
     @Query("""
