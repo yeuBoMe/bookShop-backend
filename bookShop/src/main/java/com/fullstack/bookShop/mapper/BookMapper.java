@@ -3,20 +3,15 @@ package com.fullstack.bookShop.mapper;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.model.Book;
 import com.fullstack.bookShop.model.Category;
-import com.fullstack.bookShop.repository.RatingRepository;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
 public class BookMapper {
 
-    private final RatingRepository ratingRepository;
-
-    public BookResponse toResponse(Book book, String methodName) {
+    public BookResponse toResponse(Book book, String methodName, Double... averageStars) {
         BookResponse.BookResponseBuilder builder = BookResponse.builder()
                 .id(book.getId())
                 .name(book.getName())
@@ -36,7 +31,11 @@ public class BookMapper {
             builder.updatedAt(book.getUpdatedAt())
                     .updatedBy(book.getUpdatedBy());
         } else if (ActionConstant.FETCH.equals(methodName)) {
-            builder.averageStars(ratingRepository.getAverageRatingByBookId(book.getId()))
+            builder.averageStars(
+                            averageStars.length > 0
+                                    ? averageStars[0]
+                                    : 0.0
+                    )
                     .createdAt(book.getCreatedAt())
                     .updatedAt(book.getUpdatedAt())
                     .createdBy(book.getCreatedBy())

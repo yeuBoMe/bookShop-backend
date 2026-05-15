@@ -66,8 +66,7 @@ public class BookController {
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.BOOK_GET)
     public ResponseEntity<BookResponse> getBookByIdRequest(@PathVariable Long id) {
-        Book bookGetById = bookService.getBookById(id);
-        return ResponseEntity.ok(bookMapper.toResponse(bookGetById, ActionConstant.FETCH));
+        return ResponseEntity.ok(bookService.getBookResponseById(id));
     }
 
     @IsAdmin

@@ -61,5 +61,7 @@ public interface BookService {
 
     Set<String> findExistingNamesAndAuthorIgnoreCase(Set<String> keys);
 
+    BookResponse getBookResponseById(Long id);
+
     ImportFileResponse<BookResponse> importBooksFromFile(List<BookCreateRequest> bookCreateRequestList);
 }

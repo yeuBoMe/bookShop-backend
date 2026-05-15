@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.dto.request.BookCreateRequest;
+import com.fullstack.bookShop.dto.response.BookAverageRatingResponse;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
@@ -67,13 +68,9 @@ public class BookServiceImpl implements BookService {
     @Override
     public PaginationResponse fetchAllBooks(Specification<Book> spec, Pageable pageable) {
         Page<Book> bookPage = bookRepository.findAll(spec, pageable);
-
-        List<BookResponse> bookResponseList = bookPage.getContent()
-                .stream()
-                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
-                .toList();
-
         PaginationResponse paginationResponse = PaginationUtil.fetchAllDataWithPagination(bookPage, pageable);
+
+        List<BookResponse> bookResponseList = buildListBooksResponseForBookPage(bookPage.getContent());
         paginationResponse.setResult(bookResponseList);
         return paginationResponse;
     }
@@ -81,24 +78,17 @@ public class BookServiceImpl implements BookService {
     @Override
     public PaginationResponse fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable) {
         Page<Book> bookPageWithAverageRating = bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
+        PaginationResponse paginationResponse
+                = PaginationUtil.fetchAllDataWithPagination(bookPageWithAverageRating, pageable);
 
-        List<BookResponse> bookResponseList = bookPageWithAverageRating.getContent()
-                .stream()
-                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
-                .toList();
-
-        PaginationResponse paginationResponse =
-                PaginationUtil.fetchAllDataWithPagination(bookPageWithAverageRating, pageable);
+        List<BookResponse> bookResponseList = buildListBooksResponseForBookPage(bookPageWithAverageRating.getContent());
         paginationResponse.setResult(bookResponseList);
         return paginationResponse;
     }
 
     @Override
     public List<BookResponse> fetchAllBookResponsesFromBooks() {
-        return bookRepository.findAll()
-                .stream()
-                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
-                .toList();
+        return buildListBooksResponseForBookPage(bookRepository.findAll());
     }
 
     @Transactional
@@ -156,8 +146,12 @@ public class BookServiceImpl implements BookService {
         Book bookGetById = getBookById(id);
         validateAndSetCategory(bookGetById, bookUpdated);
 
-        if (bookUpdated.getName() != null && !bookUpdated.getName().trim().isEmpty()) {
+        boolean shouldValidate = bookUpdated.getName() != null && bookUpdated.getAuthor() != null;
+        if (shouldValidate) {
             validateBookForUpdate(bookGetById, bookUpdated);
+        }
+
+        if (bookUpdated.getName() != null && !bookUpdated.getName().trim().isEmpty()) {
             bookGetById.setName(bookUpdated.getName());
         }
         if (bookUpdated.getPrice() != null) {
@@ -167,7 +161,6 @@ public class BookServiceImpl implements BookService {
             bookGetById.setQuantity(bookUpdated.getQuantity());
         }
         if (bookUpdated.getAuthor() != null && !bookUpdated.getAuthor().trim().isEmpty()) {
-            validateBookForUpdate(bookGetById, bookUpdated);
             bookGetById.setAuthor(bookUpdated.getAuthor());
         }
         if (bookUpdated.getDescription() != null && !bookUpdated.getDescription().trim().isEmpty()) {
@@ -520,6 +513,43 @@ public class BookServiceImpl implements BookService {
         book.setAuthor(bookCreateRequest.getAuthor());
         book.setSold(bookCreateRequest.getSold());
         return book;
+    }
+
+    @Override
+    public BookResponse getBookResponseById(Long id) {
+        Book bookGetById = getBookById(id);
+        Double averageStars = ratingRepository.getAverageRatingByBookId(id);
+
+        return bookMapper.toResponse(
+                bookGetById,
+                ActionConstant.FETCH,
+                averageStars
+        );
+    }
+
+    private Map<Long, Double> getAverageRatingsMapFromListBook(List<Book> allBooks) {
+        Set<Long> bookIds = allBooks.stream()
+                .map(Book::getId)
+                .collect(Collectors.toSet());
+
+        return ratingRepository.getAverageRatingsByBookIds(bookIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        BookAverageRatingResponse::getBookId,
+                        BookAverageRatingResponse::getAverageStars
+                ));
+    }
+
+    private List<BookResponse> buildListBooksResponseForBookPage(List<Book> allBooks) {
+        Map<Long, Double> averageRatingsMap = getAverageRatingsMapFromListBook(allBooks);
+
+        return allBooks.stream()
+                .map(b -> bookMapper.toResponse(
+                        b,
+                        ActionConstant.FETCH,
+                        averageRatingsMap.getOrDefault(b.getId(), 0.0)
+                ))
+                .toList();
     }
 
     private void validateAndSetCategory(Book currentBook, Book bookRequest) {
