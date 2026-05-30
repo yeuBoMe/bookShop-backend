@@ -355,6 +355,11 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findExistingNamesAndAuthorsIgnoreCase(keys);
     }
 
+    @Override
+    public List<Book> getAllBooksByIds(Set<Long> bookIds) {
+        return bookRepository.findAllByBookIds(bookIds);
+    }
+
     @Transactional
     @Override
     public ImportFileResponse<BookResponse> importBooksFromFile(List<BookCreateRequest> bookCreateRequestList) {

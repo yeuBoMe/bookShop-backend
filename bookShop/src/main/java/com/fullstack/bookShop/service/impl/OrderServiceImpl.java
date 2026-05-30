@@ -25,9 +25,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -143,25 +142,45 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private List<OrderDetail> buildListOrderDetail(Order orderRequest) {
-        return Optional.ofNullable(orderRequest.getDetail())
-                .orElse(List.of())
+        List<OrderDetail> orderDetailsFromRequest = Optional.ofNullable(orderRequest.getDetail())
+                .orElse(List.of());
+
+        Set<Long> bookIds = orderDetailsFromRequest.stream()
+                .filter(detail -> (
+                        detail.getBook() != null
+                        && detail.getBook().getId() != null
+                ))
+                .map(detail -> detail.getBook().getId())
+                .collect(Collectors.toSet());
+
+        Map<Long, Book> bookMap = bookService.getAllBooksByIds(bookIds)
                 .stream()
-                .map(orderDetail -> saveOrderDetail(orderRequest, orderDetail))
-                .toList();
-    }
+                .collect(Collectors.toMap(Book::getId, b -> b));
 
-    private OrderDetail saveOrderDetail(Order orderRequest, OrderDetail orderDetail) {
-        OrderDetail orderDetailNeedToSave = new OrderDetail();
-
-        if (orderDetail.getBook() != null) {
-            Long bookId = orderDetail.getBook().getId();
-            if (!bookService.checkIdExists(bookId)) {
+        for (Long bookId : bookIds) {
+            if (!bookMap.containsKey(bookId)) {
                 throw new NoSuchElementException(
                         String.format(BookEnum.ID_NOT_FOUND.getMessage(), bookId)
                 );
             }
-            Book bookGetById = bookService.getBookById(bookId);
-            orderDetailNeedToSave.setBook(bookGetById);
+        }
+
+        return orderDetailsFromRequest.stream()
+                .map(orderDetail -> saveOrderDetail(orderRequest, orderDetail, bookMap))
+                .toList();
+    }
+
+    private OrderDetail saveOrderDetail(
+            Order orderRequest,
+            OrderDetail orderDetail,
+            Map<Long, Book> bookMap
+    ) {
+        OrderDetail orderDetailNeedToSave = new OrderDetail();
+
+        if (orderDetail.getBook() != null) {
+            Long bookId = orderDetail.getBook().getId();
+            Book book = bookMap.get(bookId);
+            orderDetailNeedToSave.setBook(book);
         }
 
         orderDetailNeedToSave.setOrder(orderRequest);
