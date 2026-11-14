@@ -1,6 +1,7 @@
 package com.fullstack.bookShop.service.interfaces;
 
 import com.fullstack.bookShop.dto.request.OrderStatusRequest;
+import com.fullstack.bookShop.dto.response.OrderResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
 import com.fullstack.bookShop.model.Order;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,10 @@ public interface OrderService {
     Order partialUpdateOrderById(Long id, OrderStatusRequest orderStatusRequest);
 
     Order getOrderById(Long id);
+
+    OrderResponse getOrderResponseById(Long id);
+
+    OrderResponse partialUpdateOrderResponseById(Long id, OrderStatusRequest orderStatusRequest);
 
     boolean checkIdExists(Long id);
 

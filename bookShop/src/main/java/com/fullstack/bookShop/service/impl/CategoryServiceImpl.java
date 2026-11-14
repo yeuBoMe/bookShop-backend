@@ -13,6 +13,8 @@ import com.fullstack.bookShop.util.constant.CommonMessage;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.CategoryEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
+import com.fullstack.bookShop.util.message.MessageTranslator;
+import com.fullstack.bookShop.util.string.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,8 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryServiceImpl.class);
+
+    private final MessageTranslator messageTranslator;
 
     private final CategoryMapper categoryMapper;
 
@@ -86,7 +90,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category categoryGetById = getCategoryById(id);
         validateCategoryForUpdate(categoryGetById, categoryRequest);
 
-        if (categoryRequest.getName() != null && !categoryRequest.getName().trim().isEmpty()) {
+        if (StringUtils.hasValue(categoryRequest.getName())) {
             categoryGetById.setName(categoryRequest.getName());
         }
 
@@ -99,7 +103,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(CategoryEnum.ID_NOT_FOUND.getMessage(), id)
+                        messageTranslator.toLocale(CategoryEnum.ID_NOT_FOUND.getMessageKey(), id)
                 ));
     }
 
@@ -109,7 +113,7 @@ public class CategoryServiceImpl implements CategoryService {
         LOGGER.info("Deleting category id: {}", id);
         if (!checkIdExists(id)) {
             throw new NoSuchElementException(
-                    String.format(CategoryEnum.ID_NOT_FOUND.getMessage(), id)
+                    messageTranslator.toLocale(CategoryEnum.ID_NOT_FOUND.getMessageKey(), id)
             );
         }
         bookRepository.deleteByCategoryId(id);
@@ -201,7 +205,7 @@ public class CategoryServiceImpl implements CategoryService {
         importFileResponse.setCountSuccess(countSuccess);
         importFileResponse.setCountError(countError);
         importFileResponse.setItems(successData);
-        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
+        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : messageTranslator.toLocale(CommonMessage.IMPORT_SUCCESS));
 
         return importFileResponse;
     }
@@ -221,7 +225,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (checkNameExistsIgnoreCase(categoryRequest.getName())) {
             LOGGER.warn("Create failed: Category name '{}' already exists", categoryRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(CategoryEnum.NAME_EXISTS.getMessage(), categoryRequest.getName())
+                    messageTranslator.toLocale(CategoryEnum.NAME_EXISTS.getMessageKey(), categoryRequest.getName())
             );
         }
     }
@@ -231,7 +235,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (isNameExists && !(currentCategory.getName().equals(categoryRequest.getName()))) {
             LOGGER.warn("Update failed: Category name '{}' already exists", categoryRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(CategoryEnum.NAME_EXISTS.getMessage(), categoryRequest.getName())
+                    messageTranslator.toLocale(CategoryEnum.NAME_EXISTS.getMessageKey(), categoryRequest.getName())
             );
         }
     }
@@ -241,14 +245,12 @@ public class CategoryServiceImpl implements CategoryService {
             CategoryCreateRequest categoryCreateRequest
     ) {
         // Check name exists
-        String normalizedNameLowerCase = categoryCreateRequest.getName() != null
-                ? categoryCreateRequest.getName().trim().toLowerCase()
-                : null;
+        String normalizedNameLowerCase = StringUtils.trimLowerBlank(categoryCreateRequest.getName());
 
         if (existingNamesIgnoreCase.contains(normalizedNameLowerCase)) {
             LOGGER.warn("Import failed: Category name '{}' already exists", categoryCreateRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(CategoryEnum.NAME_EXISTS.getMessage(), categoryCreateRequest.getName())
+                    messageTranslator.toLocale(CategoryEnum.NAME_EXISTS.getMessageKey(), categoryCreateRequest.getName())
             );
         }
     }

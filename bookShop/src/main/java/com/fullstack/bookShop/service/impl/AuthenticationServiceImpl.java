@@ -46,7 +46,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User userGetByEmail = userService.getUserByEmail(loginRequest.getUsername());
+        // Nap kem role + permissions: LoginResponse can permissions, ma
+        // open-in-view da tat nen khong the doc lazy sau khi ra khoi service.
+        User userGetByEmail = userService.getUserWithPermissionsByEmail(loginRequest.getUsername());
 
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setUser(UserLoginResponseUtil.buildUserLogin(userGetByEmail));
@@ -61,7 +63,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public LoginResponse refresh(String refreshTokenOld) {
         Jwt jwtChecked = securityUtil.validateRefreshToken(refreshTokenOld);
         String email = jwtChecked.getSubject();
-        User userGetByEmailAndRefreshToken = userService.getUserByEmailAndRefreshToken(email, refreshTokenOld);
+        User userGetByEmailAndRefreshToken =
+                userService.getUserWithPermissionsByEmailAndRefreshToken(email, refreshTokenOld);
 
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setUser(UserLoginResponseUtil.buildUserLogin(userGetByEmailAndRefreshToken));
@@ -75,7 +78,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public LoginResponse.UserGetAccountResponse account() {
         String email = SecurityUtil.getCurrentUserLoginEmail().orElse(null);
-        User userGetByEmail = userService.getUserByEmail(email);
+        User userGetByEmail = userService.getUserWithPermissionsByEmail(email);
 
         LoginResponse.UserGetAccountResponse userGetAccountResponse = new LoginResponse.UserGetAccountResponse();
         userGetAccountResponse.setUser(UserLoginResponseUtil.buildUserLogin(userGetByEmail));

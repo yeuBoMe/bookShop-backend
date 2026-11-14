@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface FileService {
 
-    void createUploadFolder(String folder) throws URISyntaxException;
+    void createUploadFolder(String folder) throws URISyntaxException, IOException;
 
     String storeSingleFile(MultipartFile file, String folder) throws URISyntaxException, IOException;
 

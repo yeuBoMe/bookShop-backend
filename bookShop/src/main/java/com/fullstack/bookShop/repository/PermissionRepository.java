@@ -13,7 +13,12 @@ import java.util.List;
 public interface PermissionRepository extends JpaRepository<Permission, Long>, JpaSpecificationExecutor<Permission> {
 
     // check exists
-    @Query("SELECT COUNT(p) > 0 FROM Permission p WHERE LOWER(p.name) = LOWER(:name)")
+    @Query("""
+        SELECT
+            COUNT(p) > 0
+        FROM Permission p
+        WHERE LOWER(p.name) = LOWER(:name)
+    """)
     boolean existsByNameIgnoreCase(@Param("name") String name);
 
     boolean existsByApiPathAndMethodAndModule(String apiPath, String method, String module);

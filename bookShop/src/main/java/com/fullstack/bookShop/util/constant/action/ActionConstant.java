@@ -11,91 +11,104 @@ public final class ActionConstant {
     public static final String DELETE = "Delete";
 
     // Permission
-    public static final String PERMISSION_FETCH_ALL = "Fetch all permissions";
-    public static final String PERMISSION_CREATE = "Create permission";
-    public static final String PERMISSION_GET = "Get permission";
-    public static final String PERMISSION_UPDATE = "Update permission";
-    public static final String PERMISSION_DELETE = "Delete permission";
+    public static final String PERMISSION_FETCH_ALL = "api.permission.fetch-all";
+    public static final String PERMISSION_CREATE = "api.permission.create";
+    public static final String PERMISSION_GET = "api.permission.get";
+    public static final String PERMISSION_UPDATE = "api.permission.update";
+    public static final String PERMISSION_DELETE = "api.permission.delete";
 
     // Role
-    public static final String ROLE_FETCH_ALL = "Fetch all roles";
-    public static final String ROLE_CREATE = "Create role";
-    public static final String ROLE_GET = "Get role";
-    public static final String ROLE_UPDATE = "Update role";
-    public static final String ROLE_DELETE = "Delete role";
-    public static final String ROLE_IMPORT = "Import roles from file";
+    public static final String ROLE_FETCH_ALL = "api.role.fetch-all";
+    public static final String ROLE_CREATE = "api.role.create";
+    public static final String ROLE_GET = "api.role.get";
+    public static final String ROLE_UPDATE = "api.role.update";
+    public static final String ROLE_DELETE = "api.role.delete";
+    public static final String ROLE_IMPORT = "api.role.import";
+    public static final String ROLE_IMPORT_BATCH = "api.role.import-batch";
 
     // User
-    public static final String USER_FETCH_ALL = "Fetch all users";
-    public static final String USER_CREATE = "Create user";
-    public static final String USER_GET = "Get user";
-    public static final String USER_UPDATE = "Update user";
-    public static final String USER_UPDATE_PARTIAL = "Update user partial";
-    public static final String USER_UPDATE_PASSWORD = "Update user password";
-    public static final String USER_UPLOAD_AVATAR = "Upload user avatar";
-    public static final String USER_UPLOAD_AVATAR_CLOUDINARY = "Upload user avatar to Cloudinary";
-    public static final String USER_DELETE = "Delete user";
-    public static final String USER_DELETE_AVATAR = "Delete user avatar";
-    public static final String USER_DELETE_AVATAR_CLOUDINARY = "Delete user avatar from Cloudinary";
-    public static final String USER_IMPORT = "Import users from file";
+    public static final String USER_FETCH_ALL = "api.user.fetch-all";
+    public static final String USER_CREATE = "api.user.create";
+    public static final String USER_GET = "api.user.get";
+    public static final String USER_UPDATE = "api.user.update";
+    public static final String USER_UPDATE_PARTIAL = "api.user.update-partial";
+    public static final String USER_UPDATE_PASSWORD = "api.user.update-password";
+    public static final String USER_UPLOAD_AVATAR = "api.user.upload-avatar";
+    public static final String USER_UPLOAD_AVATAR_CLOUDINARY = "api.user.upload-avatar-cloudinary";
+    public static final String USER_DELETE = "api.user.delete";
+    public static final String USER_DELETE_AVATAR = "api.user.delete-avatar";
+    public static final String USER_DELETE_AVATAR_CLOUDINARY = "api.user.delete-avatar-cloudinary";
+    public static final String USER_IMPORT = "api.user.import";
+    public static final String USER_IMPORT_BATCH = "api.user.import-batch";
 
     // Book
-    public static final String BOOK_FETCH_ALL = "Fetch all books";
-    public static final String BOOK_FETCH_AVERAGE_RATE = "Fetch list books with average rating";
-    public static final String BOOK_CREATE = "Create book";
-    public static final String BOOK_GET = "Get book";
-    public static final String BOOK_UPDATE = "Update book";
-    public static final String BOOK_UPDATE_PARTIAL = "Update book partial";
-    public static final String BOOK_UPLOAD_SINGLE_IMAGE = "Upload book image";
-    public static final String BOOK_UPDATE_MULTIPLE_IMAGES = "Upload book multiple images";
-    public static final String BOOK_UPLOAD_IMAGE_CLOUDINARY = "Upload book image to Cloudinary";
-    public static final String BOOK_UPLOAD_MULTIPLE_IMAGES_CLOUDINARY = "Upload book multiple images to Cloudinary";
-    public static final String BOOK_DELETE = "Delete book";
-    public static final String BOOK_DELETE_IMAGE = "Delete book image";
-    public static final String BOOK_DELETE_MULTIPLE_IMAGES = "Delete book multiple images";
-    public static final String BOOK_DELETE_IMAGE_CLOUDINARY = "Delete book image from Cloudinary";
-    public static final String BOOK_DELETE_MULTIPLE_IMAGES_CLOUDINARY = "Delete book multiple images from Cloudinary";
-    public static final String BOOK_IMPORT = "Import books from file";
+    public static final String BOOK_FETCH_ALL = "api.book.fetch-all";
+    public static final String BOOK_FETCH_AVERAGE_RATE = "api.book.fetch-average-rate";
+    public static final String BOOK_CREATE = "api.book.create";
+    public static final String BOOK_GET = "api.book.get";
+    public static final String BOOK_UPDATE = "api.book.update";
+    public static final String BOOK_UPDATE_PARTIAL = "api.book.update-partial";
+    public static final String BOOK_UPLOAD_SINGLE_IMAGE = "api.book.upload-single-image";
+    public static final String BOOK_UPDATE_MULTIPLE_IMAGES = "api.book.update-multiple-images";
+    public static final String BOOK_UPLOAD_IMAGE_CLOUDINARY = "api.book.upload-image-cloudinary";
+    public static final String BOOK_UPLOAD_MULTIPLE_IMAGES_CLOUDINARY = "api.book.upload-multiple-images-cloudinary";
+    public static final String BOOK_DELETE = "api.book.delete";
+    public static final String BOOK_DELETE_IMAGE = "api.book.delete-image";
+    public static final String BOOK_DELETE_MULTIPLE_IMAGES = "api.book.delete-multiple-images";
+    public static final String BOOK_DELETE_IMAGE_CLOUDINARY = "api.book.delete-image-cloudinary";
+    public static final String BOOK_DELETE_MULTIPLE_IMAGES_CLOUDINARY = "api.book.delete-multiple-images-cloudinary";
+    public static final String BOOK_IMPORT = "api.book.import";
+    public static final String BOOK_IMPORT_BATCH = "api.book.import-batch";
+    public static final String BOOK_SEARCH = "api.book.search";
 
     // Category
-    public static final String CATEGORY_FETCH_ALL = "Fetch all categories";
-    public static final String CATEGORY_CREATE = "Create category";
-    public static final String CATEGORY_GET = "Get category";
-    public static final String CATEGORY_UPDATE = "Update category";
-    public static final String CATEGORY_UPDATE_PARTIAL = "Update category partial";
-    public static final String CATEGORY_DELETE = "Delete category";
-    public static final String CATEGORY_IMPORT = "Import categories from file";
+    public static final String CATEGORY_FETCH_ALL = "api.category.fetch-all";
+    public static final String CATEGORY_CREATE = "api.category.create";
+    public static final String CATEGORY_GET = "api.category.get";
+    public static final String CATEGORY_UPDATE = "api.category.update";
+    public static final String CATEGORY_UPDATE_PARTIAL = "api.category.update-partial";
+    public static final String CATEGORY_DELETE = "api.category.delete";
+    public static final String CATEGORY_IMPORT = "api.category.import";
+    public static final String CATEGORY_IMPORT_BATCH = "api.category.import-batch";
 
     // Rating
-    public static final String RATING_FETCH_ALL = "Fetch all ratings";
-    public static final String RATING_FETCH_BY_BOOK = "Fetch ratings by book";
-    public static final String RATING_CREATE = "Create rating";
-    public static final String RATING_GET_BY_USER_AND_BOOK = "Get rating by user and book";
-    public static final String RATING_GET = "Get rating";
-    public static final String RATING_DELETE = "Delete rating";
+    public static final String RATING_FETCH_ALL = "api.rating.fetch-all";
+    public static final String RATING_FETCH_BY_BOOK = "api.rating.fetch-by-book";
+    public static final String RATING_CREATE = "api.rating.create";
+    public static final String RATING_GET_BY_USER_AND_BOOK = "api.rating.get-by-user-and-book";
+    public static final String RATING_GET = "api.rating.get";
+    public static final String RATING_DELETE = "api.rating.delete";
 
     // Order
-    public static final String ORDER_FETCH_ALL = "Fetch all orders";
-    public static final String ORDER_HISTORY = "Fetch list order history";
-    public static final String ORDER_CREATE = "Create order";
-    public static final String ORDER_GET = "Get order";
-    public static final String ORDER_UPDATE_PARTIAL = "Update order partial";
-    public static final String ORDER_DELETE = "Delete order";
+    public static final String ORDER_FETCH_ALL = "api.order.fetch-all";
+    public static final String ORDER_HISTORY = "api.order.history";
+    public static final String ORDER_CREATE = "api.order.create";
+    public static final String ORDER_GET = "api.order.get";
+    public static final String ORDER_UPDATE_PARTIAL = "api.order.update-partial";
+    public static final String ORDER_DELETE = "api.order.delete";
 
     // Authentication
-    public static final String LOGIN = "Login";
-    public static final String REGISTER = "Register";
-    public static final String LOGOUT = "Logout";
-    public static final String REFRESH = "Refresh";
-    public static final String ACCOUNT = "Get account information";
+    public static final String LOGIN = "api.auth.login";
+    public static final String REGISTER = "api.auth.register";
+    public static final String LOGOUT = "api.auth.logout";
+    public static final String REFRESH = "api.auth.refresh";
+    public static final String ACCOUNT = "api.auth.account";
 
     // Dashboard
-    public static final String DASHBOARD = "Get dashboard information";
+    public static final String DASHBOARD = "api.dashboard.get";
+    public static final String DASHBOARD_STATISTICS = "api.dashboard.statistics";
+    public static final String DASHBOARD_REVENUE = "api.dashboard.revenue";
+    public static final String DASHBOARD_REVENUE_BY_DAY = "api.dashboard.revenue-by-day";
+    public static final String DASHBOARD_ORDER_STATUS = "api.dashboard.order-status";
+    public static final String DASHBOARD_TOP_BOOKS = "api.dashboard.top-books";
+    public static final String DASHBOARD_TOP_CUSTOMERS = "api.dashboard.top-customers";
+    public static final String DASHBOARD_REVENUE_BY_CATEGORY = "api.dashboard.revenue-by-category";
+    public static final String DASHBOARD_LOW_STOCK = "api.dashboard.low-stock";
 
     // Chatbot
-    public static final String CHATBOT = "Chatbot response successfully";
+    public static final String CHATBOT = "api.chatbot.response";
 
     // Payment
-    public static final String MOMO = "Tạo link thanh toán MomoPay thành công";
-    public static final String VN_PAY = "Tạo link thanh toán VNPay thành công";
+    public static final String MOMO = "api.payment.momo";
+    public static final String VN_PAY = "api.payment.vnpay";
 }

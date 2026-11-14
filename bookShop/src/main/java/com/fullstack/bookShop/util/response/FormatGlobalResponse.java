@@ -4,6 +4,8 @@ import com.fullstack.bookShop.dto.response.global.GlobalResponse;
 import com.fullstack.bookShop.util.annotation.ApiMessage;
 import com.fullstack.bookShop.util.constant.CommonMessage;
 import com.fullstack.bookShop.util.constant.auth.EndpointConstant;
+import com.fullstack.bookShop.util.message.MessageTranslator;
+import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -18,7 +20,10 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 @ControllerAdvice
+@RequiredArgsConstructor
 public class FormatGlobalResponse implements ResponseBodyAdvice<Object> {
+
+    private final MessageTranslator messageTranslator;
 
     @Override
     public boolean supports(
@@ -59,11 +64,10 @@ public class FormatGlobalResponse implements ResponseBodyAdvice<Object> {
         } else {
             globalResponse.setData(body);
             ApiMessage apiMessage = returnType.getMethodAnnotation(ApiMessage.class);
-            globalResponse.setMessage(
-                    apiMessage != null
-                            ? apiMessage.value()
-                            : CommonMessage.API_CALL_SUCCESS
-            );
+            String messageKey = apiMessage != null
+                    ? apiMessage.value()
+                    : CommonMessage.API_CALL_SUCCESS;
+            globalResponse.setMessage(messageTranslator.toLocale(messageKey));
         }
 
         return globalResponse;

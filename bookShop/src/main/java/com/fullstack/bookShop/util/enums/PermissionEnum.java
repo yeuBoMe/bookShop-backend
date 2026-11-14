@@ -4,14 +4,14 @@ import lombok.Getter;
 
 @Getter
 public enum PermissionEnum {
-    ID_NOT_FOUND("Permission not found with ID: %d"),
-    IDS_NOT_FOUND("Permission not found with IDs in: %s"),
-    NAME_EXISTS("Permission name '%s' already exists"),
-    API_EXISTS("Permission with API path '%s', method '%s' and module '%s' already exists");
+    ID_NOT_FOUND("permission.error.id-not-found"),
+    IDS_NOT_FOUND("permission.error.ids-not-found"),
+    NAME_EXISTS("permission.error.name-exists"),
+    API_EXISTS("permission.error.api-exists");
 
-    private final String message;
+    private final String messageKey;
 
-    PermissionEnum(String message) {
-        this.message = message;
+    PermissionEnum(String messageKey) {
+        this.messageKey = messageKey;
     }
 }

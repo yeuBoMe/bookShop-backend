@@ -4,12 +4,13 @@ import lombok.Getter;
 
 @Getter
 public enum RatingEnum {
-    ID_NOT_FOUND("Rating not found with ID: %d"),
-    USER_BOOK_NOT_FOUND("Rating not found with userId '%d' and bookId '%d'");
+    ID_NOT_FOUND("rating.error.id-not-found"),
+    USER_BOOK_NOT_FOUND("rating.error.user-book-not-found"),
+    USER_BOOK_ALREADY_RATED("rating.error.user-book-already-rated");
 
-    private final String message;
+    private final String messageKey;
 
-    RatingEnum(String message) {
-        this.message = message;
+    RatingEnum(String messageKey) {
+        this.messageKey = messageKey;
     }
 }

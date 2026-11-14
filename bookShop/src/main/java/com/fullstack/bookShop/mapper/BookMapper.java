@@ -11,7 +11,7 @@ import java.util.Optional;
 @Component
 public class BookMapper {
 
-    public BookResponse toResponse(Book book, String methodName, Double... averageStars) {
+    public BookResponse toResponse(Book book, String methodName) {
         BookResponse.BookResponseBuilder builder = BookResponse.builder()
                 .id(book.getId())
                 .name(book.getName())
@@ -22,7 +22,8 @@ public class BookMapper {
                 .author(book.getAuthor())
                 .introduceText(book.getIntroduceText())
                 .description(book.getDescription())
-                .reader(book.getReader());
+                .reader(book.getReader())
+                .sold(book.getSold());
 
         if (ActionConstant.CREATE.equals(methodName)) {
             builder.createdAt(book.getCreatedAt())
@@ -31,11 +32,8 @@ public class BookMapper {
             builder.updatedAt(book.getUpdatedAt())
                     .updatedBy(book.getUpdatedBy());
         } else if (ActionConstant.FETCH.equals(methodName)) {
-            builder.averageStars(
-                            averageStars.length > 0
-                                    ? averageStars[0]
-                                    : 0.0
-                    )
+            builder.averageStars(book.getAverageStars())
+                    .ratingCount(book.getRatingCount())
                     .createdAt(book.getCreatedAt())
                     .updatedAt(book.getUpdatedAt())
                     .createdBy(book.getCreatedBy())

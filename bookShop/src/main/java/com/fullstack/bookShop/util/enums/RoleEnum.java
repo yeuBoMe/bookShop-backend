@@ -4,13 +4,13 @@ import lombok.Getter;
 
 @Getter
 public enum RoleEnum {
-    ID_NOT_FOUND("Role not found with ID: %d"),
-    NAME_NOT_FOUND("Role not found with name: '%s'"),
-    NAME_EXISTS("Role name '%s' already exists");
+    ID_NOT_FOUND("role.error.id-not-found"),
+    NAME_NOT_FOUND("role.error.name-not-found"),
+    NAME_EXISTS("role.error.name-exists");
 
-    private final String message;
+    private final String messageKey;
 
-    RoleEnum(String message) {
-        this.message = message;
+    RoleEnum(String messageKey) {
+        this.messageKey = messageKey;
     }
 }

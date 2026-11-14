@@ -3,6 +3,9 @@ package com.fullstack.bookShop.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fullstack.bookShop.service.interfaces.MomoService;
+import com.fullstack.bookShop.util.security.SignatureUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import net.minidev.json.JSONObject;
 
@@ -24,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class MomoServiceImpl implements MomoService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MomoServiceImpl.class);
 
     @Value("${bookshop.frontend.url}")
     private String frontendUrl;
@@ -111,11 +116,11 @@ public class MomoServiceImpl implements MomoService {
                     "&partnerCode=" + PARTNER_CODE + "&requestId=" + params.get("requestId");
             String mySig = hmacSHA256(raw, SECRET_KEY);
 
-            if (mySig.equals(receivedSig) && "0".equals(params.get("resultCode"))) {
+            if (SignatureUtil.matches(mySig, receivedSig) && "0".equals(params.get("resultCode"))) {
                 return true;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Verify Momo signature failed: {}", e.getMessage(), e);
         }
         return false;
     }

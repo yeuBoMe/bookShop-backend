@@ -6,17 +6,36 @@ import com.fullstack.bookShop.model.User;
 import com.fullstack.bookShop.repository.PermissionRepository;
 import com.fullstack.bookShop.repository.RoleRepository;
 import com.fullstack.bookShop.repository.UserRepository;
+import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.string.StringUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class DatabaseInitializer implements CommandLineRunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseInitializer.class);
+
+    @Value("${bookshop.admin.email:}")
+    private String adminEmail;
+
+    @Value("${bookshop.admin.password:}")
+    private String adminPassword;
+
+    @Value("${bookshop.admin.full-name:Administrator}")
+    private String adminFullName;
+
+    private final PasswordEncoder passwordEncoder;
 
     private final PermissionRepository permissionRepository;
 
@@ -25,8 +44,9 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
 
     @Override
-    public void run(String... args) throws Exception {
-        System.out.println(">>> START INIT DATABASE");
+    @Transactional
+    public void run(String... args) {
+        LOGGER.info(">>> START INIT DATABASE");
 
         long countPermissions = permissionRepository.count();
 
@@ -128,21 +148,64 @@ public class DatabaseInitializer implements CommandLineRunner {
 
         List<Permission> allPermissions = this.permissionRepository.findAll();
 
-        Role roleGetByName = roleRepository.findByName("ADMIN")
-                .orElseThrow(() -> new NoSuchElementException("Role not found!"));
+        Role adminRole = findOrCreateRole(AuthorityConstant.ADMIN, "Toan quyen quan tri he thong");
+        findOrCreateRole(AuthorityConstant.USER, "Nguoi dung cuoi");
 
-        roleGetByName.setPermissions(allPermissions);
-        roleRepository.save(roleGetByName);
+        syncPermissionsForAdminRole(adminRole, allPermissions);
+        createAdminUserIfConfigured(adminRole);
 
-        User userGetByEmail = userRepository.findByEmail("ninh@gmail.com")
-                .orElseThrow(() -> new NoSuchElementException("User not found!"));
+        LOGGER.info(
+                ">>> END INIT DATABASE (permissions={}, seeded={})",
+                allPermissions.size(),
+                countPermissions == 0
+        );
+    }
 
-        userGetByEmail.setRole(roleGetByName);
-        userRepository.save(userGetByEmail);
+    /** Role phai duoc seed o day: DB moi khong co san role nao, thieu ADMIN la app khong khoi dong duoc. */
+    private Role findOrCreateRole(String name, String description) {
+        return roleRepository.findByName(name)
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setName(name);
+                    role.setDescription(description);
+                    role.setActive(true);
+                    LOGGER.info(">>> Create missing role: {}", name);
+                    return roleRepository.save(role);
+                });
+    }
 
-        if (countPermissions > 0) {
-            System.out.println(">>> SKIP INIT DATABASE ~ ALREADY HAVE DATA...");
-        } else
-            System.out.println(">>> END INIT DATABASE");
+    /** Chi ghi khi thuc su thieu quyen, tranh update bang role_permission moi lan khoi dong. */
+    private void syncPermissionsForAdminRole(Role adminRole, List<Permission> allPermissions) {
+        int currentSize = adminRole.getPermissions() != null ? adminRole.getPermissions().size() : 0;
+        if (currentSize == allPermissions.size()) {
+            return;
+        }
+
+        adminRole.setPermissions(allPermissions);
+        roleRepository.save(adminRole);
+        LOGGER.info(">>> Sync permissions for role ADMIN: {} -> {}", currentSize, allPermissions.size());
+    }
+
+    /** Tai khoan admin lay tu bien moi truong. Khong cau hinh thi bo qua, KHONG chan khoi dong. */
+    private void createAdminUserIfConfigured(Role adminRole) {
+        String email = StringUtils.trimLowerBlank(adminEmail);
+        if (email == null || StringUtils.isNullOrBlank(adminPassword)) {
+            LOGGER.info(">>> Skip admin seeding: chua cau hinh bookshop.admin.email / bookshop.admin.password");
+            return;
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            LOGGER.info(">>> Admin user already exists: {}", email);
+            return;
+        }
+
+        User admin = new User();
+        admin.setEmail(email);
+        admin.setFullName(StringUtils.normalizeSpaces(adminFullName));
+        admin.setPassword(passwordEncoder.encode(adminPassword));
+        admin.setRole(adminRole);
+
+        userRepository.save(admin);
+        LOGGER.info(">>> Create admin user: {}", email);
     }
 }

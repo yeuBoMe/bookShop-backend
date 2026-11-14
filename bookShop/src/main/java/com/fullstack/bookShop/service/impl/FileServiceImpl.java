@@ -29,7 +29,7 @@ public class FileServiceImpl implements FileService {
     private String baseURI;
 
     @Override
-    public void createUploadFolder(String folder) throws URISyntaxException {
+    public void createUploadFolder(String folder) throws URISyntaxException, IOException {
         URI uri = new URI(folder);
         Path path = Paths.get(uri);
 
@@ -39,8 +39,8 @@ public class FileServiceImpl implements FileService {
                 Files.createDirectories(tempDir.toPath());
                 LOGGER.info("Create directory successfully, path={}", tempDir.toPath());
             } catch (IOException ex) {
-                ex.printStackTrace();
                 LOGGER.error("Upload folder failed: {}", ex.getMessage(), ex);
+                throw ex;
             }
         } else {
             LOGGER.info("Skipping create directory, already exists");

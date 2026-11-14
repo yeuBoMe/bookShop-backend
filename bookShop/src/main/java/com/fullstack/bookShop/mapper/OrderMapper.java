@@ -15,6 +15,11 @@ import java.util.Optional;
 public class OrderMapper {
 
     public OrderResponse toResponse(Order order, String methodName) {
+        return toResponse(order, methodName, order.getDetail());
+    }
+
+    /** Nhan san danh sach dong hang da nap theo lo: tranh cham lazy collection cua tung don. */
+    public OrderResponse toResponse(Order order, String methodName, List<OrderDetail> orderDetailList) {
         OrderResponse.OrderResponseBuilder builder = OrderResponse.builder()
                 .id(order.getId())
                 .name(order.getName())
@@ -24,7 +29,7 @@ public class OrderMapper {
                 .paymentMethod(order.getPaymentMethod())
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
-                .detail(convertListOrderDetails(order.getDetail()));
+                .detail(convertListOrderDetails(orderDetailList));
 
         if (ActionConstant.CREATE.equals(methodName)) {
             builder.createdAt(order.getCreatedAt())

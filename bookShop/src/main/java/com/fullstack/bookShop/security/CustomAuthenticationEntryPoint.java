@@ -7,6 +7,7 @@ import com.fullstack.bookShop.util.constant.ContentTypeConstant;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.fullstack.bookShop.util.message.MessageTranslator;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     private final ObjectMapper objectMapper;
 
+    private final MessageTranslator messageTranslator;
+
     @Override
     public void commence(
             @NonNull HttpServletRequest request,
@@ -43,7 +46,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         GlobalResponse<Object> globalResponse = new GlobalResponse<>();
         globalResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
         globalResponse.setError(authErrorMessage);
-        globalResponse.setMessage(CommonMessage.JWT_FAILED);
+        globalResponse.setMessage(messageTranslator.toLocale(CommonMessage.JWT_FAILED));
 
         objectMapper.writeValue(response.getWriter(), globalResponse);
     }

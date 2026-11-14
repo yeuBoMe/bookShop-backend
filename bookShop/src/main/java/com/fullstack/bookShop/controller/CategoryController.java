@@ -1,5 +1,7 @@
 package com.fullstack.bookShop.controller;
 
+import com.fullstack.bookShop.service.interfaces.EntityImportService;
+import com.fullstack.bookShop.dto.request.imports.CategoryImportRequest;
 import com.fullstack.bookShop.dto.request.CategoryCreateRequest;
 import com.fullstack.bookShop.dto.response.CategoryResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
@@ -30,6 +32,8 @@ public class CategoryController {
     private final CategoryMapper categoryMapper;
 
     private final CategoryService categoryService;
+
+    private final EntityImportService<CategoryImportRequest, CategoryResponse> categoryImportService;
 
     @GetMapping
     @ApiMessage(ActionConstant.CATEGORY_FETCH_ALL)
@@ -99,6 +103,23 @@ public class CategoryController {
         HttpStatus httpStatus = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
                 .status(httpStatus)
+                .body(importFileResponse);
+    }
+    /**
+     * Import theo dong: moi dong mang thao tac rieng (CREATE/UPDATE/DELETE) va duoc tinh
+     * thanh cong / that bai doc lap. KHONG dat @Valid tren tung phan tu: mot dong sai dinh dang
+     * se lam ca file bi tu choi 400 truoc khi vao service.
+     */
+    @IsAdmin
+    @PostMapping("/import/batch")
+    @ApiMessage(ActionConstant.CATEGORY_IMPORT_BATCH)
+    public ResponseEntity<ImportFileResponse<CategoryResponse>> importCategoriesBatchRequest(
+            @RequestBody List<CategoryImportRequest> categoryImportRequestList
+    ) {
+        ImportFileResponse<CategoryResponse> importFileResponse =
+                categoryImportService.importFromFile(categoryImportRequestList);
+        return ResponseEntity
+                .status(HttpStatusUtil.determineHttpStatus(importFileResponse))
                 .body(importFileResponse);
     }
 }

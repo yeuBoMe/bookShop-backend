@@ -2,6 +2,7 @@ package com.fullstack.bookShop.util.file;
 
 import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.string.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,8 +30,7 @@ public final class FileValidUtil {
         LOGGER.info("Validating file: name={}, size={} bytes", fileName, multipartFile.getSize());
 
         boolean isValid = ALLOWED_EXTENSIONS.stream()
-                .anyMatch(extension -> Objects.requireNonNull(fileName)
-                        .toLowerCase()
+                .anyMatch(extension -> StringUtils.convertValueTrimLower(Objects.requireNonNull(fileName))
                         .endsWith(extension)
                 );
 

@@ -7,7 +7,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "order_details")
+@Table(
+        name = "order_details",
+        indexes = {
+                @Index(name = "idx_order_details_order_id", columnList = "order_id"),
+                @Index(name = "idx_order_details_book_id", columnList = "book_id")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,7 +21,8 @@ import lombok.Setter;
 public class OrderDetail {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_details_id_seq")
+    @SequenceGenerator(name = "order_details_id_seq", sequenceName = "order_details_id_seq", allocationSize = 50)
     private Long id;
 
     private int quantity;

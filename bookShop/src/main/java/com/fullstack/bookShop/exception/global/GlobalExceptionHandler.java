@@ -4,8 +4,14 @@ import com.fullstack.bookShop.dto.response.global.GlobalResponse;
 import com.fullstack.bookShop.exception.custom.FileException;
 import com.fullstack.bookShop.exception.custom.PermissionException;
 import com.fullstack.bookShop.util.constant.CommonMessage;
+import com.fullstack.bookShop.util.message.MessageTranslator;
+import com.fullstack.bookShop.util.string.StringUtils;
+import lombok.RequiredArgsConstructor;
 import jakarta.mail.MessagingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +36,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final MessageTranslator messageTranslator;
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GlobalResponse<Object>> globalExceptionHandler(Exception ex) {
@@ -49,7 +60,7 @@ public class GlobalExceptionHandler {
     // Handle authorization denied
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<GlobalResponse<Object>> authorizationDeniedExceptionHandler(Exception ex) {
-        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, CommonMessage.SERVER_ERROR);
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, CommonMessage.FORBIDDEN_ACCESS);
     }
 
     // Handle resource not found errors
@@ -84,6 +95,20 @@ public class GlobalExceptionHandler {
             InvalidDataAccessApiUsageException ex
     ) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, CommonMessage.GENERAL_ERROR);
+    }
+
+    // Rang buoc DB bi vi pham: tra 409 va KHONG lo cau SQL / ten constraint ra client
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<GlobalResponse<Object>> dataIntegrityViolationExceptionHandler(
+            DataIntegrityViolationException ex
+    ) {
+        LOGGER.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+
+        GlobalResponse<Object> globalResponse = new GlobalResponse<>();
+        globalResponse.setStatusCode(HttpStatus.CONFLICT.value());
+        globalResponse.setError(messageTranslator.toLocale(CommonMessage.DATA_CONFLICT));
+        globalResponse.setMessage(messageTranslator.toLocale(CommonMessage.DATA_CONFLICT_DETAIL));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(globalResponse);
     }
 
     // Handle null pointer errors
@@ -165,15 +190,27 @@ public class GlobalExceptionHandler {
     private ResponseEntity<GlobalResponse<Object>> buildErrorResponse(
             Exception ex,
             HttpStatus httpStatus,
-            String commonMessage
+            String commonMessageKey
     ) {
         GlobalResponse<Object> globalResponse = new GlobalResponse<>();
-        globalResponse.setMessage(ex.getMessage());
+        globalResponse.setMessage(resolveMessage(ex.getMessage()));
         globalResponse.setStatusCode(httpStatus.value());
-        globalResponse.setError(commonMessage);
+        globalResponse.setError(messageTranslator.toLocale(commonMessageKey));
         return ResponseEntity
                 .status(httpStatus)
                 .body(globalResponse);
+    }
+
+    /**
+     * Exception nem tu tang util (khong inject duoc bean) chi mang KEY, con service da dich san.
+     * Key khong co khoang trang va co dau cham; cau chu binh thuong thi tra nguyen van.
+     */
+    private String resolveMessage(String rawMessage) {
+        if (StringUtils.isNullOrBlank(rawMessage)) {
+            return rawMessage;
+        }
+        boolean looksLikeKey = rawMessage.indexOf(' ') < 0 && rawMessage.indexOf('.') > 0;
+        return looksLikeKey ? messageTranslator.toLocale(rawMessage) : rawMessage;
     }
 
     private ResponseEntity<GlobalResponse<Object>> buildValidationErrorResponse(MethodArgumentNotValidException ex) {

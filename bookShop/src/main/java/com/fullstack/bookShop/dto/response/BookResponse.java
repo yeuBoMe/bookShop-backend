@@ -21,7 +21,9 @@ public class BookResponse {
     private String introduceText;
     private String description;
     private String reader;
+    private String sold;
     private Double averageStars;
+    private Integer ratingCount;
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;

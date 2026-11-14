@@ -13,4 +13,6 @@ public final class SymbolConstant {
     public static final String EMPTY_STRING = "";
 
     public static final String AT_SIGN = "@";
+
+    public static final String SPACE = " ";
 }

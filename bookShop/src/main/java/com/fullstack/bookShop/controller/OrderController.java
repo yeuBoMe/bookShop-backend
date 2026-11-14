@@ -58,8 +58,7 @@ public class OrderController {
     @GetMapping("/{id}")
     @ApiMessage(ActionConstant.ORDER_GET)
     public ResponseEntity<OrderResponse> getOrderByIdRequest(@PathVariable Long id) {
-        Order orderGetById = orderService.getOrderById(id);
-        return ResponseEntity.ok(orderMapper.toResponse(orderGetById, ActionConstant.FETCH));
+        return ResponseEntity.ok(orderService.getOrderResponseById(id));
     }
 
     @PatchMapping("/{id}")
@@ -68,8 +67,7 @@ public class OrderController {
             @PathVariable Long id,
             @Valid @RequestBody OrderStatusRequest orderStatusRequest
     ) {
-        Order orderUpdated = orderService.partialUpdateOrderById(id, orderStatusRequest);
-        return ResponseEntity.ok(orderMapper.toResponse(orderUpdated, ActionConstant.UPDATE));
+        return ResponseEntity.ok(orderService.partialUpdateOrderResponseById(id, orderStatusRequest));
     }
 
     @IsAdmin

@@ -4,37 +4,37 @@ public final class BookConstant {
 
     private BookConstant() {}
 
-    public static final String NAME_REQUIRED = "Book's name is required";
+    public static final String NAME_REQUIRED = "{book.name.required}";
 
-    public static final String NAME_MAX_LENGTH = "Book's name must not exceed 100 characters";
+    public static final String NAME_MAX_LENGTH = "{book.name.max-length}";
 
-    public static final String NAME_INVALID = "Book's name contains invalid characters";
+    public static final String NAME_INVALID = "{book.name.invalid}";
 
-    public static final String INTRODUCE_TEXT_REQUIRED = "Introduce text is required";
+    public static final String INTRODUCE_TEXT_REQUIRED = "{book.introduce-text.required}";
 
-    public static final String INTRODUCE_TEXT_MAX_LENGTH = "Introduce text must not exceed 200 characters";
+    public static final String INTRODUCE_TEXT_MAX_LENGTH = "{book.introduce-text.max-length}";
 
-    public static final String DESCRIPTION_REQUIRED = "Description is required";
+    public static final String DESCRIPTION_REQUIRED = "{book.description.required}";
 
-    public static final String DESCRIPTION_MAX_LENGTH = "Description must not exceed 5000 characters";
+    public static final String DESCRIPTION_MAX_LENGTH = "{book.description.max-length}";
 
-    public static final String READER_REQUIRED = "Reader is required";
+    public static final String READER_REQUIRED = "{book.reader.required}";
 
-    public static final String READER_MAX_LENGTH = "Reader must not exceed 200 characters";
+    public static final String READER_MAX_LENGTH = "{book.reader.max-length}";
 
-    public static final String PRICE_REQUIRED = "Price is required";
+    public static final String PRICE_REQUIRED = "{book.price.required}";
 
-    public static final String PRICE_POSITIVE = "Price must be a positive number";
+    public static final String PRICE_POSITIVE = "{book.price.positive}";
 
-    public static final String QUANTITY_REQUIRED = "Quantity is required";
+    public static final String QUANTITY_REQUIRED = "{book.quantity.required}";
 
-    public static final String QUANTITY_MIN = "Quantity must be at least 1";
+    public static final String QUANTITY_MIN = "{book.quantity.min}";
 
-    public static final String QUANTITY_MAX = "Quantity must not exceed 1000";
+    public static final String QUANTITY_MAX = "{book.quantity.max}";
 
-    public static final String AUTHOR_REQUIRED = "Author is required";
+    public static final String AUTHOR_REQUIRED = "{book.author.required}";
 
-    public static final String AUTHOR_MAX_LENGTH = "Author must not exceed 100 characters";
+    public static final String AUTHOR_MAX_LENGTH = "{book.author.max-length}";
 
-    public static final String AUTHOR_INVALID = "Author contains invalid characters";
+    public static final String AUTHOR_INVALID = "{book.author.invalid}";
 }

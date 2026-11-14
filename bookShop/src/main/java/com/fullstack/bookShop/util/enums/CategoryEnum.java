@@ -4,13 +4,14 @@ import lombok.Getter;
 
 @Getter
 public enum CategoryEnum {
-    ID_NOT_FOUND("Category not found with ID: %d"),
-    NAME_EXISTS("Category name '%s' already exists");
+    ID_NOT_FOUND("category.error.id-not-found"),
+    NAME_EXISTS("category.error.name-exists"),
+    NAME_NOT_FOUND("category.error.name-not-found");
 
-    private final String message;
+    private final String messageKey;
 
-    CategoryEnum(String message) {
-        this.message = message;
+    CategoryEnum(String messageKey) {
+        this.messageKey = messageKey;
     }
 }
 

@@ -30,6 +30,11 @@ public interface UserService {
 
     User getUserByEmailAndRefreshToken(String email, String refreshToken);
 
+    // Ban co nap san role + permissions, danh cho luong dang nhap / refresh / account
+    User getUserWithPermissionsByEmail(String email);
+
+    User getUserWithPermissionsByEmailAndRefreshToken(String email, String refreshToken);
+
     User updateUserById(Long id, User userRequest);
 
     User partialUpdateUserById(Long id, User userRequest);

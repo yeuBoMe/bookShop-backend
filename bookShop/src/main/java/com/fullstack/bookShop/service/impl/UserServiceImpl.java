@@ -26,6 +26,8 @@ import com.fullstack.bookShop.util.enums.RoleEnum;
 import com.fullstack.bookShop.util.enums.UserEnum;
 import com.fullstack.bookShop.util.file.FileValidUtil;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
+import com.fullstack.bookShop.util.message.MessageTranslator;
+import com.fullstack.bookShop.util.string.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +54,8 @@ public class UserServiceImpl implements UserService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
+    private final MessageTranslator messageTranslator;
+
     @Value("${bookshop.upload-file.base-uri}")
     private String baseURI;
 
@@ -66,6 +70,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final RatingRepository ratingRepository;
+
+    private final BookRatingSummaryUpdater bookRatingSummaryUpdater;
 
     private final CloudinaryService cloudinaryService;
 
@@ -128,6 +134,7 @@ public class UserServiceImpl implements UserService {
             if (picture != null) {
                 user.setAvatar(picture);
             }
+            validateAndSetRole(user, user);
 
             User userGoogleCreated = userRepository.save(user);
             LOGGER.info("Create google user successfully with id: {}", userGoogleCreated.getId());
@@ -141,7 +148,7 @@ public class UserServiceImpl implements UserService {
         return userRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(UserEnum.ID_NOT_FOUND.getMessage(), id)
+                        messageTranslator.toLocale(UserEnum.ID_NOT_FOUND.getMessageKey(), id)
                 ));
     }
 
@@ -150,7 +157,7 @@ public class UserServiceImpl implements UserService {
         return userRepository
                 .findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        String.format(UserEnum.EMAIL_NOT_FOUND.getMessage(), email)
+                        messageTranslator.toLocale(UserEnum.EMAIL_NOT_FOUND.getMessageKey(), email)
                 ));
     }
 
@@ -159,7 +166,25 @@ public class UserServiceImpl implements UserService {
         return userRepository
                 .findByEmailAndRefreshToken(email, refreshToken)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(UserEnum.EMAIL_TOKEN_NOT_FOUND.getMessage(), email)
+                        messageTranslator.toLocale(UserEnum.EMAIL_TOKEN_NOT_FOUND.getMessageKey(), email)
+                ));
+    }
+
+    @Override
+    public User getUserWithPermissionsByEmail(String email) {
+        return userRepository
+                .findByEmailFetchRoleAndPermissions(email)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        messageTranslator.toLocale(UserEnum.EMAIL_NOT_FOUND.getMessageKey(), email)
+                ));
+    }
+
+    @Override
+    public User getUserWithPermissionsByEmailAndRefreshToken(String email, String refreshToken) {
+        return userRepository
+                .findByEmailAndRefreshTokenFetchRoleAndPermissions(email, refreshToken)
+                .orElseThrow(() -> new NoSuchElementException(
+                        messageTranslator.toLocale(UserEnum.EMAIL_TOKEN_NOT_FOUND.getMessageKey(), email)
                 ));
     }
 
@@ -187,10 +212,10 @@ public class UserServiceImpl implements UserService {
         User userGetById = getUserById(id);
         validateAndSetRole(userGetById, userRequest);
 
-        if (userRequest.getFullName() != null && !userRequest.getFullName().trim().isEmpty()) {
+        if (StringUtils.hasValue(userRequest.getFullName())) {
             userGetById.setFullName(userRequest.getFullName());
         }
-        if (userRequest.getPhone() != null && !userRequest.getPhone().trim().isEmpty()) {
+        if (StringUtils.hasValue(userRequest.getPhone())) {
             validateUserForUpdate(userGetById, userRequest);
             userGetById.setPhone(userRequest.getPhone());
         }
@@ -209,7 +234,7 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(userPasswordRequest.getCurrentPassword(), userGetById.getPassword())) {
             throw new IllegalArgumentException(PasswordConstant.PASSWORD_NOT_MATCH);
         }
-        if (userPasswordRequest.getNewPassword() != null && !userPasswordRequest.getNewPassword().trim().isEmpty()) {
+        if (StringUtils.hasValue(userPasswordRequest.getNewPassword())) {
             userGetById.setPassword(passwordEncoder.encode(userPasswordRequest.getNewPassword()));
         }
 
@@ -307,7 +332,7 @@ public class UserServiceImpl implements UserService {
 
         if (!checkIdExists(id)) {
             throw new NoSuchElementException(
-                    String.format(UserEnum.ID_NOT_FOUND.getMessage(), id)
+                    messageTranslator.toLocale(UserEnum.ID_NOT_FOUND.getMessageKey(), id)
             );
         }
 
@@ -315,11 +340,15 @@ public class UserServiceImpl implements UserService {
         Role userRole = userGetById.getRole();
 
         if (userRole != null && AuthorityConstant.ADMIN.equals(userRole.getName())) {
-            throw new IllegalStateException(CommonMessage.NOT_PERMISSION_DELETE_USER);
+            throw new IllegalStateException(messageTranslator.toLocale(CommonMessage.NOT_PERMISSION_DELETE_USER));
         }
+
+        // Lay truoc danh sach sach, vi sau khi xoa danh gia thi khong con truy nguoc duoc
+        Set<Long> ratedBookIds = ratingRepository.findRatedBookIdsByUserId(id);
 
         ratingRepository.deleteByUserId(id);
         userRepository.deleteById(id);
+        bookRatingSummaryUpdater.refresh(ratedBookIds);
 
         LOGGER.info("Delete user successfully with id: {}", id);
     }
@@ -417,7 +446,7 @@ public class UserServiceImpl implements UserService {
 
         importFileResponse.setCountSuccess(countSuccess);
         importFileResponse.setCountError(countError);
-        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
+        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : messageTranslator.toLocale(CommonMessage.IMPORT_SUCCESS));
         importFileResponse.setItems(successList);
 
         return importFileResponse;
@@ -427,13 +456,13 @@ public class UserServiceImpl implements UserService {
         if (checkEmailExists(userRequest.getEmail())) {
             LOGGER.warn("Create failed: User email '{}' already exists", userRequest.getEmail());
             throw new IllegalArgumentException(
-                    String.format(UserEnum.EMAIL_EXISTS.getMessage(), userRequest.getEmail())
+                    messageTranslator.toLocale(UserEnum.EMAIL_EXISTS.getMessageKey(), userRequest.getEmail())
             );
         }
         if (checkPhoneExists(userRequest.getPhone())) {
             LOGGER.warn("Create failed: User phone '{}' already exists", userRequest.getPhone());
             throw new IllegalArgumentException(
-                    String.format(UserEnum.PHONE_EXISTS.getMessage(), userRequest.getPhone())
+                    messageTranslator.toLocale(UserEnum.PHONE_EXISTS.getMessageKey(), userRequest.getPhone())
             );
         }
     }
@@ -444,7 +473,7 @@ public class UserServiceImpl implements UserService {
         if (isPhoneExists && !userRequest.getPhone().equals(currentUser.getPhone())) {
             LOGGER.warn("Update failed: User phone '{}' already exists", userRequest.getPhone());
             throw new IllegalArgumentException(
-                    String.format(UserEnum.PHONE_EXISTS.getMessage(), userRequest.getPhone())
+                    messageTranslator.toLocale(UserEnum.PHONE_EXISTS.getMessageKey(), userRequest.getPhone())
             );
         }
     }
@@ -454,25 +483,21 @@ public class UserServiceImpl implements UserService {
             Set<String> existingPhones,
             UserCreateRequest userCreateRequest
     ) {
-        String normalizedEmail = userCreateRequest.getEmail() != null
-                ? userCreateRequest.getEmail().trim()
-                : null;
+        String normalizedEmail = StringUtils.trimBlank(userCreateRequest.getEmail());
 
         if (existingEmails.contains(normalizedEmail)) {
             LOGGER.warn("Import failed: User email '{}' already exists", userCreateRequest.getEmail());
             throw new IllegalArgumentException(
-                    String.format(UserEnum.EMAIL_EXISTS.getMessage(), userCreateRequest.getEmail())
+                    messageTranslator.toLocale(UserEnum.EMAIL_EXISTS.getMessageKey(), userCreateRequest.getEmail())
             );
         }
 
-        String normalizedPhone = userCreateRequest.getPhone() != null
-                ? userCreateRequest.getPhone().trim()
-                : null;
+        String normalizedPhone = StringUtils.trimBlank(userCreateRequest.getPhone());
 
         if (existingPhones.contains(normalizedPhone)) {
             LOGGER.warn("Import failed: User phone '{}' already exists", userCreateRequest.getPhone());
             throw new IllegalArgumentException(
-                    String.format(UserEnum.PHONE_EXISTS.getMessage(), userCreateRequest.getPhone())
+                    messageTranslator.toLocale(UserEnum.PHONE_EXISTS.getMessageKey(), userCreateRequest.getPhone())
             );
         }
     }
@@ -514,7 +539,7 @@ public class UserServiceImpl implements UserService {
             Long roleId = userRequest.getRole().getId();
             if (!roleService.checkIdExists(roleId)) {
                 throw new IllegalArgumentException(
-                        String.format(RoleEnum.ID_NOT_FOUND.getMessage(), roleId)
+                        messageTranslator.toLocale(RoleEnum.ID_NOT_FOUND.getMessageKey(), roleId)
                 );
             }
             Role roleGetById = roleService.getRoleById(roleId);

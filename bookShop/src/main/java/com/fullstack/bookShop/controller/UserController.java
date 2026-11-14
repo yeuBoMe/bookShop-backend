@@ -1,5 +1,7 @@
 package com.fullstack.bookShop.controller;
 
+import com.fullstack.bookShop.service.interfaces.EntityImportService;
+import com.fullstack.bookShop.dto.request.imports.UserImportRequest;
 import com.fullstack.bookShop.dto.request.user.UserCreateRequest;
 import com.fullstack.bookShop.dto.request.user.UserPasswordRequest;
 import com.fullstack.bookShop.dto.response.UserResponse;
@@ -37,6 +39,8 @@ public class UserController {
     private final UserMapper userMapper;
 
     private final UserService userService;
+
+    private final EntityImportService<UserImportRequest, UserResponse> userImportService;
 
     @IsAdmin
     @GetMapping
@@ -163,6 +167,23 @@ public class UserController {
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
                 .status(status)
+                .body(importFileResponse);
+    }
+    /**
+     * Import theo dong: moi dong mang thao tac rieng (CREATE/UPDATE/DELETE) va duoc tinh
+     * thanh cong / that bai doc lap. KHONG dat @Valid tren tung phan tu: mot dong sai dinh dang
+     * se lam ca file bi tu choi 400 truoc khi vao service.
+     */
+    @IsAdmin
+    @PostMapping("/import/batch")
+    @ApiMessage(ActionConstant.USER_IMPORT_BATCH)
+    public ResponseEntity<ImportFileResponse<UserResponse>> importUsersBatchRequest(
+            @RequestBody List<UserImportRequest> userImportRequestList
+    ) {
+        ImportFileResponse<UserResponse> importFileResponse =
+                userImportService.importFromFile(userImportRequestList);
+        return ResponseEntity
+                .status(HttpStatusUtil.determineHttpStatus(importFileResponse))
                 .body(importFileResponse);
     }
 }

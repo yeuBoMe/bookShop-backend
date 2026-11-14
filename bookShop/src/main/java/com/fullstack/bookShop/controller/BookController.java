@@ -1,5 +1,10 @@
 package com.fullstack.bookShop.controller;
 
+import com.fullstack.bookShop.service.interfaces.BookSearchService;
+import com.fullstack.bookShop.dto.response.cursor.CursorPageResponse;
+import com.fullstack.bookShop.dto.request.BookSearchRequest;
+import com.fullstack.bookShop.service.interfaces.EntityImportService;
+import com.fullstack.bookShop.dto.request.imports.BookImportRequest;
 import com.fullstack.bookShop.dto.request.BookCreateRequest;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
@@ -35,6 +40,10 @@ public class BookController {
 
     private final BookService bookService;
 
+    private final BookSearchService bookSearchService;
+
+    private final EntityImportService<BookImportRequest, BookResponse> bookImportService;
+
     @GetMapping
     @ApiMessage(ActionConstant.BOOK_FETCH_ALL)
     public ResponseEntity<PaginationResponse> fetchAllBooksRequest(
@@ -44,13 +53,27 @@ public class BookController {
         return ResponseEntity.ok(bookService.fetchAllBooks(spec, pageable));
     }
 
+    /**
+     * Tim kiem phan trang theo con tro. Khong dem tong va khong dung OFFSET nen
+     * trang sau khong cham dan theo do sau - hop cho cuon vo han hoac nut "xem them".
+     * Endpoint GET /api/v1/books cu giu nguyen cho bang co so trang.
+     */
+    @GetMapping("/search")
+    @ApiMessage(ActionConstant.BOOK_SEARCH)
+    public ResponseEntity<CursorPageResponse<BookResponse>> searchBooksRequest(
+            BookSearchRequest bookSearchRequest
+    ) {
+        return ResponseEntity.ok(bookSearchService.search(bookSearchRequest));
+    }
+
     @GetMapping("/average-rating")
     @ApiMessage(ActionConstant.BOOK_FETCH_AVERAGE_RATE)
     public ResponseEntity<PaginationResponse> fetchListBooksByMinRatingGreaterThanEqualRequest(
+            @Filter Specification<Book> spec,
             @RequestParam(defaultValue = "0") Double minRating,
             Pageable pageable
     ) {
-        return ResponseEntity.ok(bookService.fetchListBooksByMinRatingGreaterThanEqual(minRating, pageable));
+        return ResponseEntity.ok(bookService.fetchListBooksByMinRatingGreaterThanEqual(spec, minRating, pageable));
     }
 
     @IsAdmin
@@ -202,5 +225,22 @@ public class BookController {
         return ResponseEntity
                 .status(httpStatus)
                 .body(restImportDTO);
+    }
+    /**
+     * Import theo dong: moi dong mang thao tac rieng (CREATE/UPDATE/DELETE) va duoc tinh
+     * thanh cong / that bai doc lap. KHONG dat @Valid tren tung phan tu: mot dong sai dinh dang
+     * se lam ca file bi tu choi 400 truoc khi vao service.
+     */
+    @IsAdmin
+    @PostMapping("/import/batch")
+    @ApiMessage(ActionConstant.BOOK_IMPORT_BATCH)
+    public ResponseEntity<ImportFileResponse<BookResponse>> importBooksBatchRequest(
+            @RequestBody List<BookImportRequest> bookImportRequestList
+    ) {
+        ImportFileResponse<BookResponse> importFileResponse =
+                bookImportService.importFromFile(bookImportRequestList);
+        return ResponseEntity
+                .status(HttpStatusUtil.determineHttpStatus(importFileResponse))
+                .body(importFileResponse);
     }
 }

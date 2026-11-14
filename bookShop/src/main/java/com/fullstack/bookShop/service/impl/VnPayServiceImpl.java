@@ -2,6 +2,7 @@ package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.config.VnPayConfig;
 import com.fullstack.bookShop.service.interfaces.VnPayService;
+import com.fullstack.bookShop.util.security.SignatureUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -106,7 +107,7 @@ public class VnPayServiceImpl implements VnPayService {
 
         String signValue = VnPayConfig.hashAllFields(params);
 
-        if (signValue.equals(vnp_SecureHash)) {
+        if (SignatureUtil.matches(signValue, vnp_SecureHash)) {
             if ("00".equals(vnpResponseCode)) {
                 // Payment success
                 response.sendRedirect(frontendUrl + "/checkout?payment=vnpay&status=success&txnRef=" + vnpTxnRef);

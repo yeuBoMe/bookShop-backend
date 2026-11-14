@@ -9,6 +9,7 @@ import com.fullstack.bookShop.service.interfaces.PermissionService;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.PermissionEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
+import com.fullstack.bookShop.util.message.MessageTranslator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,8 @@ import java.util.NoSuchElementException;
 public class PermissionServiceImpl implements PermissionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
+    private final MessageTranslator messageTranslator;
 
     private final PermissionMapper permissionMapper;
 
@@ -69,7 +72,7 @@ public class PermissionServiceImpl implements PermissionService {
         return permissionRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(PermissionEnum.ID_NOT_FOUND.getMessage(), id)
+                        messageTranslator.toLocale(PermissionEnum.ID_NOT_FOUND.getMessageKey(), id)
                 ));
     }
 
@@ -124,7 +127,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (checkNameExistsIgnoreCase(permissionRequest.getName())) {
             LOGGER.warn("Create failed: Permission name '{}' already exists", permissionRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(PermissionEnum.NAME_EXISTS.getMessage(), permissionRequest.getName())
+                    messageTranslator.toLocale(PermissionEnum.NAME_EXISTS.getMessageKey(), permissionRequest.getName())
             );
         }
 
@@ -140,8 +143,8 @@ public class PermissionServiceImpl implements PermissionService {
                     permissionRequest.getModule()
             );
             throw new IllegalArgumentException(
-                    String.format(
-                            PermissionEnum.API_EXISTS.getMessage(),
+                    messageTranslator.toLocale(
+                            PermissionEnum.API_EXISTS.getMessageKey(),
                             permissionRequest.getApiPath(),
                             permissionRequest.getMethod(),
                             permissionRequest.getModule()
@@ -156,7 +159,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (isNameExists && !permissionRequest.getName().equals(currentPermission.getName())) {
             LOGGER.warn("Update failed: Permission name '{}' already exists", permissionRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(PermissionEnum.NAME_EXISTS.getMessage(), permissionRequest.getName())
+                    messageTranslator.toLocale(PermissionEnum.NAME_EXISTS.getMessageKey(), permissionRequest.getName())
             );
         }
 
@@ -178,8 +181,8 @@ public class PermissionServiceImpl implements PermissionService {
                     permissionRequest.getModule()
             );
             throw new IllegalArgumentException(
-                    String.format(
-                            PermissionEnum.API_EXISTS.getMessage(),
+                    messageTranslator.toLocale(
+                            PermissionEnum.API_EXISTS.getMessageKey(),
                             permissionRequest.getApiPath(),
                             permissionRequest.getMethod(),
                             permissionRequest.getModule()

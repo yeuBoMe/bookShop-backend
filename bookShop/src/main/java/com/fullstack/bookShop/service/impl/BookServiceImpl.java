@@ -1,7 +1,6 @@
 package com.fullstack.bookShop.service.impl;
 
 import com.fullstack.bookShop.dto.request.BookCreateRequest;
-import com.fullstack.bookShop.dto.response.BookAverageRatingResponse;
 import com.fullstack.bookShop.dto.response.BookResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
 import com.fullstack.bookShop.dto.response.pagination.PaginationResponse;
@@ -16,14 +15,18 @@ import com.fullstack.bookShop.service.interfaces.BookService;
 import com.fullstack.bookShop.service.interfaces.CategoryService;
 import com.fullstack.bookShop.service.interfaces.CloudinaryService;
 import com.fullstack.bookShop.service.interfaces.FileService;
+import com.fullstack.bookShop.specification.BookSpecification;
 import com.fullstack.bookShop.util.cloudinary.CloudinaryUtil;
 import com.fullstack.bookShop.util.constant.CommonMessage;
 import com.fullstack.bookShop.util.constant.FolderConstant;
+import com.fullstack.bookShop.util.constant.SymbolConstant;
 import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.BookEnum;
 import com.fullstack.bookShop.util.enums.CategoryEnum;
 import com.fullstack.bookShop.util.file.FileValidUtil;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
+import com.fullstack.bookShop.util.message.MessageTranslator;
+import com.fullstack.bookShop.util.string.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +50,8 @@ import java.util.stream.Collectors;
 public class BookServiceImpl implements BookService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BookServiceImpl.class);
+
+    private final MessageTranslator messageTranslator;
 
     @Value("${bookshop.upload-file.base-uri}")
     private String baseURI;
@@ -76,8 +81,18 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public PaginationResponse fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable) {
-        Page<Book> bookPageWithAverageRating = bookRepository.findAllByMinRatingGreaterThanEqual(minRating, pageable);
+    public PaginationResponse fetchListBooksByMinRatingGreaterThanEqual(
+            Specification<Book> spec,
+            Double minRating,
+            Pageable pageable
+    ) {
+        Specification<Book> minRatingSpec = BookSpecification.hasMinAverageRating(minRating)
+                .and(BookSpecification.orderByAverageRatingDesc());
+        Specification<Book> combinedSpec = spec != null
+                ? spec.and(minRatingSpec)
+                : minRatingSpec;
+
+        Page<Book> bookPageWithAverageRating = bookRepository.findAll(combinedSpec, pageable);
         PaginationResponse paginationResponse
                 = PaginationUtil.fetchAllDataWithPagination(bookPageWithAverageRating, pageable);
 
@@ -85,6 +100,7 @@ public class BookServiceImpl implements BookService {
         paginationResponse.setResult(bookResponseList);
         return paginationResponse;
     }
+
 
     @Override
     public List<BookResponse> fetchAllBookResponsesFromBooks() {
@@ -151,8 +167,8 @@ public class BookServiceImpl implements BookService {
             validateBookForUpdate(bookGetById, bookUpdated);
         }
 
-        if (bookUpdated.getName() != null && !bookUpdated.getName().trim().isEmpty()) {
-            bookGetById.setName(bookUpdated.getName());
+        if (StringUtils.hasValue(bookUpdated.getName())) {
+            bookGetById.setName(StringUtils.normalizeSpaces(bookUpdated.getName()));
         }
         if (bookUpdated.getPrice() != null) {
             bookGetById.setPrice(bookUpdated.getPrice());
@@ -160,17 +176,17 @@ public class BookServiceImpl implements BookService {
         if (bookUpdated.getQuantity() != null) {
             bookGetById.setQuantity(bookUpdated.getQuantity());
         }
-        if (bookUpdated.getAuthor() != null && !bookUpdated.getAuthor().trim().isEmpty()) {
-            bookGetById.setAuthor(bookUpdated.getAuthor());
+        if (StringUtils.hasValue(bookUpdated.getAuthor())) {
+            bookGetById.setAuthor(StringUtils.normalizeSpaces(bookUpdated.getAuthor()));
         }
-        if (bookUpdated.getDescription() != null && !bookUpdated.getDescription().trim().isEmpty()) {
-            bookGetById.setDescription(bookUpdated.getDescription());
+        if (StringUtils.hasValue(bookUpdated.getDescription())) {
+            bookGetById.setDescription(StringUtils.trimBlank(bookUpdated.getDescription()));
         }
-        if (bookUpdated.getIntroduceText() != null && !bookUpdated.getIntroduceText().trim().isEmpty()) {
-            bookGetById.setIntroduceText(bookUpdated.getIntroduceText());
+        if (StringUtils.hasValue(bookUpdated.getIntroduceText())) {
+            bookGetById.setIntroduceText(StringUtils.trimBlank(bookUpdated.getIntroduceText()));
         }
-        if (bookUpdated.getReader() != null && !bookUpdated.getReader().trim().isEmpty()) {
-            bookGetById.setReader(bookUpdated.getReader());
+        if (StringUtils.hasValue(bookUpdated.getReader())) {
+            bookGetById.setReader(StringUtils.trimBlank(bookUpdated.getReader()));
         }
 
         LOGGER.info("Update book partial successfully with id: {}", id);
@@ -321,7 +337,7 @@ public class BookServiceImpl implements BookService {
         return bookRepository
                 .findById(id)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(BookEnum.ID_NOT_FOUND.getMessage(), id)
+                        messageTranslator.toLocale(BookEnum.ID_NOT_FOUND.getMessageKey(), id)
                 ));
     }
 
@@ -331,11 +347,17 @@ public class BookServiceImpl implements BookService {
         LOGGER.info("Deleting book id: {}", id);
         if (!checkIdExists(id)) {
             throw new NoSuchElementException(
-                    String.format(BookEnum.ID_NOT_FOUND.getMessage(), id)
+                    messageTranslator.toLocale(BookEnum.ID_NOT_FOUND.getMessageKey(), id)
             );
         }
+        // Don hang la du lieu lich su: xoa sach khong duoc lam bien mat dong hang da ban.
+        if (orderDetailRepository.existsByBookId(id)) {
+            throw new IllegalStateException(
+                    messageTranslator.toLocale(BookEnum.REFERENCED_BY_ORDER.getMessageKey(), id)
+            );
+        }
+
         ratingRepository.deleteByBookId(id);
-        orderDetailRepository.deleteByBookId(id);
         bookRepository.deleteById(id);
         LOGGER.info("Delete book successfully with id: {}", id);
     }
@@ -362,12 +384,19 @@ public class BookServiceImpl implements BookService {
 
     @Transactional
     @Override
+    public List<Book> saveAllBooks(List<Book> books) {
+        return bookRepository.saveAll(books);
+    }
+
+    @Transactional
+    @Override
     public ImportFileResponse<BookResponse> importBooksFromFile(List<BookCreateRequest> bookCreateRequestList) {
 
         ImportFileResponse<BookResponse> importFileResponse = new ImportFileResponse<>();
         List<BookResponse> successData = new ArrayList<>();
         List<ImportFileResponse.DetailFaultInfo<BookCreateRequest>> detailFaultInfoList = new ArrayList<>();
         List<Book> listBooksToSave = new ArrayList<>();
+        Set<String> keysImported = new HashSet<>();
 
         int countSuccess = 0;
         int countError = 0;
@@ -381,6 +410,17 @@ public class BookServiceImpl implements BookService {
             BookCreateRequest bookCreateRequest = bookCreateRequestList.get(i);
 
             try {
+                String key = generateBookKeyNameMixAuthor(bookCreateRequest.getName(), bookCreateRequest.getAuthor());
+                if (!keysImported.add(key)) {
+                    throw new IllegalArgumentException(
+                            messageTranslator.toLocale(
+                                    BookEnum.NAME_AUTHOR_EXISTS.getMessageKey(),
+                                    bookCreateRequest.getName(),
+                                    bookCreateRequest.getAuthor()
+                            )
+                    );
+                }
+
                 validateBookForImport(existingNamesAndAuthorsIgnoreCase, bookCreateRequest);
                 Book book = buildBookFromBookCreateRequest(bookCreateRequest);
 
@@ -426,7 +466,10 @@ public class BookServiceImpl implements BookService {
 
         importFileResponse.setCountSuccess(countSuccess);
         importFileResponse.setCountError(countError);
-        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
+        importFileResponse.setDetail(countError > 0
+                ? detailFaultInfoList
+                : messageTranslator.toLocale(CommonMessage.IMPORT_SUCCESS)
+        );
         importFileResponse.setItems(successData);
 
         return importFileResponse;
@@ -435,8 +478,8 @@ public class BookServiceImpl implements BookService {
     private void validateBookForCreate(Book bookRequest) {
         if (checkNameAndAuthorExistsIgnoreCase(bookRequest.getName(), bookRequest.getAuthor())) {
             throw new IllegalArgumentException(
-                    String.format(
-                            BookEnum.NAME_AUTHOR_EXISTS.getMessage(),
+                    messageTranslator.toLocale(
+                            BookEnum.NAME_AUTHOR_EXISTS.getMessageKey(),
                             bookRequest.getName(),
                             bookRequest.getAuthor()
                     )
@@ -455,8 +498,8 @@ public class BookServiceImpl implements BookService {
                         && currentBook.getAuthor().equals(bookRequest.getAuthor())
         )) {
             throw new IllegalArgumentException(
-                    String.format(
-                            BookEnum.NAME_AUTHOR_EXISTS.getMessage(),
+                    messageTranslator.toLocale(
+                            BookEnum.NAME_AUTHOR_EXISTS.getMessageKey(),
                             bookRequest.getName(),
                             bookRequest.getAuthor()
                     )
@@ -469,11 +512,11 @@ public class BookServiceImpl implements BookService {
             BookCreateRequest bookCreateRequest
     ) {
         if (bookCreateRequest.getName() != null && bookCreateRequest.getAuthor() != null) {
-            String keys = (bookCreateRequest.getName() + "_" + bookCreateRequest.getAuthor()).toLowerCase().trim();
+            String keys = generateBookKeyNameMixAuthor(bookCreateRequest.getName(), bookCreateRequest.getAuthor());
             if (existingNamesAndAuthorsIgnoreCase.contains(keys)) {
                 throw new IllegalArgumentException(
-                        String.format(
-                                BookEnum.NAME_AUTHOR_EXISTS.getMessage(),
+                        messageTranslator.toLocale(
+                                BookEnum.NAME_AUTHOR_EXISTS.getMessageKey(),
                                 bookCreateRequest.getName(),
                                 bookCreateRequest.getAuthor()
                         )
@@ -486,8 +529,8 @@ public class BookServiceImpl implements BookService {
             List<BookCreateRequest> bookCreateRequestList
     ) {
         Set<String> setKeysToCheck = bookCreateRequestList.stream()
-                .map(b -> (b.getName() + "_" + b.getAuthor()).toLowerCase())
-                .map(String::trim)
+                .filter(b -> (b.getName() != null && b.getAuthor() != null))
+                .map(b -> generateBookKeyNameMixAuthor(b.getName(), b.getAuthor()))
                 .collect(Collectors.toSet());
 
         return findExistingNamesAndAuthorIgnoreCase(setKeysToCheck);
@@ -499,7 +542,7 @@ public class BookServiceImpl implements BookService {
         Set<String> setNamesToCheck = bookCreateRequestList.stream()
                 .map(BookCreateRequest::getCategory)
                 .filter(Objects::nonNull)
-                .map(String::trim)
+                .map(StringUtils::convertValueTrim)
                 .collect(Collectors.toSet());
 
         List<Category> categories = categoryService.findAllCategoriesByNamesIgnoreCase(setNamesToCheck);
@@ -522,39 +565,20 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public BookResponse getBookResponseById(Long id) {
-        Book bookGetById = getBookById(id);
-        Double averageStars = ratingRepository.getAverageRatingByBookId(id);
-
-        return bookMapper.toResponse(
-                bookGetById,
-                ActionConstant.FETCH,
-                averageStars
-        );
+        return bookMapper.toResponse(getBookById(id), ActionConstant.FETCH);
     }
 
-    private Map<Long, Double> getAverageRatingsMapFromListBook(List<Book> allBooks) {
-        Set<Long> bookIds = allBooks.stream()
-                .map(Book::getId)
-                .collect(Collectors.toSet());
-
-        return ratingRepository.getAverageRatingsByBookIds(bookIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        BookAverageRatingResponse::getBookId,
-                        BookAverageRatingResponse::getAverageStars
-                ));
-    }
-
+    /** Diem trung binh nam san tren entity nen khong con phai ban them 1 cau query cho moi trang. */
     private List<BookResponse> buildListBooksResponseForBookPage(List<Book> allBooks) {
-        Map<Long, Double> averageRatingsMap = getAverageRatingsMapFromListBook(allBooks);
-
         return allBooks.stream()
-                .map(b -> bookMapper.toResponse(
-                        b,
-                        ActionConstant.FETCH,
-                        averageRatingsMap.getOrDefault(b.getId(), 0.0)
-                ))
+                .map(book -> bookMapper.toResponse(book, ActionConstant.FETCH))
                 .toList();
+    }
+
+    private String generateBookKeyNameMixAuthor(String name, String author) {
+        String bookNameLowerCase = StringUtils.convertValueTrimLower(name);
+        String bookAuthorLowerCase = StringUtils.convertValueTrimLower(author);
+        return bookNameLowerCase + SymbolConstant.UNDERSCORE + bookAuthorLowerCase;
     }
 
     private void validateAndSetCategory(Book currentBook, Book bookRequest) {
@@ -562,7 +586,7 @@ public class BookServiceImpl implements BookService {
             Long categoryId = bookRequest.getCategory().getId();
             if (!categoryService.checkIdExists(categoryId)) {
                 throw new NoSuchElementException(
-                        String.format(CategoryEnum.ID_NOT_FOUND.getMessage(), categoryId)
+                        messageTranslator.toLocale(CategoryEnum.ID_NOT_FOUND.getMessageKey(), categoryId)
                 );
             }
             Category categoryGetById = categoryService.getCategoryById(categoryId);

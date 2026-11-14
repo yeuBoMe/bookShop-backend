@@ -1,5 +1,7 @@
 package com.fullstack.bookShop.controller;
 
+import com.fullstack.bookShop.service.interfaces.EntityImportService;
+import com.fullstack.bookShop.dto.request.imports.RoleImportRequest;
 import com.fullstack.bookShop.dto.request.RoleCreateRequest;
 import com.fullstack.bookShop.dto.response.RoleResponse;
 import com.fullstack.bookShop.dto.response.imports.ImportFileResponse;
@@ -30,6 +32,8 @@ public class RoleController {
     private final RoleMapper roleMapper;
 
     private final RoleService roleService;
+
+    private final EntityImportService<RoleImportRequest, RoleResponse> roleImportService;
 
     @IsAdmin
     @GetMapping
@@ -88,6 +92,23 @@ public class RoleController {
         HttpStatus status = HttpStatusUtil.determineHttpStatus(importFileResponse);
         return ResponseEntity
                 .status(status)
+                .body(importFileResponse);
+    }
+    /**
+     * Import theo dong: moi dong mang thao tac rieng (CREATE/UPDATE/DELETE) va duoc tinh
+     * thanh cong / that bai doc lap. KHONG dat @Valid tren tung phan tu: mot dong sai dinh dang
+     * se lam ca file bi tu choi 400 truoc khi vao service.
+     */
+    @IsAdmin
+    @PostMapping("/import/batch")
+    @ApiMessage(ActionConstant.ROLE_IMPORT_BATCH)
+    public ResponseEntity<ImportFileResponse<RoleResponse>> importRolesBatchRequest(
+            @RequestBody List<RoleImportRequest> roleImportRequestList
+    ) {
+        ImportFileResponse<RoleResponse> importFileResponse =
+                roleImportService.importFromFile(roleImportRequestList);
+        return ResponseEntity
+                .status(HttpStatusUtil.determineHttpStatus(importFileResponse))
                 .body(importFileResponse);
     }
 }

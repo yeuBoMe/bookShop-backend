@@ -4,13 +4,13 @@ public final class RoleConstant {
 
     private RoleConstant() {}
 
-    public static final String NAME_REQUIRED = "Name is required";
+    public static final String NAME_REQUIRED = "{role.name.required}";
 
-    public static final String NAME_MAX_LENGTH = "Name must be less than 100 characters";
+    public static final String NAME_MAX_LENGTH = "{role.name.max-length}";
 
-    public static final String DESCRIPTION_REQUIRED = "Description is required";
+    public static final String DESCRIPTION_REQUIRED = "{role.description.required}";
 
-    public static final String DESCRIPTION_MAX_LENGTH = "Description must not exceed 5000 characters";
+    public static final String DESCRIPTION_MAX_LENGTH = "{role.description.max-length}";
 
-    public static final String ACTIVE_REQUIRED = "Active is required";
+    public static final String ACTIVE_REQUIRED = "{role.active.required}";
 }

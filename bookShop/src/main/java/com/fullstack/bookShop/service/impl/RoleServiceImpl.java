@@ -16,6 +16,8 @@ import com.fullstack.bookShop.util.constant.action.ActionConstant;
 import com.fullstack.bookShop.util.enums.PermissionEnum;
 import com.fullstack.bookShop.util.enums.RoleEnum;
 import com.fullstack.bookShop.util.pagination.PaginationUtil;
+import com.fullstack.bookShop.util.message.MessageTranslator;
+import com.fullstack.bookShop.util.string.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,8 @@ public class RoleServiceImpl implements RoleService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoleServiceImpl.class);
 
+    private final MessageTranslator messageTranslator;
+
     private final RoleMapper roleMapper;
 
     private final RoleRepository roleRepository;
@@ -44,6 +48,16 @@ public class RoleServiceImpl implements RoleService {
 
     private final PermissionRepository permissionRepository;
 
+    /*
+     * Doc trong transaction de Session con song suot qua trinh map sang
+     * RoleResponse (RoleMapper phai duyet role.permissions).
+     *
+     * Khong dung fetch join o day: fetch join mot collection kem Pageable se
+     * khien Hibernate phan trang trong bo nho (canh bao HHH000104). Nho
+     * hibernate.default_batch_fetch_size da bat trong application.properties,
+     * permissions cua ca trang duoc nap gop chi bang them 1 cau query.
+     */
+    @Transactional(readOnly = true)
     @Override
     public PaginationResponse fetchAllRoles(Specification<Role> spec, Pageable pageable) {
         Page<Role> rolePage = roleRepository.findAll(spec, pageable);
@@ -82,9 +96,9 @@ public class RoleServiceImpl implements RoleService {
     public Role getRoleById(Long id) {
         LOGGER.debug("Fetching role by id: {}", id);
         return roleRepository
-                .findById(id)
+                .findByIdFetchPermissions(id)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(RoleEnum.ID_NOT_FOUND.getMessage(), id)
+                        messageTranslator.toLocale(RoleEnum.ID_NOT_FOUND.getMessageKey(), id)
                 ));
     }
 
@@ -94,7 +108,7 @@ public class RoleServiceImpl implements RoleService {
         return roleRepository
                 .findByName(name)
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format(RoleEnum.NAME_NOT_FOUND.getMessage(), name)
+                        messageTranslator.toLocale(RoleEnum.NAME_NOT_FOUND.getMessageKey(), name)
                 ));
     }
 
@@ -123,7 +137,7 @@ public class RoleServiceImpl implements RoleService {
         LOGGER.info("Deleting role id: {}", id);
         if (!checkIdExists(id)) {
             throw new NoSuchElementException(
-                    String.format(RoleEnum.ID_NOT_FOUND.getMessage(), id)
+                    messageTranslator.toLocale(RoleEnum.ID_NOT_FOUND.getMessageKey(), id)
             );
         }
         userRepository.deleteByRoleId(id);
@@ -211,7 +225,7 @@ public class RoleServiceImpl implements RoleService {
 
         importFileResponse.setCountSuccess(countSuccess);
         importFileResponse.setCountError(countError);
-        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : CommonMessage.IMPORT_SUCCESS);
+        importFileResponse.setDetail(countError > 0 ? detailFaultInfoList : messageTranslator.toLocale(CommonMessage.IMPORT_SUCCESS));
         importFileResponse.setItems(successRoles);
 
         LOGGER.info("Import roles completed: {} success, {} failed", countSuccess, countError);
@@ -222,7 +236,7 @@ public class RoleServiceImpl implements RoleService {
         if (checkNameExistsIgnoreCase(roleRequest.getName())) {
             LOGGER.warn("Create failed: Role name '{}' already exists", roleRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(RoleEnum.NAME_EXISTS.getMessage(), roleRequest.getName())
+                    messageTranslator.toLocale(RoleEnum.NAME_EXISTS.getMessageKey(), roleRequest.getName())
             );
         }
     }
@@ -233,7 +247,7 @@ public class RoleServiceImpl implements RoleService {
         if (isNameExists && !roleRequest.getName().equals(currentRole.getName())) {
             LOGGER.warn("Update failed: Role name '{}' already exists", roleRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(RoleEnum.NAME_EXISTS.getMessage(), roleRequest.getName())
+                    messageTranslator.toLocale(RoleEnum.NAME_EXISTS.getMessageKey(), roleRequest.getName())
             );
         }
     }
@@ -249,14 +263,12 @@ public class RoleServiceImpl implements RoleService {
 
     private void validateRoleForImport(Set<String> existingNamesIgnoreCase, RoleCreateRequest roleCreateRequest) {
         // Check name exists
-        String normalizedNameLowerCase = roleCreateRequest.getName() != null
-                ? roleCreateRequest.getName().trim().toLowerCase()
-                : null;
+        String normalizedNameLowerCase = StringUtils.trimLowerBlank(roleCreateRequest.getName());
 
         if (existingNamesIgnoreCase.contains(normalizedNameLowerCase)) {
             LOGGER.warn("Import failed: Role name '{}' already exists", roleCreateRequest.getName());
             throw new IllegalArgumentException(
-                    String.format(RoleEnum.NAME_EXISTS.getMessage(), roleCreateRequest.getName())
+                    messageTranslator.toLocale(RoleEnum.NAME_EXISTS.getMessageKey(), roleCreateRequest.getName())
             );
         }
     }
@@ -294,7 +306,7 @@ public class RoleServiceImpl implements RoleService {
                         .collect(Collectors.joining(", ", "(", ")"));
 
                 throw new NoSuchElementException(
-                        String.format(PermissionEnum.IDS_NOT_FOUND.getMessage(), missingIdsString)
+                        messageTranslator.toLocale(PermissionEnum.IDS_NOT_FOUND.getMessageKey(), missingIdsString)
                 );
             }
 

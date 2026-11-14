@@ -1,9 +1,8 @@
 package com.fullstack.bookShop.model;
 
-import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.model.base.AuditableEntity;
 import com.fullstack.bookShop.util.constant.entity.OrderConstant;
 import com.fullstack.bookShop.util.enums.StatusEnum;
-import com.fullstack.bookShop.util.security.SecurityUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -11,19 +10,27 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
 import java.util.List;
 
 @Entity
-@Table(name = "orders")
+@Table(
+        name = "orders",
+        indexes = {
+                @Index(name = "idx_orders_created_at_id", columnList = "created_at, id"),
+                @Index(name = "idx_orders_name", columnList = "name"),
+                @Index(name = "idx_orders_email_created_at", columnList = "email, created_at"),
+                @Index(name = "idx_orders_status_created_at", columnList = "status, created_at")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+public class Order extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orders_id_seq")
+    @SequenceGenerator(name = "orders_id_seq", sequenceName = "orders_id_seq", allocationSize = 50)
     private Long id;
 
     @NotBlank(message = OrderConstant.NAME_REQUIRED)
@@ -70,28 +77,4 @@ public class Order {
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
 //    @JsonIgnore
     private List<OrderDetail> detail;
-
-    private Instant createdAt;
-
-    private Instant updatedAt;
-
-    private String createdBy;
-
-    private String updatedBy;
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = Instant.now();
-        this.createdBy = SecurityUtil
-                .getCurrentUserLoginEmail()
-                .orElse(AuthorityConstant.SYSTEM);
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = Instant.now();
-        this.updatedBy = SecurityUtil
-                .getCurrentUserLoginEmail()
-                .orElse(AuthorityConstant.SYSTEM);
-    }
 }

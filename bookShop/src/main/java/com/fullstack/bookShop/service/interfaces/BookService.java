@@ -19,7 +19,11 @@ public interface BookService {
 
     PaginationResponse fetchAllBooks(Specification<Book> spec, Pageable pageable);
 
-    PaginationResponse fetchListBooksByMinRatingGreaterThanEqual(Double minRating, Pageable pageable);
+    PaginationResponse fetchListBooksByMinRatingGreaterThanEqual(
+            Specification<Book> spec,
+            Double minRating,
+            Pageable pageable
+    );
 
     List<BookResponse> fetchAllBookResponsesFromBooks();
 
@@ -62,6 +66,8 @@ public interface BookService {
     Set<String> findExistingNamesAndAuthorIgnoreCase(Set<String> keys);
 
     List<Book> getAllBooksByIds(Set<Long> bookIds);
+
+    List<Book> saveAllBooks(List<Book> books);
 
     BookResponse getBookResponseById(Long id);
 

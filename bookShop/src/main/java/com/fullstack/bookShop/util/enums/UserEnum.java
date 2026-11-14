@@ -4,15 +4,15 @@ import lombok.Getter;
 
 @Getter
 public enum UserEnum {
-    ID_NOT_FOUND("User not found with ID: %d"),
-    EMAIL_NOT_FOUND("User not found with email: '%s'"),
-    EMAIL_TOKEN_NOT_FOUND("User not found with token and email: '%s'"),
-    EMAIL_EXISTS("User email '%s' already exists"),
-    PHONE_EXISTS("User phone '%s' already exists");
+    ID_NOT_FOUND("user.error.id-not-found"),
+    EMAIL_NOT_FOUND("user.error.email-not-found"),
+    EMAIL_TOKEN_NOT_FOUND("user.error.email-token-not-found"),
+    EMAIL_EXISTS("user.error.email-exists"),
+    PHONE_EXISTS("user.error.phone-exists");
 
-    private final String message;
+    private final String messageKey;
 
-    UserEnum(String message) {
-        this.message = message;
+    UserEnum(String messageKey) {
+        this.messageKey = messageKey;
     }
 }

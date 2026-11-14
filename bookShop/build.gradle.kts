@@ -44,6 +44,9 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
     implementation("org.apache.commons:commons-lang3:3.18.0")
 
+    // Xuat Excel: dung ban SXSSF (ghi theo luong) nen bo nho khong phinh theo so dong
+    implementation("org.apache.poi:poi-ooxml:5.4.1")
+
     // lib cloudinary
     implementation("com.cloudinary:cloudinary-http5:2.0.0")
 

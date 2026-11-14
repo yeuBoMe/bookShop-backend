@@ -2,6 +2,7 @@ package com.fullstack.bookShop.controller.websocket;
 
 import com.fullstack.bookShop.dto.websocket.RestWebSocketDTO;
 import com.fullstack.bookShop.util.constant.auth.AuthorityConstant;
+import com.fullstack.bookShop.util.string.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,11 @@ public class WebSocketController {
 
     @MessageMapping("/chat.toAdmin")
     public void sendMessageToAdmin(@Payload RestWebSocketDTO dto) {
-        if (dto.getSender() == null || dto.getSender().isBlank()) {
+        if (!StringUtils.hasValue(dto.getSender())) {
             return;
         }
 
-        if (dto.getTimestamp() == null || dto.getTimestamp().isBlank()) {
+        if (!StringUtils.hasValue(dto.getTimestamp())) {
             dto.setTimestamp(java.time.Instant.now().toString());
         }
         dto.setFrom(AuthorityConstant.USER);
@@ -42,12 +43,12 @@ public class WebSocketController {
 
     @MessageMapping("/chat.toUser")
     public void sendMessageToUser(@Payload RestWebSocketDTO dto) {
-        if (dto.getSender() == null || dto.getSender().isBlank()) {
+        if (!StringUtils.hasValue(dto.getSender())) {
             LOGGER.info("⚠️ Target user email (sender field) is missing!");
             return;
         }
 
-        if (dto.getTimestamp() == null || dto.getTimestamp().isBlank()) {
+        if (!StringUtils.hasValue(dto.getTimestamp())) {
             dto.setTimestamp(java.time.Instant.now().toString());
         }
         dto.setFrom(AuthorityConstant.ADMIN);
